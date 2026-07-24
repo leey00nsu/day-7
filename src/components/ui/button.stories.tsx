@@ -13,7 +13,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "shadcn 기반 버튼입니다. 게임의 주요 행동, 보조 행동, 위험 행동에 공통으로 사용합니다.",
+          "shadcn 기반 버튼입니다. 게임의 주요 행동, 보조 행동, 위험 행동에 공통으로 사용하며 호버 시 Border Glow가 자동 재생됩니다.",
       },
     },
   },
@@ -23,6 +23,12 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Primary: Story = {};
+
+export const BorderGlowOnHover: Story = {
+  args: {
+    children: "호버해서 경계 효과 보기",
+  },
+};
 
 export const Secondary: Story = {
   args: {

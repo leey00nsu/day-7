@@ -130,6 +130,63 @@ a {
   }
 }
 
+@property --button-border-glow-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes button-border-glow-sweep {
+  from {
+    --button-border-glow-angle: 0deg;
+  }
+
+  to {
+    --button-border-glow-angle: 360deg;
+  }
+}
+
+.ui-glow-ring::before {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  padding: 1.5px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--button-border-glow-angle),
+    transparent 0deg,
+    transparent 205deg,
+    rgb(56 189 248 / 48%) 240deg,
+    rgb(196 132 252 / 92%) 276deg,
+    rgb(255 255 255 / 100%) 306deg,
+    rgb(244 114 182 / 82%) 334deg,
+    transparent 360deg
+  );
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+@media (hover: hover) {
+  .ui-glow-ring:not(:disabled):hover::before {
+    animation: button-border-glow-sweep 1.65s linear infinite;
+    opacity: 1;
+  }
+}
+
+.ui-glow-ring:not(:disabled):focus-visible::before {
+  animation: button-border-glow-sweep 1.65s linear infinite;
+  opacity: 1;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
