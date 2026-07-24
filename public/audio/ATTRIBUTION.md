@@ -18,3 +18,6 @@ Attribution is not required by the license, but the original sources are recorde
 - `decision-minimal-tension.mp3`
   - “Dark Tension Background – Minimal Suspense Underscore” by OpenMindAudio
   - https://pixabay.com/music/epic-classical-dark-tension-background-minimal-suspense-underscore-464819/
+- `choice-feedback-chime.mp3`
+  - Edited first chime from “Elevator Chime/Notification Ding Recreation” by BlueGrayA10
+  - https://pixabay.com/sound-effects/film-special-effects-elevator-chimenotification-ding-recreation-287560/

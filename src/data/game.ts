@@ -10,6 +10,7 @@ export type SubtitleCue = {
 export type StoryClip = {
   filename: string;
   label: string;
+  narration?: string;
   cues: readonly SubtitleCue[];
 };
 
@@ -18,6 +19,7 @@ export type StoryChapter = {
   title: string;
   clips: readonly StoryClip[];
   decisionThought?: string;
+  decisionNarration?: string;
   choices?: readonly [
     { label: string; feedback: string; clips: readonly StoryClip[] },
     { label: string; feedback: string; clips: readonly StoryClip[] },
@@ -26,9 +28,14 @@ export type StoryChapter = {
 
 const subtitleTable = subtitles as Record<string, SubtitleCue[]>;
 
-const clip = (filename: string, label: string): StoryClip => ({
+const clip = (
+  filename: string,
+  label: string,
+  narration?: string,
+): StoryClip => ({
   filename,
   label,
+  narration,
   cues: subtitleTable[filename] ?? [],
 });
 
@@ -37,7 +44,11 @@ export const storyChapters: readonly StoryChapter[] = [
     day: "프롤로그",
     title: "결과 발표 일주일 전",
     clips: [
-      clip("p00_prologue_s00.mp4", "결과 발표 일주일 전"),
+      clip(
+        "p00_prologue_s00.mp4",
+        "결과 발표 일주일 전",
+        "/audio/narration/prologue-p1.mp3",
+      ),
       clip("p00_prologue_s01.mp4", "결과 발표 일주일 전"),
       clip("p00_prologue_s02.mp4", "일주일 전"),
     ],
@@ -52,6 +63,7 @@ export const storyChapters: readonly StoryChapter[] = [
     ],
     decisionThought:
       "완료로 바꾸자니 찝찝하고, 그대로 두면 부장님이 또 뭐라고 할 텐데.",
+    decisionNarration: "/audio/narration/decision-s1.mp3",
     choices: [
       {
         label: "지시대로 완료 처리한다.",
@@ -74,6 +86,7 @@ export const storyChapters: readonly StoryChapter[] = [
     ],
     decisionThought:
       "약속이 있는데... 그렇다고 지금 못 한다고 해도 될까.",
+    decisionNarration: "/audio/narration/decision-s2.mp3",
     choices: [
       {
         label: "가방을 내려놓고 작업을 시작한다.",
@@ -99,6 +112,7 @@ export const storyChapters: readonly StoryChapter[] = [
       clip("n03_wed_wrong_number_s02.mp4", "떠넘겨진 책임"),
     ],
     decisionThought: "지금 따질까... 아니면 수습부터 해야 할까?",
+    decisionNarration: "/audio/narration/decision-s3.mp3",
     choices: [
       {
         label: "억울함을 삼키고 먼저 수습한다.",
@@ -124,6 +138,7 @@ export const storyChapters: readonly StoryChapter[] = [
     ],
     decisionThought:
       "내가 한 일을 지워야 하나. 그대로 쓰면 찍힐 것 같고.",
+    decisionNarration: "/audio/narration/decision-s4.mp3",
     choices: [
       {
         label: "성과를 지우고 팀 서포트로 낮춘다.",

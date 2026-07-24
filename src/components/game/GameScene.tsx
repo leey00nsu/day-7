@@ -18,6 +18,7 @@ import {
   StoryMusic,
   type StoryMusicMode,
 } from "@/components/game/StoryMusic";
+import { NarrationAudio } from "@/components/game/NarrationAudio";
 import { SubtitleOverlay } from "@/components/game/SubtitleOverlay";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -40,6 +41,7 @@ function findCue(cues: readonly SubtitleCue[] | undefined, time: number) {
 
 export function GameScene() {
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
+  const choiceFeedbackAudioRef = useRef<HTMLAudioElement>(null);
   const [chapterIndex, setChapterIndex] = useState(0);
   const [clipIndex, setClipIndex] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
@@ -119,10 +121,25 @@ export function GameScene() {
   }, []);
 
   useEffect(() => {
-    for (const video of videoRefs.current) {
-      if (video) video.volume = volume;
-    }
-  }, [volume]);
+    const audio = choiceFeedbackAudioRef.current;
+    if (!audio) return;
+
+    audio.volume = Math.min(volume * effectsVolume * 0.675, 1);
+  }, [effectsVolume, volume]);
+
+  useEffect(() => {
+    if (!choiceFeedback) return;
+
+    const playTimer = window.setTimeout(() => {
+      const audio = choiceFeedbackAudioRef.current;
+      if (!audio) return;
+
+      audio.currentTime = 0;
+      void audio.play().catch(() => undefined);
+    }, 100);
+
+    return () => window.clearTimeout(playTimer);
+  }, [choiceFeedback]);
 
   useEffect(() => {
     if (!choiceFeedback) return;
@@ -165,6 +182,17 @@ export function GameScene() {
 
   const videoFilename =
     mode === "decision" ? "select_decision.mp4" : activeClip?.filename;
+  const narrationFilename =
+    mode === "decision" ? chapter.decisionNarration : activeClip?.narration;
+  const narrationVolume =
+    mode === "decision" ? Math.min(volume * 1.2, 1) : volume;
+  const videoVolume = volume * (narrationFilename ? 0.35 : 1);
+
+  useEffect(() => {
+    for (const video of videoRefs.current) {
+      if (video) video.volume = videoVolume;
+    }
+  }, [videoVolume]);
 
   const preloadFilename = useMemo(() => {
     if (mode === "main") {
@@ -198,7 +226,7 @@ export function GameScene() {
       if (slot === activeSlot && !nextVideo.paused) return;
 
       nextVideo.currentTime = 0;
-      nextVideo.volume = volume;
+      nextVideo.volume = videoVolume;
 
       try {
         await nextVideo.play();
@@ -225,7 +253,7 @@ export function GameScene() {
         setChapterVideoPending(false);
       }
     },
-    [activeSlot, preloadFilename, videoFilename, volume],
+    [activeSlot, preloadFilename, videoFilename, videoVolume],
   );
 
   useEffect(() => {
@@ -402,6 +430,13 @@ export function GameScene() {
         masterVolume={volume}
         mode={storyMusicMode}
         musicVolume={musicVolume}
+      />
+      <NarrationAudio src={narrationFilename} volume={narrationVolume} />
+      <audio
+        aria-hidden="true"
+        preload="auto"
+        ref={choiceFeedbackAudioRef}
+        src="/audio/choice-feedback-chime.mp3"
       />
 
       {videoSlots.map((filename, slot) =>
