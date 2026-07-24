@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -8,17 +8,22 @@ type ChapterIntroProps = {
   title: string;
   description?: string;
   onComplete?: () => void;
+  effectsVolume?: number;
   className?: string;
 };
 
 const INTRO_DURATION_MS = 2600;
+const CHAPTER_SOUND_GAIN = 1.05;
 
 export function ChapterIntro({
   title,
   description,
   onComplete,
+  effectsVolume = 0.4,
   className,
 }: ChapterIntroProps) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+
   useEffect(() => {
     const completeTimer = window.setTimeout(() => {
       onComplete?.();
@@ -28,6 +33,13 @@ export function ChapterIntro({
       window.clearTimeout(completeTimer);
     };
   }, [onComplete]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    audio.volume = Math.min(effectsVolume * CHAPTER_SOUND_GAIN, 1);
+  }, [effectsVolume]);
 
   return (
     <section
@@ -50,6 +62,13 @@ export function ChapterIntro({
           {description || "\u00a0"}
         </p>
       </div>
+      <audio
+        aria-hidden="true"
+        autoPlay
+        preload="auto"
+        ref={audioRef}
+        src="/audio/chapter-clock-ticking.mp3"
+      />
     </section>
   );
 }

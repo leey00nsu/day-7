@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "pretendard/dist/web/variable/pretendardvariable.css";
 
+import { GameAudio } from "@/components/game/GameAudio";
 import { GameOptions } from "@/components/game/GameOptions";
 import "./globals.css";
 
@@ -26,6 +27,7 @@ export default function RootLayout({
   return (
     <html lang="ko" className="dark h-full antialiased">
       <body className="min-h-full bg-background font-sans text-foreground">
+        <GameAudio />
         <GameOptions />
         {children}
       </body>

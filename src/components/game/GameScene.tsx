@@ -14,6 +14,10 @@ import {
 import { DecisionOverlay } from "@/components/game/DecisionOverlay";
 import { ChapterIntro } from "@/components/game/ChapterIntro";
 import { ChoiceFeedback } from "@/components/game/ChoiceFeedback";
+import {
+  StoryMusic,
+  type StoryMusicMode,
+} from "@/components/game/StoryMusic";
 import { SubtitleOverlay } from "@/components/game/SubtitleOverlay";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -55,10 +59,25 @@ export function GameScene() {
       ? true
       : window.localStorage.getItem("game-captions") !== "false",
   );
+  const [captionSize, setCaptionSize] = useState(() =>
+    typeof window === "undefined"
+      ? 100
+      : Number(window.localStorage.getItem("game-caption-size") ?? 100),
+  );
   const [volume, setVolume] = useState(() =>
     typeof window === "undefined"
       ? 0.8
       : Number(window.localStorage.getItem("game-volume") ?? 80) / 100,
+  );
+  const [effectsVolume, setEffectsVolume] = useState(() =>
+    typeof window === "undefined"
+      ? 0.4
+      : Number(window.localStorage.getItem("game-effects-volume") ?? 40) / 100,
+  );
+  const [musicVolume, setMusicVolume] = useState(() =>
+    typeof window === "undefined"
+      ? 0.28
+      : Number(window.localStorage.getItem("game-music-volume") ?? 28) / 100,
   );
 
   const chapter = storyChapters[chapterIndex];
@@ -72,12 +91,30 @@ export function GameScene() {
       setVolume((event as CustomEvent<number>).detail / 100);
     }
 
+    function updateCaptionSize(event: Event) {
+      setCaptionSize((event as CustomEvent<number>).detail);
+    }
+
+    function updateEffectsVolume(event: Event) {
+      setEffectsVolume((event as CustomEvent<number>).detail / 100);
+    }
+
+    function updateMusicVolume(event: Event) {
+      setMusicVolume((event as CustomEvent<number>).detail / 100);
+    }
+
     window.addEventListener("game:captions", updateCaptions);
+    window.addEventListener("game:caption-size", updateCaptionSize);
     window.addEventListener("game:volume", updateVolume);
+    window.addEventListener("game:effects-volume", updateEffectsVolume);
+    window.addEventListener("game:music-volume", updateMusicVolume);
 
     return () => {
       window.removeEventListener("game:captions", updateCaptions);
+      window.removeEventListener("game:caption-size", updateCaptionSize);
       window.removeEventListener("game:volume", updateVolume);
+      window.removeEventListener("game:effects-volume", updateEffectsVolume);
+      window.removeEventListener("game:music-volume", updateMusicVolume);
     };
   }, []);
 
@@ -302,7 +339,13 @@ export function GameScene() {
   }
 
   async function togglePlayback() {
-    if (mode === "chapterIntro" || mode === "complete") return;
+    if (
+      mode === "chapterIntro" ||
+      mode === "decision" ||
+      mode === "complete"
+    ) {
+      return;
+    }
 
     const video = videoRefs.current[activeSlot];
     if (!video) return;
@@ -328,6 +371,8 @@ export function GameScene() {
   }
 
   function handleStageClick(event: MouseEvent<HTMLElement>) {
+    if (mode === "decision") return;
+
     const target = event.target as HTMLElement;
 
     if (target.closest("a, button, input, label")) return;
@@ -341,11 +386,24 @@ export function GameScene() {
     setIsPlaying(false);
   }, [chapter.clips.length]);
 
+  const storyMusicMode: StoryMusicMode =
+    mode === "decision"
+      ? "decision"
+      : mode === "main" || mode === "branch"
+        ? "gameplay"
+        : "silent";
+
   return (
     <main
       className="relative isolate min-h-svh cursor-pointer overflow-hidden bg-black text-white"
       onClick={handleStageClick}
     >
+      <StoryMusic
+        masterVolume={volume}
+        mode={storyMusicMode}
+        musicVolume={musicVolume}
+      />
+
       {videoSlots.map((filename, slot) =>
         filename ? (
           <video
@@ -406,12 +464,13 @@ export function GameScene() {
         </header>
       ) : null}
 
-      {mode !== "complete" && mode !== "chapterIntro" ? (
+      {mode !== "complete" &&
+      mode !== "chapterIntro" &&
+      mode !== "decision" ? (
         <>
           <Button
             aria-label="현재 영상 건너뛰기"
             className="fixed right-[7.5rem] top-4 z-[90] size-11 rounded-full border border-white/15 bg-black/35 text-white shadow-lg shadow-black/20 backdrop-blur-xl hover:bg-black/55 sm:right-[8rem] sm:top-6"
-            disabled={mode === "decision"}
             onClick={skipCurrentVideo}
             size="icon-lg"
             title="영상 넘기기"
@@ -447,6 +506,7 @@ export function GameScene() {
             ? { speaker: activeCue.speaker, text: activeCue.text }
             : decisionThought
         }
+        scale={captionSize / 100}
       />
 
       {choiceFeedback ? (
@@ -460,6 +520,7 @@ export function GameScene() {
       {mode === "chapterIntro" ? (
         <ChapterIntro
           description={chapter.title}
+          effectsVolume={effectsVolume * volume}
           key={chapter.day}
           onComplete={finishChapterIntro}
           title={chapter.day}

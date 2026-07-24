@@ -32,3 +32,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Dialogue: Story = {};
+
+export const Large: Story = {
+  args: {
+    scale: 1.5,
+  },
+};

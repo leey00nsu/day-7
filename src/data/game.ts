@@ -73,10 +73,10 @@ export const storyChapters: readonly StoryChapter[] = [
       clip("n02_tue_late_request_s01.mp4", "퇴근 직전의 업무 지시"),
     ],
     decisionThought:
-      "남으면 약속은 깨진다. 그렇다고 지금 못 한다고 해도 될까.",
+      "약속이 있는데... 그렇다고 지금 못 한다고 해도 될까.",
     choices: [
       {
-        label: "가방을 내려놓고 숫자를 맞춘다.",
+        label: "가방을 내려놓고 작업을 시작한다.",
         feedback: "이대리는 김인턴이 야근을 받아들인 것을 기억할 것입니다.",
         clips: [
           clip("c02_a_finish_tonight_s01.mp4", "남아서 끝내기"),
@@ -98,7 +98,7 @@ export const storyChapters: readonly StoryChapter[] = [
       clip("n03_wed_wrong_number_s01.mp4", "회의 직전"),
       clip("n03_wed_wrong_number_s02.mp4", "떠넘겨진 책임"),
     ],
-    decisionThought: "지금 따질까. 아니면 회의부터 막아야 하나.",
+    decisionThought: "지금 따질까... 아니면 수습부터 해야 할까?",
     choices: [
       {
         label: "억울함을 삼키고 먼저 수습한다.",
