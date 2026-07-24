@@ -1,0 +1,43 @@
+import type { Metadata, Viewport } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+
+import "./globals.css";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: {
+    default: "정규직 D-7",
+    template: "%s · 정규직 D-7",
+  },
+  description:
+    "7일간의 선택으로 정규직 전환과 거절의 결말을 만들어 가는 인터랙티브 오피스 드라마.",
+};
+
+export const viewport: Viewport = {
+  colorScheme: "dark",
+  themeColor: "#0b0f0d",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html
+      lang="ko"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    >
+      <body className="min-h-full bg-ink font-sans text-white">{children}</body>
+    </html>
+  );
+}
