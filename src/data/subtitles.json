@@ -53,6 +53,36 @@
     }
   ],
   "c01_a_complete_s01.mp4": [],
+  "n02_tue_late_request_s01.mp4": [
+    {
+      "start": 0.3,
+      "end": 3.7,
+      "speaker": "이대리",
+      "text": "내일 아침 임원회의 자료야. 지난달 수치랑 하나도 안 맞아."
+    },
+    {
+      "start": 3.9,
+      "end": 6.8,
+      "speaker": "김인턴",
+      "text": "네? 지금부터 다 다시 맞춰야 합니까?"
+    }
+  ],
+  "c02_a_finish_tonight_s01.mp4": [
+    {
+      "start": 0.4,
+      "end": 3.2,
+      "speaker": "김인턴",
+      "text": "네, 파일 넘겨주십시오."
+    }
+  ],
+  "c02_b_set_scope_s01.mp4": [
+    {
+      "start": 0.4,
+      "end": 5.6,
+      "speaker": "김인턴",
+      "text": "대리님, 제가 오늘 선약이 있어서... 어디까지 해두고 가면 될까요?"
+    }
+  ],
   "n03_wed_wrong_number_s01.mp4": [
     {
       "start": 0.35,
@@ -89,7 +119,14 @@
       "text": "죄송합니다. 바로 수정하겠습니다."
     }
   ],
-  "c03_a_take_blame_s02.mp4": [],
+  "c03_b_explain_process_s01.mp4": [
+    {
+      "start": 0.4,
+      "end": 5.8,
+      "speaker": "김인턴",
+      "text": "어제 대리님이 주신 파일 그대로 붙여넣은 건데... 아, 일단 고치겠습니다."
+    }
+  ],
   "n04_thu_self_review_s01.mp4": [
     {
       "start": 0.35,
@@ -116,6 +153,22 @@
       "end": 7.7,
       "speaker": "김인턴",
       "text": "...네, 알겠습니다."
+    }
+  ],
+  "n05_fri_result_intro_s01.mp4": [
+    {
+      "start": 0.4,
+      "end": 4.5,
+      "speaker": "박부장",
+      "text": "김 인턴 벌써 1년인가? 시간 참 빠르네."
+    }
+  ],
+  "n05_fri_result_intro_s02.mp4": [
+    {
+      "start": 0.4,
+      "end": 5.6,
+      "speaker": "박부장",
+      "text": "전환 관련해서. 최종 결과 나왔어."
     }
   ]
 }

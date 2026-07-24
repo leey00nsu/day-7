@@ -69,19 +69,25 @@ export const storyChapters: readonly StoryChapter[] = [
   {
     day: "화요일",
     title: "퇴근 10분 전의 통보",
-    clips: [],
+    clips: [
+      clip("n02_tue_late_request_s01.mp4", "퇴근 직전의 업무 지시"),
+    ],
     decisionThought:
       "남으면 약속은 깨진다. 그렇다고 지금 못 한다고 해도 될까.",
     choices: [
       {
         label: "가방을 내려놓고 숫자를 맞춘다.",
         feedback: "이대리는 김인턴이 야근을 받아들인 것을 기억할 것입니다.",
-        clips: [],
+        clips: [
+          clip("c02_a_finish_tonight_s01.mp4", "남아서 끝내기"),
+        ],
       },
       {
         label: "오늘 가능한 범위를 먼저 묻는다.",
         feedback: "이대리는 김인턴이 선을 그은 것을 기억할 것입니다.",
-        clips: [],
+        clips: [
+          clip("c02_b_set_scope_s01.mp4", "가능한 범위 정하기"),
+        ],
       },
     ],
   },
@@ -98,15 +104,14 @@ export const storyChapters: readonly StoryChapter[] = [
         label: "억울함을 삼키고 먼저 수습한다.",
         feedback:
           "이대리는 김인턴이 책임을 대신 진 것을 기억할 것입니다.",
-        clips: [
-          clip("c03_a_take_blame_s01.mp4", "수습 우선"),
-          clip("c03_a_take_blame_s02.mp4", "회의실로 향하는 길"),
-        ],
+        clips: [clip("c03_a_take_blame_s01.mp4", "수습 우선")],
       },
       {
         label: "수정하되 전달 경위를 밝힌다.",
         feedback: "이대리는 김인턴이 경위를 밝힌 것을 기억할 것입니다.",
-        clips: [],
+        clips: [
+          clip("c03_b_explain_process_s01.mp4", "전달 경위 밝히기"),
+        ],
       },
     ],
   },
@@ -130,6 +135,14 @@ export const storyChapters: readonly StoryChapter[] = [
         feedback: "이대리는 김인턴이 자기 성과를 지킨 것을 기억할 것입니다.",
         clips: [],
       },
+    ],
+  },
+  {
+    day: "금요일",
+    title: "최종 결과",
+    clips: [
+      clip("n05_fri_result_intro_s01.mp4", "결과 면담"),
+      clip("n05_fri_result_intro_s02.mp4", "최종 결과"),
     ],
   },
 ] as const;
