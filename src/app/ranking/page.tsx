@@ -24,7 +24,7 @@ export default function RankingPage() {
         poster="/assets/home/home-hero-poster-16x9.png"
         preload="metadata"
       >
-        <source src="/api/videos/t00_title_s01.mp4" type="video/mp4" />
+        <source src="/videos/t00_title_s01.mp4" type="video/mp4" />
       </video>
       <div className="fixed inset-0 -z-20 bg-black/68" />
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,.1),transparent_48%),linear-gradient(180deg,rgba(0,0,0,.14),rgba(0,0,0,.54))]" />

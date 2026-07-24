@@ -30,7 +30,7 @@ export default function Home() {
         poster="/assets/home/home-hero-poster-16x9.png"
         preload="auto"
       >
-        <source src="/api/videos/t00_title_s01.mp4" type="video/mp4" />
+        <source src="/videos/t00_title_s01.mp4" type="video/mp4" />
       </video>
 
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_5%,rgba(0,0,0,.16)_58%,rgba(0,0,0,.52)),linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.08)_55%,rgba(0,0,0,.5))]" />

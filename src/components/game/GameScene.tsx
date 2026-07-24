@@ -580,7 +580,7 @@ export function GameScene() {
             ref={(element) => {
               videoRefs.current[slot] = element;
             }}
-            src={`/api/videos/${encodeURIComponent(filename)}`}
+            src={`/videos/${encodeURIComponent(filename)}`}
           />
         ) : null,
       )}

@@ -20,6 +20,9 @@
 # production
 /build
 
+# externally hosted game videos
+/public/videos/
+
 # misc
 .DS_Store
 *.pem
