@@ -1,6 +1,6 @@
 "use client";
 
-import { Pause, Play } from "lucide-react";
+import { ChevronsRight, Pause, Play } from "lucide-react";
 import Link from "next/link";
 import {
   type MouseEvent,
@@ -13,6 +13,7 @@ import {
 
 import { DecisionOverlay } from "@/components/game/DecisionOverlay";
 import { ChapterIntro } from "@/components/game/ChapterIntro";
+import { ChoiceFeedback } from "@/components/game/ChoiceFeedback";
 import { SubtitleOverlay } from "@/components/game/SubtitleOverlay";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -41,6 +42,8 @@ export function GameScene() {
   const [mode, setMode] = useState<PlaybackMode>("chapterIntro");
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [choiceFeedback, setChoiceFeedback] = useState<string | null>(null);
+  const [choiceFeedbackExiting, setChoiceFeedbackExiting] = useState(false);
   const [chapterVideoPending, setChapterVideoPending] = useState(false);
   const [activeSlot, setActiveSlot] = useState(0);
   const [videoSlots, setVideoSlots] = useState<VideoSlots>([
@@ -83,6 +86,22 @@ export function GameScene() {
       if (video) video.volume = volume;
     }
   }, [volume]);
+
+  useEffect(() => {
+    if (!choiceFeedback) return;
+
+    const exitTimer = window.setTimeout(() => {
+      setChoiceFeedbackExiting(true);
+    }, 3000);
+    const removeTimer = window.setTimeout(() => {
+      setChoiceFeedback(null);
+    }, 3600);
+
+    return () => {
+      window.clearTimeout(exitTimer);
+      window.clearTimeout(removeTimer);
+    };
+  }, [choiceFeedback]);
 
   const activeClip = useMemo<StoryClip | undefined>(() => {
     if (mode === "main") {
@@ -191,20 +210,25 @@ export function GameScene() {
     const nextSlot = activeSlot === 0 ? 1 : 0;
     const waitingVideo = videoRefs.current[nextSlot];
 
-    if (
-      videoSlots[nextSlot] === videoFilename &&
-      waitingVideo &&
-      waitingVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
-    ) {
-      void activateSlot(nextSlot, videoFilename);
+    if (videoSlots[nextSlot] === videoFilename) {
+      if (
+        waitingVideo &&
+        waitingVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
+      ) {
+        void activateSlot(nextSlot, videoFilename);
+      }
       return;
     }
 
-    setVideoSlots((slots) => {
-      const next: VideoSlots = [...slots];
-      next[nextSlot] = videoFilename;
-      return next;
+    const updateFrame = window.requestAnimationFrame(() => {
+      setVideoSlots((slots) => {
+        const next: VideoSlots = [...slots];
+        next[nextSlot] = videoFilename;
+        return next;
+      });
     });
+
+    return () => window.cancelAnimationFrame(updateFrame);
   }, [
     activateSlot,
     activeSlot,
@@ -263,6 +287,8 @@ export function GameScene() {
     if (!chapter.choices) return;
 
     const branchClips = chapter.choices[index].clips;
+    setChoiceFeedbackExiting(false);
+    setChoiceFeedback(chapter.choices[index].feedback);
     setSelectedChoice(index);
     setCurrentTime(0);
     setClipIndex(0);
@@ -292,6 +318,13 @@ export function GameScene() {
       video.pause();
       setIsPlaying(false);
     }
+  }
+
+  function skipCurrentVideo() {
+    if (mode !== "main" && mode !== "branch") return;
+
+    videoRefs.current[activeSlot]?.pause();
+    handleEnded();
   }
 
   function handleStageClick(event: MouseEvent<HTMLElement>) {
@@ -374,15 +407,28 @@ export function GameScene() {
       ) : null}
 
       {mode !== "complete" && mode !== "chapterIntro" ? (
-        <Button
-          aria-label={isPlaying ? "일시정지" : "재생"}
-          className="fixed right-[4.25rem] top-4 z-[90] size-11 rounded-full border border-white/15 bg-black/35 text-white shadow-lg shadow-black/20 backdrop-blur-xl hover:bg-black/55 sm:right-[4.75rem] sm:top-6"
-          onClick={() => void togglePlayback()}
-          size="icon-lg"
-          variant="ghost"
-        >
-          {isPlaying ? <Pause /> : <Play />}
-        </Button>
+        <>
+          <Button
+            aria-label="현재 영상 건너뛰기"
+            className="fixed right-[7.5rem] top-4 z-[90] size-11 rounded-full border border-white/15 bg-black/35 text-white shadow-lg shadow-black/20 backdrop-blur-xl hover:bg-black/55 sm:right-[8rem] sm:top-6"
+            disabled={mode === "decision"}
+            onClick={skipCurrentVideo}
+            size="icon-lg"
+            title="영상 넘기기"
+            variant="ghost"
+          >
+            <ChevronsRight />
+          </Button>
+          <Button
+            aria-label={isPlaying ? "일시정지" : "재생"}
+            className="fixed right-[4.25rem] top-4 z-[90] size-11 rounded-full border border-white/15 bg-black/35 text-white shadow-lg shadow-black/20 backdrop-blur-xl hover:bg-black/55 sm:right-[4.75rem] sm:top-6"
+            onClick={() => void togglePlayback()}
+            size="icon-lg"
+            variant="ghost"
+          >
+            {isPlaying ? <Pause /> : <Play />}
+          </Button>
+        </>
       ) : null}
 
       {mode === "decision" && chapter.choices ? (
@@ -402,6 +448,14 @@ export function GameScene() {
             : decisionThought
         }
       />
+
+      {choiceFeedback ? (
+        <ChoiceFeedback
+          exiting={choiceFeedbackExiting}
+          key={choiceFeedback}
+          message={choiceFeedback}
+        />
+      ) : null}
 
       {mode === "chapterIntro" ? (
         <ChapterIntro

@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings2, Subtitles, Volume2, X } from "lucide-react";
+import { Cog, House, Subtitles, Volume2, X } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -50,7 +50,7 @@ export function GameOptions({ className }: GameOptionsProps) {
         size="icon-lg"
         variant="ghost"
       >
-        {open ? <X /> : <Settings2 />}
+        {open ? <X /> : <Cog />}
       </Button>
 
       {open ? (
@@ -81,6 +81,16 @@ export function GameOptions({ className }: GameOptionsProps) {
               type="range"
             />
           </label>
+          <div className="mt-2 border-t border-white/10 pt-3">
+            <Button
+              className="h-10 w-full"
+              onClick={() => window.location.assign("/")}
+              variant="outline"
+            >
+              <House data-icon="inline-start" />
+              홈으로
+            </Button>
+          </div>
         </div>
       ) : null}
     </aside>
