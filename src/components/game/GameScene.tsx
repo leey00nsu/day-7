@@ -184,8 +184,6 @@ export function GameScene() {
     mode === "decision" ? "select_decision.mp4" : activeClip?.filename;
   const narrationFilename =
     mode === "decision" ? chapter.decisionNarration : activeClip?.narration;
-  const narrationVolume =
-    mode === "decision" ? Math.min(volume * 1.2, 1) : volume;
   const videoVolume = volume * (narrationFilename ? 0.35 : 1);
 
   useEffect(() => {
@@ -431,7 +429,7 @@ export function GameScene() {
         mode={storyMusicMode}
         musicVolume={musicVolume}
       />
-      <NarrationAudio src={narrationFilename} volume={narrationVolume} />
+      <NarrationAudio src={narrationFilename} volume={volume} />
       <audio
         aria-hidden="true"
         preload="auto"
