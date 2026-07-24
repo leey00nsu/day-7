@@ -169,6 +169,13 @@ export const endings = [
     summary:
       "인력 부족 때문에 전환이 결정됐다. 축하보다 먼저, 더 많은 야근이 기다린다는 말이 돌아온다.",
     image: "/assets/endings/e01-conversion.png",
+    clips: [
+      clip("e01_conversion_s01.mp4", "정규직 전환 통보"),
+      clip("e01_conversion_s02.mp4", "축하 뒤의 현실"),
+    ],
+    narrationAudio: "/audio/narration/ending-e1.mp3",
+    narrationText:
+      "정규직이 됐다. 그런데 왜... 목줄이 하나 더 채워진 기분일까.",
   },
   {
     id: "E02",
@@ -176,6 +183,13 @@ export const endings = [
     summary:
       "회사는 인건비 동결을 내세워 전환을 끝낸다. 남은 것은 모호한 위로와 빈 사무실뿐이다.",
     image: "/assets/endings/e02-hold.png",
+    clips: [
+      clip("e02_hold_s01.mp4", "전환 보류 통보"),
+      clip("e02_hold_s02.mp4", "회사의 사정"),
+    ],
+    narrationAudio: "/audio/narration/ending-e2.mp3",
+    narrationText:
+      "시키는 일은 다 했다. 하지만 회사는 필요 없을 때 버리기 좋은 핑계만 찾을 뿐이었다.",
   },
   {
     id: "E03",
@@ -183,7 +197,16 @@ export const endings = [
     summary:
       "금요일이 되어서야 알았다. 이 회사와 나는 맞지 않는다는 걸.",
     image: "/assets/endings/e03-decline.png",
+    clips: [
+      clip("e03_decline_s01.mp4", "전환 제안"),
+      clip("e03_decline_s02.mp4", "계약 연장 거절"),
+      clip("e03_decline_s05.mp4", "마지막 반응"),
+    ],
+    narrationAudio: "/audio/narration/ending-e3.mp3",
+    narrationText:
+      "금요일이 되어서야 알았다. 이 회사와 나는 맞지 않는다는 걸.",
   },
 ] as const;
 
 export type EndingId = (typeof endings)[number]["id"];
+export type Ending = (typeof endings)[number];

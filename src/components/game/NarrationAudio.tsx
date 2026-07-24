@@ -5,9 +5,16 @@ import { useEffect, useRef } from "react";
 type NarrationAudioProps = {
   src?: string;
   volume: number;
+  paused?: boolean;
+  onEnded?: () => void;
 };
 
-export function NarrationAudio({ src, volume }: NarrationAudioProps) {
+export function NarrationAudio({
+  src,
+  volume,
+  paused = false,
+  onEnded,
+}: NarrationAudioProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -24,7 +31,20 @@ export function NarrationAudio({ src, volume }: NarrationAudioProps) {
     audio.pause();
     audio.currentTime = 0;
 
-    if (!src) return;
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+    };
+  }, [src]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !src) return;
+
+    if (paused) {
+      audio.pause();
+      return;
+    }
 
     function retry() {
       const retryAudio = audioRef.current;
@@ -41,14 +61,13 @@ export function NarrationAudio({ src, volume }: NarrationAudioProps) {
     return () => {
       window.removeEventListener("pointerdown", retry);
       window.removeEventListener("keydown", retry);
-      audio.pause();
-      audio.currentTime = 0;
     };
-  }, [src]);
+  }, [paused, src]);
 
   return (
     <audio
       aria-hidden="true"
+      onEnded={onEnded}
       preload="auto"
       ref={audioRef}
       src={src}

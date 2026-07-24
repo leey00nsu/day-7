@@ -14,6 +14,7 @@ import {
 import { DecisionOverlay } from "@/components/game/DecisionOverlay";
 import { ChapterIntro } from "@/components/game/ChapterIntro";
 import { ChoiceFeedback } from "@/components/game/ChoiceFeedback";
+import { EndingCard } from "@/components/game/EndingCard";
 import {
   StoryMusic,
   type StoryMusicMode,
@@ -38,6 +39,8 @@ type PlaybackMode =
   | "main"
   | "decision"
   | "branch"
+  | "ending"
+  | "endingNarration"
   | "complete";
 type VideoSlots = [string | undefined, string | undefined];
 
@@ -56,6 +59,7 @@ export function GameScene() {
     useState<EndingId | null>(null);
   const [mode, setMode] = useState<PlaybackMode>("chapterIntro");
   const [currentTime, setCurrentTime] = useState(0);
+  const [currentVideoDuration, setCurrentVideoDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [choiceFeedback, setChoiceFeedback] = useState<string | null>(null);
   const [choiceFeedbackExiting, setChoiceFeedbackExiting] = useState(false);
@@ -92,6 +96,9 @@ export function GameScene() {
   );
 
   const chapter = storyChapters[chapterIndex];
+  const activeEnding = achievedEndingId
+    ? endings.find((ending) => ending.id === achievedEndingId)
+    : undefined;
 
   useEffect(() => {
     function updateCaptions(event: Event) {
@@ -175,8 +182,15 @@ export function GameScene() {
       return chapter.choices[selectedChoice].clips[clipIndex];
     }
 
+    if (
+      (mode === "ending" || mode === "endingNarration") &&
+      activeEnding
+    ) {
+      return activeEnding.clips[clipIndex];
+    }
+
     return undefined;
-  }, [chapter, clipIndex, mode, selectedChoice]);
+  }, [activeEnding, chapter, clipIndex, mode, selectedChoice]);
 
   const activeCue = captionsEnabled
     ? findCue(activeClip?.cues, currentTime)
@@ -192,7 +206,11 @@ export function GameScene() {
   const videoFilename =
     mode === "decision" ? "select_decision.mp4" : activeClip?.filename;
   const narrationFilename =
-    mode === "decision" ? chapter.decisionNarration : activeClip?.narration;
+    mode === "decision"
+      ? chapter.decisionNarration
+      : mode === "endingNarration"
+        ? activeEnding?.narrationAudio
+        : activeClip?.narration;
   const videoVolume = volume * (narrationFilename ? 0.35 : 1);
 
   useEffect(() => {
@@ -202,6 +220,19 @@ export function GameScene() {
   }, [videoVolume]);
 
   const preloadFilename = useMemo(() => {
+    if (
+      mode === "main" &&
+      clipIndex === chapter.clips.length - 1 &&
+      chapterIndex === storyChapters.length - 1
+    ) {
+      const nextEnding = endings.find(
+        (ending) =>
+          ending.id === resolveEndingFromChoices(choiceHistory),
+      );
+
+      return nextEnding?.clips[0]?.filename;
+    }
+
     if (mode === "main") {
       return (
         chapter.clips[clipIndex + 1]?.filename ??
@@ -220,8 +251,20 @@ export function GameScene() {
       );
     }
 
+    if (mode === "ending" && activeEnding) {
+      return activeEnding.clips[clipIndex + 1]?.filename;
+    }
+
     return undefined;
-  }, [chapter, chapterIndex, clipIndex, mode, selectedChoice]);
+  }, [
+    activeEnding,
+    chapter,
+    chapterIndex,
+    choiceHistory,
+    clipIndex,
+    mode,
+    selectedChoice,
+  ]);
 
   const activateSlot = useCallback(
     async (slot: number, filename: string) => {
@@ -324,8 +367,20 @@ export function GameScene() {
     }
 
     const endingId = resolveEndingFromChoices(completedChoices);
-    unlockEnding(endingId);
+    const ending = endings.find((candidate) => candidate.id === endingId);
+
     setAchievedEndingId(endingId);
+    setClipIndex(0);
+    setSelectedChoice(null);
+    setMode(ending?.clips.length ? "ending" : "endingNarration");
+    setCurrentTime(0);
+    setIsPlaying(false);
+  }
+
+  function completeEnding() {
+    if (!achievedEndingId) return;
+
+    unlockEnding(achievedEndingId);
     setMode("complete");
     setCurrentTime(0);
     setIsPlaying(false);
@@ -353,6 +408,13 @@ export function GameScene() {
       } else {
         advanceChapter();
       }
+    } else if (mode === "ending" && activeEnding) {
+      if (clipIndex < activeEnding.clips.length - 1) {
+        setClipIndex((value) => value + 1);
+      } else {
+        setMode("endingNarration");
+        setIsPlaying(true);
+      }
     }
 
     setCurrentTime(0);
@@ -379,11 +441,12 @@ export function GameScene() {
   }
 
   async function togglePlayback() {
-    if (
-      mode === "chapterIntro" ||
-      mode === "decision" ||
-      mode === "complete"
-    ) {
+    if (mode === "endingNarration") {
+      setIsPlaying((value) => !value);
+      return;
+    }
+
+    if (mode !== "main" && mode !== "branch" && mode !== "ending") {
       return;
     }
 
@@ -404,7 +467,7 @@ export function GameScene() {
   }
 
   function skipCurrentVideo() {
-    if (mode !== "main" && mode !== "branch") return;
+    if (mode !== "main" && mode !== "branch" && mode !== "ending") return;
 
     videoRefs.current[activeSlot]?.pause();
     handleEnded();
@@ -429,9 +492,40 @@ export function GameScene() {
   const storyMusicMode: StoryMusicMode =
     mode === "decision"
       ? "decision"
-      : mode === "main" || mode === "branch" || mode === "complete"
+      : mode === "main" ||
+          mode === "branch" ||
+          mode === "ending" ||
+          mode === "endingNarration" ||
+          mode === "complete"
         ? "gameplay"
         : "silent";
+
+  const endingNarrationLine =
+    captionsEnabled && mode === "endingNarration" && activeEnding
+      ? {
+          speaker: "김인턴 (내레이션)",
+          text: activeEnding.narrationText,
+        }
+      : undefined;
+  const isLastEndingClip =
+    mode === "ending" &&
+    activeEnding &&
+    clipIndex === activeEnding.clips.length - 1;
+  const endingFadeOpacity =
+    mode === "endingNarration"
+      ? 1
+      : isLastEndingClip &&
+          Number.isFinite(currentVideoDuration) &&
+          currentVideoDuration > 0
+        ? Math.min(
+            Math.max(
+              (currentTime - currentVideoDuration * 0.5) /
+                (currentVideoDuration * 0.5),
+              0,
+            ),
+            1,
+          )
+        : 0;
 
   return (
     <main
@@ -443,7 +537,14 @@ export function GameScene() {
         mode={storyMusicMode}
         musicVolume={musicVolume}
       />
-      <NarrationAudio src={narrationFilename} volume={volume} />
+      <NarrationAudio
+        onEnded={
+          mode === "endingNarration" ? completeEnding : undefined
+        }
+        paused={!isPlaying}
+        src={narrationFilename}
+        volume={volume}
+      />
       <audio
         aria-hidden="true"
         preload="auto"
@@ -471,6 +572,7 @@ export function GameScene() {
             onTimeUpdate={(event) => {
               if (slot === activeSlot) {
                 setCurrentTime(event.currentTarget.currentTime);
+                setCurrentVideoDuration(event.currentTarget.duration);
               }
             }}
             playsInline
@@ -497,6 +599,14 @@ export function GameScene() {
 
       <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(180deg,rgba(0,0,0,.46),transparent_24%,transparent_68%,rgba(0,0,0,.5))]" />
 
+      {isLastEndingClip || mode === "endingNarration" ? (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-30 bg-black transition-opacity duration-300 ease-linear"
+          style={{ opacity: endingFadeOpacity }}
+        />
+      ) : null}
+
       {mode !== "chapterIntro" ? (
         <header className="absolute left-4 top-4 z-20 sm:left-6 sm:top-6">
           <Link
@@ -511,9 +621,7 @@ export function GameScene() {
         </header>
       ) : null}
 
-      {mode !== "complete" &&
-      mode !== "chapterIntro" &&
-      mode !== "decision" ? (
+      {mode === "main" || mode === "branch" || mode === "ending" ? (
         <>
           <Button
             aria-label="현재 영상 건너뛰기"
@@ -537,6 +645,18 @@ export function GameScene() {
         </>
       ) : null}
 
+      {mode === "endingNarration" ? (
+        <Button
+          aria-label={isPlaying ? "일시정지" : "재생"}
+          className="fixed right-[4.25rem] top-4 z-[90] size-11 rounded-full border border-white/15 bg-black/35 text-white shadow-lg shadow-black/20 backdrop-blur-xl hover:bg-black/55 sm:right-[4.75rem] sm:top-6"
+          onClick={() => void togglePlayback()}
+          size="icon-lg"
+          variant="ghost"
+        >
+          {isPlaying ? <Pause /> : <Play />}
+        </Button>
+      ) : null}
+
       {mode === "decision" && chapter.choices ? (
         <DecisionOverlay
           choices={[
@@ -549,9 +669,10 @@ export function GameScene() {
 
       <SubtitleOverlay
         line={
-          activeCue
+          endingNarrationLine ??
+          (activeCue
             ? { speaker: activeCue.speaker, text: activeCue.text }
-            : decisionThought
+            : decisionThought)
         }
         scale={captionSize / 100}
       />
@@ -575,18 +696,15 @@ export function GameScene() {
       ) : null}
 
       {mode === "complete" ? (
-        <section className="absolute inset-0 z-30 grid cursor-default place-items-center bg-black px-5 text-center">
-          <div>
-            <p className="text-xs font-semibold tracking-[0.16em] text-white/45">
-              ENDING UNLOCKED · {achievedEndingId}
-            </p>
-            <h1 className="mt-3 text-2xl font-bold">
-              {endings.find((ending) => ending.id === achievedEndingId)
-                ?.title ?? "새로운 엔딩"}
-            </h1>
-            <p className="mt-3 text-sm text-white/55">
-              이 결말이 앨범에 기록되었습니다.
-            </p>
+        <section className="absolute inset-0 z-30 grid cursor-default place-items-center overflow-y-auto bg-black px-5 py-12">
+          <div className="w-full max-w-md">
+            {activeEnding ? (
+              <EndingCard
+                className="w-full"
+                ending={activeEnding}
+                unlocked
+              />
+            ) : null}
             <div className="mt-7 flex justify-center gap-4">
               <Link
                 className={buttonVariants({
