@@ -1,0 +1,23 @@
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+
+import { GameOptions } from "./GameOptions";
+
+const meta = {
+  title: "Game/Options",
+  component: GameOptions,
+  parameters: {
+    layout: "fullscreen",
+  },
+  decorators: [
+    (Story) => (
+      <div className="relative min-h-[520px] bg-[radial-gradient(circle_at_center,#38413d,#090b0a_70%)]">
+        <Story />
+      </div>
+    ),
+  ],
+} satisfies Meta<typeof GameOptions>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const FixedTopRight: Story = {};
