@@ -80,9 +80,6 @@ export function EndingAlbum({ initialUnlockedIds }: EndingAlbumProps) {
             <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-5xl">
               지금까지의 결말
             </h1>
-            <p className="mt-3 text-sm text-white/58 sm:text-base">
-              달성한 엔딩만 다시 볼 수 있습니다.
-            </p>
           </div>
           <Link
             className={cn(

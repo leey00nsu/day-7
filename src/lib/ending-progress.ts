@@ -63,6 +63,6 @@ export function resolveEndingFromChoices(
   ).length;
 
   if (principledChoiceCount === 4) return "E03";
-  if (principledChoiceCount >= 2) return "E01";
-  return "E02";
+  if (principledChoiceCount >= 2) return "E02";
+  return "E01";
 }

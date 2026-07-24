@@ -83,6 +83,7 @@ export const storyChapters: readonly StoryChapter[] = [
     title: "퇴근 10분 전의 통보",
     clips: [
       clip("n02_tue_late_request_s01.mp4", "퇴근 직전의 업무 지시"),
+      clip("n02_tue_late_request_s02.mp4", "일방적인 마감 지시"),
     ],
     decisionThought:
       "약속이 있는데... 그렇다고 지금 못 한다고 해도 될까.",
@@ -204,7 +205,7 @@ export const endings = [
     ],
     narrationAudio: "/audio/narration/ending-e3.mp3",
     narrationText:
-      "금요일이 되어서야 알았다. 이 회사와 나는 맞지 않는다는 걸.",
+      "마지막까지 자기들 걱정 뿐이었다. 내 선택은 틀리지 않았다.",
   },
 ] as const;
 
