@@ -32,7 +32,7 @@ export default function Home() {
         <h1 className="sr-only">정규직까지 D-7</h1>
         <Image
           alt=""
-          className="h-auto w-[min(52vw,350px)] drop-shadow-[0_10px_35px_rgba(0,0,0,.52)]"
+          className="home-logo-reveal h-auto w-[min(52vw,350px)] drop-shadow-[0_10px_35px_rgba(0,0,0,.52)]"
           height={867}
           priority
           src="/assets/brand/game-title-logo.png"
@@ -50,7 +50,7 @@ export default function Home() {
                   variant: "outline",
                   size: "lg",
                 }),
-                "h-12 px-3 text-[14px] font-semibold sm:h-13 sm:px-6 sm:text-[15px]",
+                "home-menu-item-reveal h-12 px-3 text-[14px] font-semibold sm:h-13 sm:px-6 sm:text-[15px]",
                 item.primary
                   ? "border-white"
                   : "bg-gray-800/30",
