@@ -41,7 +41,7 @@ export default function Home() {
 
         <nav
           aria-label="메인 메뉴"
-          className="mt-7 grid w-[min(92vw,600px)] grid-cols-3 gap-2.5"
+          className="mt-12 grid w-[min(94vw,700px)] grid-cols-3 gap-4 sm:mt-16 sm:gap-7"
         >
           {menuItems.map((item) => (
             <Link

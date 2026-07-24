@@ -17,6 +17,7 @@ export type StoryChapter = {
   day: string;
   title: string;
   clips: readonly StoryClip[];
+  decisionThought?: string;
   choices?: readonly [
     { label: string; clips: readonly StoryClip[] },
     { label: string; clips: readonly StoryClip[] },
@@ -49,6 +50,8 @@ export const storyChapters: readonly StoryChapter[] = [
       clip("n01_mon_status_s02.mp4", "조직의 룰"),
       clip("n01_mon_status_s03.mp4", "결정 직전"),
     ],
+    decisionThought:
+      "완료로 바꾸자니 찝찝하고, 그대로 두면 부장님이 또 뭐라고 할 텐데.",
     choices: [
       {
         label: "지시대로 완료 처리한다.",
@@ -63,7 +66,9 @@ export const storyChapters: readonly StoryChapter[] = [
   {
     day: "화요일",
     title: "퇴근 10분 전의 통보",
-    clips: [clip("n02_tue_late_request_s00.mp4", "퇴근 10분 전")],
+    clips: [],
+    decisionThought:
+      "남으면 약속은 깨진다. 그렇다고 지금 못 한다고 해도 될까.",
     choices: [
       {
         label: "가방을 내려놓고 숫자를 맞춘다.",
@@ -82,6 +87,7 @@ export const storyChapters: readonly StoryChapter[] = [
       clip("n03_wed_wrong_number_s01.mp4", "회의 직전"),
       clip("n03_wed_wrong_number_s02.mp4", "떠넘겨진 책임"),
     ],
+    decisionThought: "지금 따질까. 아니면 회의부터 막아야 하나.",
     choices: [
       {
         label: "억울함을 삼키고 먼저 수습한다.",
@@ -103,6 +109,8 @@ export const storyChapters: readonly StoryChapter[] = [
       clip("n04_thu_self_review_s01.mp4", "웃으며 가로채는 공"),
       clip("n04_thu_self_review_s02.mp4", "위계로 누르는 말"),
     ],
+    decisionThought:
+      "내가 한 일을 지워야 하나. 그대로 쓰면 찍힐 것 같고.",
     choices: [
       {
         label: "성과를 지우고 팀 서포트로 낮춘다.",

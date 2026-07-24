@@ -98,6 +98,13 @@ export function GameScene() {
   const activeCue = captionsEnabled
     ? findCue(activeClip?.cues, currentTime)
     : undefined;
+  const decisionThought =
+    captionsEnabled && mode === "decision" && chapter.decisionThought
+      ? {
+          speaker: "김인턴 (속마음)",
+          text: chapter.decisionThought,
+        }
+      : undefined;
 
   const videoFilename =
     mode === "decision" ? "select_decision.mp4" : activeClip?.filename;
@@ -267,10 +274,10 @@ export function GameScene() {
   }
 
   const finishChapterIntro = useCallback(() => {
-    setMode("main");
+    setMode(chapter.clips.length > 0 ? "main" : "decision");
     setCurrentTime(0);
     setIsPlaying(true);
-  }, []);
+  }, [chapter.clips.length]);
 
   return (
     <main
@@ -359,7 +366,7 @@ export function GameScene() {
         line={
           activeCue
             ? { speaker: activeCue.speaker, text: activeCue.text }
-            : undefined
+            : decisionThought
         }
       />
 
