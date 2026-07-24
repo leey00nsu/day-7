@@ -47,13 +47,13 @@ export default function Home() {
             <Link
               className={cn(
                 buttonVariants({
-                  variant: item.primary ? "default" : "outline",
+                  variant: "outline",
                   size: "lg",
                 }),
-                "h-12 rounded-2xl border-white/20 px-3 text-[14px] font-semibold shadow-lg shadow-black/15 backdrop-blur-xl sm:h-13 sm:px-6 sm:text-[15px]",
+                "h-12 px-3 text-[14px] font-semibold sm:h-13 sm:px-6 sm:text-[15px]",
                 item.primary
-                  ? "bg-white text-black hover:bg-white/88"
-                  : "bg-black/28 text-white hover:bg-white/14",
+                  ? "border-white"
+                  : "bg-gray-800/30",
               )}
               href={item.href}
               key={item.label}

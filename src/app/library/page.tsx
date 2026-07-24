@@ -28,7 +28,7 @@ export default function LibraryPage() {
           <Link
             className={cn(
               buttonVariants({ variant: "outline", size: "lg" }),
-              "h-11 rounded-full bg-background/35 px-5 backdrop-blur-xl",
+              "h-11 bg-background/35 px-5 backdrop-blur-xl",
             )}
             href="/"
           >
@@ -53,19 +53,33 @@ export default function LibraryPage() {
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <button
-                className="min-h-36 rounded-2xl border border-mint/35 bg-mint/10 p-4 text-left focus-visible:outline-2 focus-visible:outline-mint"
+                className={cn(
+                  buttonVariants({ variant: "outline" }),
+                  "min-h-36 w-full items-start justify-start border-mint/45 p-4 text-left focus-visible:ring-mint",
+                )}
                 type="button"
               >
-                <span className="font-mono text-xs text-mint">SLOT 01</span>
-                <strong className="mt-8 block">월요일 · 선택 전</strong>
-                <small className="mt-1 block text-white/48">자동 저장</small>
+                <span className="block">
+                  <span className="block font-mono text-xs text-mint">
+                    SLOT 01
+                  </span>
+                  <strong className="mt-8 block">월요일 · 선택 전</strong>
+                  <small className="mt-1 block text-white/48">
+                    자동 저장
+                  </small>
+                </span>
               </button>
               <button
-                className="min-h-36 rounded-2xl border border-dashed border-white/18 bg-white/[.04] p-4 text-left text-white/45 focus-visible:outline-2 focus-visible:outline-mint"
+                className={cn(
+                  buttonVariants({ variant: "outline" }),
+                  "min-h-36 w-full items-start justify-start border-dashed border-white/24 p-4 text-left text-white/55 focus-visible:ring-mint",
+                )}
                 type="button"
               >
-                <span className="font-mono text-xs">SLOT 02</span>
-                <strong className="mt-8 block">빈 슬롯</strong>
+                <span className="block">
+                  <span className="block font-mono text-xs">SLOT 02</span>
+                  <strong className="mt-8 block">빈 슬롯</strong>
+                </span>
               </button>
             </div>
           </GlassCard>
@@ -105,7 +119,7 @@ export default function LibraryPage() {
                 </span>
                 <input className="size-5 accent-mint" type="checkbox" />
               </label>
-              <Button className="h-11 w-full rounded-xl" type="submit">
+              <Button className="h-11 w-full" type="submit">
                 설정 저장
               </Button>
             </form>

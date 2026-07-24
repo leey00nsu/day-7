@@ -12,15 +12,21 @@ import {
 } from "react";
 
 import { DecisionOverlay } from "@/components/game/DecisionOverlay";
+import { ChapterIntro } from "@/components/game/ChapterIntro";
 import { SubtitleOverlay } from "@/components/game/SubtitleOverlay";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   storyChapters,
   type StoryClip,
   type SubtitleCue,
 } from "@/data/game";
 
-type PlaybackMode = "main" | "decision" | "branch" | "complete";
+type PlaybackMode =
+  | "chapterIntro"
+  | "main"
+  | "decision"
+  | "branch"
+  | "complete";
 type VideoSlots = [string | undefined, string | undefined];
 
 function findCue(cues: readonly SubtitleCue[] | undefined, time: number) {
@@ -32,10 +38,9 @@ export function GameScene() {
   const [chapterIndex, setChapterIndex] = useState(0);
   const [clipIndex, setClipIndex] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
-  const [mode, setMode] = useState<PlaybackMode>("main");
+  const [mode, setMode] = useState<PlaybackMode>("chapterIntro");
   const [currentTime, setCurrentTime] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [decisionSeconds, setDecisionSeconds] = useState(10);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [activeSlot, setActiveSlot] = useState(0);
   const [videoSlots, setVideoSlots] = useState<VideoSlots>([
     storyChapters[0].clips[0].filename,
@@ -78,22 +83,12 @@ export function GameScene() {
     }
   }, [volume]);
 
-  useEffect(() => {
-    if (mode !== "decision" || !isPlaying) return;
-
-    const timer = window.setInterval(() => {
-      setDecisionSeconds((seconds) => Math.max(0, seconds - 1));
-    }, 1000);
-
-    return () => window.clearInterval(timer);
-  }, [isPlaying, mode]);
-
   const activeClip = useMemo<StoryClip | undefined>(() => {
     if (mode === "main") {
       return chapter.clips[clipIndex];
     }
 
-    if (mode === "branch" && selectedChoice !== null) {
+    if (mode === "branch" && selectedChoice !== null && chapter.choices) {
       return chapter.choices[selectedChoice].clips[clipIndex];
     }
 
@@ -109,10 +104,15 @@ export function GameScene() {
 
   const preloadFilename = useMemo(() => {
     if (mode === "main") {
-      return chapter.clips[clipIndex + 1]?.filename ?? "select_decision.mp4";
+      return (
+        chapter.clips[clipIndex + 1]?.filename ??
+        (chapter.choices
+          ? "select_decision.mp4"
+          : storyChapters[chapterIndex + 1]?.clips[0]?.filename)
+      );
     }
 
-    if (mode === "branch" && selectedChoice !== null) {
+    if (mode === "branch" && selectedChoice !== null && chapter.choices) {
       const branchClips = chapter.choices[selectedChoice].clips;
 
       return (
@@ -186,9 +186,9 @@ export function GameScene() {
       setChapterIndex((value) => value + 1);
       setClipIndex(0);
       setSelectedChoice(null);
-      setMode("main");
+      setMode("chapterIntro");
       setCurrentTime(0);
-      setIsPlaying(true);
+      setIsPlaying(false);
       return;
     }
 
@@ -201,12 +201,17 @@ export function GameScene() {
     if (mode === "main") {
       if (clipIndex < chapter.clips.length - 1) {
         setClipIndex((value) => value + 1);
-      } else {
+      } else if (chapter.choices) {
         setClipIndex(0);
-        setDecisionSeconds(10);
         setMode("decision");
+      } else {
+        advanceChapter();
       }
-    } else if (mode === "branch" && selectedChoice !== null) {
+    } else if (
+      mode === "branch" &&
+      selectedChoice !== null &&
+      chapter.choices
+    ) {
       const branchClips = chapter.choices[selectedChoice].clips;
 
       if (clipIndex < branchClips.length - 1) {
@@ -220,6 +225,8 @@ export function GameScene() {
   }
 
   function choose(index: number) {
+    if (!chapter.choices) return;
+
     const branchClips = chapter.choices[index].clips;
     setSelectedChoice(index);
     setCurrentTime(0);
@@ -234,6 +241,8 @@ export function GameScene() {
   }
 
   async function togglePlayback() {
+    if (mode === "chapterIntro" || mode === "complete") return;
+
     const video = videoRefs.current[activeSlot];
     if (!video) return;
 
@@ -257,6 +266,12 @@ export function GameScene() {
     void togglePlayback();
   }
 
+  const finishChapterIntro = useCallback(() => {
+    setMode("main");
+    setCurrentTime(0);
+    setIsPlaying(true);
+  }, []);
+
   return (
     <main
       className="relative isolate min-h-svh cursor-pointer overflow-hidden bg-black text-white"
@@ -270,6 +285,11 @@ export function GameScene() {
             }`}
             key={`${slot}-${filename}`}
             loop={
+              slot === activeSlot &&
+              mode === "decision" &&
+              filename === videoFilename
+            }
+            muted={
               slot === activeSlot &&
               mode === "decision" &&
               filename === videoFilename
@@ -294,24 +314,26 @@ export function GameScene() {
       )}
 
       {!videoFilename ? (
-        <div className="absolute inset-0 bg-black" aria-label="영상 없음" />
+        <div aria-hidden="true" className="absolute inset-0 bg-black" />
       ) : null}
 
       <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(180deg,rgba(0,0,0,.46),transparent_24%,transparent_68%,rgba(0,0,0,.5))]" />
 
-      <header className="absolute left-4 top-4 z-20 sm:left-6 sm:top-6">
-        <Link
-          className="block text-sm font-semibold tracking-[0.13em] text-white/65 transition hover:text-white sm:text-base"
-          href="/"
-        >
-          정규직까지 D-7
-        </Link>
-        <p className="mt-1.5 text-base font-semibold text-white/92 sm:text-lg">
-          {chapter.day} · {chapter.title}
-        </p>
-      </header>
+      {mode !== "chapterIntro" ? (
+        <header className="absolute left-4 top-4 z-20 sm:left-6 sm:top-6">
+          <Link
+            className="block text-sm font-semibold tracking-[0.13em] text-white/65 transition hover:text-white sm:text-base"
+            href="/"
+          >
+            정규직까지 D-7
+          </Link>
+          <p className="mt-1.5 text-base font-semibold text-white/92 sm:text-lg">
+            {chapter.day} · {chapter.title}
+          </p>
+        </header>
+      ) : null}
 
-      {mode !== "complete" ? (
+      {mode !== "complete" && mode !== "chapterIntro" ? (
         <Button
           aria-label={isPlaying ? "일시정지" : "재생"}
           className="fixed right-[4.25rem] top-4 z-[90] size-11 rounded-full border border-white/15 bg-black/35 text-white shadow-lg shadow-black/20 backdrop-blur-xl hover:bg-black/55 sm:right-[4.75rem] sm:top-6"
@@ -323,15 +345,13 @@ export function GameScene() {
         </Button>
       ) : null}
 
-      {mode === "decision" ? (
+      {mode === "decision" && chapter.choices ? (
         <DecisionOverlay
           choices={[
             chapter.choices[0].label,
             chapter.choices[1].label,
           ]}
-          durationSeconds={10}
           onChoose={choose}
-          remainingSeconds={decisionSeconds}
         />
       ) : null}
 
@@ -343,6 +363,15 @@ export function GameScene() {
         }
       />
 
+      {mode === "chapterIntro" ? (
+        <ChapterIntro
+          description={chapter.title}
+          key={chapter.day}
+          onComplete={finishChapterIntro}
+          title={chapter.day}
+        />
+      ) : null}
+
       {mode === "complete" ? (
         <section className="absolute inset-0 z-30 grid cursor-default place-items-center bg-black px-5 text-center">
           <div>
@@ -353,7 +382,10 @@ export function GameScene() {
               현재 준비된 장면을 모두 재생했습니다.
             </h1>
             <Link
-              className="mt-7 inline-flex h-11 items-center justify-center rounded-full border border-white/18 bg-white px-6 text-sm font-semibold text-black"
+              className={`${buttonVariants({
+                variant: "outline",
+                size: "lg",
+              })} mt-7`}
               href="/"
             >
               홈으로

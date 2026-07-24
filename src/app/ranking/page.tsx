@@ -22,7 +22,7 @@ export default function RankingPage() {
         <Link
           className={cn(
             buttonVariants({ variant: "outline", size: "lg" }),
-            "mt-7 h-11 rounded-full border-white/16 bg-white/[.06] px-6 text-white",
+            "mt-7 h-11 px-6",
           )}
           href="/"
         >

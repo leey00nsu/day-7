@@ -27,7 +27,7 @@ export default function EndingsPage() {
           <Link
             className={cn(
               buttonVariants({ variant: "outline" }),
-              "rounded-full border-black/10 bg-white text-ink hover:bg-black/5",
+              "border-black/25 bg-black/55",
             )}
             href="/"
           >

@@ -17,7 +17,7 @@ export type StoryChapter = {
   day: string;
   title: string;
   clips: readonly StoryClip[];
-  choices: readonly [
+  choices?: readonly [
     { label: string; clips: readonly StoryClip[] },
     { label: string; clips: readonly StoryClip[] },
   ];
@@ -33,12 +33,18 @@ const clip = (filename: string, label: string): StoryClip => ({
 
 export const storyChapters: readonly StoryChapter[] = [
   {
-    day: "월요일",
-    title: "아직 끝나지 않은 일",
+    day: "프롤로그",
+    title: "결과 발표 일주일 전",
     clips: [
       clip("p00_prologue_s00.mp4", "결과 발표 일주일 전"),
       clip("p00_prologue_s01.mp4", "결과 발표 일주일 전"),
       clip("p00_prologue_s02.mp4", "일주일 전"),
+    ],
+  },
+  {
+    day: "월요일",
+    title: "아직 끝나지 않은 일",
+    clips: [
       clip("n01_mon_status_s01.mp4", "일방적인 지시"),
       clip("n01_mon_status_s02.mp4", "조직의 룰"),
       clip("n01_mon_status_s03.mp4", "결정 직전"),
@@ -50,7 +56,7 @@ export const storyChapters: readonly StoryChapter[] = [
       },
       {
         label: "대기 상태를 그대로 둔다.",
-        clips: [],
+        clips: [clip("c01_a_complete_s01.mp4", "찝찝한 완료 처리")],
       },
     ],
   },

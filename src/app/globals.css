@@ -120,6 +120,16 @@ a {
   background: rgb(66 199 131 / 35%);
 }
 
+@keyframes chapter-title-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
