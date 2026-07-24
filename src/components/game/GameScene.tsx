@@ -442,7 +442,7 @@ export function GameScene() {
       {videoSlots.map((filename, slot) =>
         filename ? (
           <video
-            className={`absolute inset-0 size-full object-cover ${
+            className={`absolute inset-0 size-full object-cover max-md:object-contain ${
               slot === activeSlot ? "z-10 visible" : "invisible z-0"
             }`}
             key={`${slot}-${filename}`}

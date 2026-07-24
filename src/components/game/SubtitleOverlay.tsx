@@ -24,7 +24,7 @@ export function SubtitleOverlay({
     <div
       aria-live="polite"
       className={cn(
-        "pointer-events-none absolute inset-x-4 bottom-[clamp(2.5rem,8vh,6.5rem)] z-40 flex justify-center",
+        "pointer-events-none absolute inset-x-4 bottom-[clamp(2.5rem,8vh,6.5rem)] z-40 flex justify-center max-md:portrait:bottom-[calc((100svh-56.25vw)/2-3rem)]",
         className,
       )}
     >
