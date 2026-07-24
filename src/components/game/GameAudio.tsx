@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const BUTTON_SOUND_GAIN = 0.9;
+const HOME_MUSIC_PATHS = new Set(["/", "/endings"]);
 
 function storedAudioVolume(key: string, fallback: number) {
   if (typeof window === "undefined") return fallback / 100;
@@ -55,7 +56,7 @@ export function GameAudio() {
 
     music.volume = masterVolume * musicVolume;
 
-    if (pathname !== "/") {
+    if (!HOME_MUSIC_PATHS.has(pathname)) {
       music.pause();
       music.currentTime = 0;
       return;
@@ -65,7 +66,7 @@ export function GameAudio() {
 
     function startMusic() {
       const activeMusic = musicRef.current;
-      if (!activeMusic || pathname !== "/") return;
+      if (!activeMusic || !HOME_MUSIC_PATHS.has(pathname)) return;
 
       void activeMusic.play().then(
         () => {

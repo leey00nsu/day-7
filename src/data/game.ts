@@ -185,3 +185,5 @@ export const endings = [
     image: "/assets/endings/e03-decline.png",
   },
 ] as const;
+
+export type EndingId = (typeof endings)[number]["id"];

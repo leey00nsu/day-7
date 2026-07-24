@@ -22,10 +22,16 @@ import { NarrationAudio } from "@/components/game/NarrationAudio";
 import { SubtitleOverlay } from "@/components/game/SubtitleOverlay";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
+  endings,
   storyChapters,
+  type EndingId,
   type StoryClip,
   type SubtitleCue,
 } from "@/data/game";
+import {
+  resolveEndingFromChoices,
+  unlockEnding,
+} from "@/lib/ending-progress";
 
 type PlaybackMode =
   | "chapterIntro"
@@ -45,6 +51,9 @@ export function GameScene() {
   const [chapterIndex, setChapterIndex] = useState(0);
   const [clipIndex, setClipIndex] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
+  const [choiceHistory, setChoiceHistory] = useState<number[]>([]);
+  const [achievedEndingId, setAchievedEndingId] =
+    useState<EndingId | null>(null);
   const [mode, setMode] = useState<PlaybackMode>("chapterIntro");
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -300,7 +309,7 @@ export function GameScene() {
     videoSlots,
   ]);
 
-  function advanceChapter() {
+  function advanceChapter(completedChoices = choiceHistory) {
     if (chapterIndex < storyChapters.length - 1) {
       for (const video of videoRefs.current) {
         video?.pause();
@@ -314,6 +323,9 @@ export function GameScene() {
       return;
     }
 
+    const endingId = resolveEndingFromChoices(completedChoices);
+    unlockEnding(endingId);
+    setAchievedEndingId(endingId);
     setMode("complete");
     setCurrentTime(0);
     setIsPlaying(false);
@@ -350,6 +362,8 @@ export function GameScene() {
     if (!chapter.choices) return;
 
     const branchClips = chapter.choices[index].clips;
+    const nextChoiceHistory = [...choiceHistory, index];
+    setChoiceHistory(nextChoiceHistory);
     setChoiceFeedbackExiting(false);
     setChoiceFeedback(chapter.choices[index].feedback);
     setSelectedChoice(index);
@@ -357,7 +371,7 @@ export function GameScene() {
     setClipIndex(0);
 
     if (branchClips.length === 0) {
-      advanceChapter();
+      advanceChapter(nextChoiceHistory);
       return;
     }
 
@@ -415,7 +429,7 @@ export function GameScene() {
   const storyMusicMode: StoryMusicMode =
     mode === "decision"
       ? "decision"
-      : mode === "main" || mode === "branch"
+      : mode === "main" || mode === "branch" || mode === "complete"
         ? "gameplay"
         : "silent";
 
@@ -564,20 +578,35 @@ export function GameScene() {
         <section className="absolute inset-0 z-30 grid cursor-default place-items-center bg-black px-5 text-center">
           <div>
             <p className="text-xs font-semibold tracking-[0.16em] text-white/45">
-              AVAILABLE FOOTAGE COMPLETE
+              ENDING UNLOCKED · {achievedEndingId}
             </p>
             <h1 className="mt-3 text-2xl font-bold">
-              현재 준비된 장면을 모두 재생했습니다.
+              {endings.find((ending) => ending.id === achievedEndingId)
+                ?.title ?? "새로운 엔딩"}
             </h1>
-            <Link
-              className={`${buttonVariants({
-                variant: "outline",
-                size: "lg",
-              })} mt-7`}
-              href="/"
-            >
-              홈으로
-            </Link>
+            <p className="mt-3 text-sm text-white/55">
+              이 결말이 앨범에 기록되었습니다.
+            </p>
+            <div className="mt-7 flex justify-center gap-4">
+              <Link
+                className={buttonVariants({
+                  variant: "outline",
+                  size: "lg",
+                })}
+                href="/endings"
+              >
+                앨범 보기
+              </Link>
+              <Link
+                className={buttonVariants({
+                  variant: "outline",
+                  size: "lg",
+                })}
+                href="/"
+              >
+                홈으로
+              </Link>
+            </div>
           </div>
         </section>
       ) : null}
