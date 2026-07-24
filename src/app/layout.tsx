@@ -3,6 +3,7 @@ import "pretendard/dist/web/variable/pretendardvariable.css";
 
 import { GameAudio } from "@/components/game/GameAudio";
 import { GameOptions } from "@/components/game/GameOptions";
+import { SoundConsent } from "@/components/game/SoundConsent";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -28,8 +29,10 @@ export default function RootLayout({
     <html lang="ko" className="dark h-full antialiased">
       <body className="min-h-full bg-background font-sans text-foreground">
         <GameAudio />
-        <GameOptions />
-        {children}
+        <SoundConsent>
+          <GameOptions />
+          {children}
+        </SoundConsent>
       </body>
     </html>
   );

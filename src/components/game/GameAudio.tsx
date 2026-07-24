@@ -25,6 +25,11 @@ export function GameAudio() {
   const [effectsVolume, setEffectsVolume] = useState(() =>
     storedAudioVolume("game-effects-volume", 40),
   );
+  const [hasSoundChoice, setHasSoundChoice] = useState(() =>
+    typeof window === "undefined"
+      ? false
+      : window.localStorage.getItem("game-sound-choice") !== null,
+  );
 
   useEffect(() => {
     function updateMasterVolume(event: Event) {
@@ -39,14 +44,22 @@ export function GameAudio() {
       setEffectsVolume((event as CustomEvent<number>).detail / 100);
     }
 
+    function updateSoundChoice() {
+      setHasSoundChoice(
+        window.localStorage.getItem("game-sound-choice") !== null,
+      );
+    }
+
     window.addEventListener("game:volume", updateMasterVolume);
     window.addEventListener("game:music-volume", updateMusicVolume);
     window.addEventListener("game:effects-volume", updateEffectsVolume);
+    window.addEventListener("game:sound-choice", updateSoundChoice);
 
     return () => {
       window.removeEventListener("game:volume", updateMasterVolume);
       window.removeEventListener("game:music-volume", updateMusicVolume);
       window.removeEventListener("game:effects-volume", updateEffectsVolume);
+      window.removeEventListener("game:sound-choice", updateSoundChoice);
     };
   }, []);
 
@@ -56,7 +69,7 @@ export function GameAudio() {
 
     music.volume = masterVolume * musicVolume;
 
-    if (!HOME_MUSIC_PATHS.has(pathname)) {
+    if (!hasSoundChoice || !HOME_MUSIC_PATHS.has(pathname)) {
       music.pause();
       music.currentTime = 0;
       return;
@@ -89,7 +102,7 @@ export function GameAudio() {
       window.removeEventListener("pointerdown", startMusic);
       window.removeEventListener("keydown", startMusic);
     };
-  }, [masterVolume, musicVolume, pathname]);
+  }, [hasSoundChoice, masterVolume, musicVolume, pathname]);
 
   useEffect(() => {
     const buttonSound = buttonSoundRef.current;
@@ -97,6 +110,8 @@ export function GameAudio() {
 
     buttonSound.volume =
       masterVolume * effectsVolume * BUTTON_SOUND_GAIN;
+
+    if (!hasSoundChoice) return;
 
     function playButtonSound(event: PointerEvent) {
       const target = event.target as HTMLElement;
@@ -115,7 +130,7 @@ export function GameAudio() {
 
     document.addEventListener("pointerdown", playButtonSound);
     return () => document.removeEventListener("pointerdown", playButtonSound);
-  }, [effectsVolume, masterVolume]);
+  }, [effectsVolume, hasSoundChoice, masterVolume]);
 
   return (
     <>
