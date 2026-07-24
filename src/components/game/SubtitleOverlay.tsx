@@ -26,10 +26,8 @@ export function SubtitleOverlay({
         className,
       )}
     >
-      <p className="max-w-[min(88vw,920px)] rounded-xl bg-black/68 px-4 py-2.5 text-center text-[clamp(15px,1.7vw,22px)] font-semibold leading-relaxed text-white shadow-xl shadow-black/30 backdrop-blur-md [text-shadow:0_2px_8px_rgb(0_0_0/.9)] sm:px-6 sm:py-3">
-        {line.speaker ? (
-          <span className="mr-2 text-white/62">{line.speaker}</span>
-        ) : null}
+      <p className="max-w-[min(90vw,980px)] text-center text-[clamp(17px,1.8vw,24px)] font-semibold leading-relaxed text-white [text-shadow:0_2px_3px_#000,0_0_8px_#000,0_0_14px_#000]">
+        {line.speaker ? `${line.speaker} : ` : ""}
         {line.text}
       </p>
     </div>

@@ -32,7 +32,7 @@ export default function Home() {
         <h1 className="sr-only">정규직까지 D-7</h1>
         <Image
           alt=""
-          className="h-auto w-[min(68vw,470px)] brightness-0 invert drop-shadow-[0_10px_35px_rgba(0,0,0,.52)]"
+          className="h-auto w-[min(52vw,350px)] drop-shadow-[0_10px_35px_rgba(0,0,0,.52)]"
           height={867}
           priority
           src="/assets/brand/game-title-logo.png"
@@ -41,7 +41,7 @@ export default function Home() {
 
         <nav
           aria-label="메인 메뉴"
-          className="mt-8 flex w-[min(88vw,380px)] flex-col gap-2.5"
+          className="mt-7 grid w-[min(92vw,600px)] grid-cols-3 gap-2.5"
         >
           {menuItems.map((item) => (
             <Link
@@ -50,7 +50,7 @@ export default function Home() {
                   variant: item.primary ? "default" : "outline",
                   size: "lg",
                 }),
-                "h-13 rounded-2xl border-white/20 px-6 text-[15px] font-semibold shadow-lg shadow-black/15 backdrop-blur-xl",
+                "h-12 rounded-2xl border-white/20 px-3 text-[14px] font-semibold shadow-lg shadow-black/15 backdrop-blur-xl sm:h-13 sm:px-6 sm:text-[15px]",
                 item.primary
                   ? "bg-white text-black hover:bg-white/88"
                   : "bg-black/28 text-white hover:bg-white/14",

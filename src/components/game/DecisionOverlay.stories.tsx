@@ -23,6 +23,7 @@ const meta = {
   ],
   args: {
     choices: ["지시대로 완료 처리한다.", "대기 상태를 그대로 둔다."],
+    remainingSeconds: 7,
   },
 } satisfies Meta<typeof DecisionOverlay>;
 

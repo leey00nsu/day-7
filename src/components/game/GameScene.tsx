@@ -2,7 +2,14 @@
 
 import { Pause, Play } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  type MouseEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { DecisionOverlay } from "@/components/game/DecisionOverlay";
 import { SubtitleOverlay } from "@/components/game/SubtitleOverlay";
@@ -14,19 +21,26 @@ import {
 } from "@/data/game";
 
 type PlaybackMode = "main" | "decision" | "branch" | "complete";
+type VideoSlots = [string | undefined, string | undefined];
 
 function findCue(cues: readonly SubtitleCue[] | undefined, time: number) {
   return cues?.find((cue) => time >= cue.start && time < cue.end);
 }
 
 export function GameScene() {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
   const [chapterIndex, setChapterIndex] = useState(0);
   const [clipIndex, setClipIndex] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
   const [mode, setMode] = useState<PlaybackMode>("main");
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [decisionSeconds, setDecisionSeconds] = useState(10);
+  const [activeSlot, setActiveSlot] = useState(0);
+  const [videoSlots, setVideoSlots] = useState<VideoSlots>([
+    storyChapters[0].clips[0].filename,
+    storyChapters[0].clips[1]?.filename,
+  ]);
   const [captionsEnabled, setCaptionsEnabled] = useState(() =>
     typeof window === "undefined"
       ? true
@@ -58,6 +72,22 @@ export function GameScene() {
     };
   }, []);
 
+  useEffect(() => {
+    for (const video of videoRefs.current) {
+      if (video) video.volume = volume;
+    }
+  }, [volume]);
+
+  useEffect(() => {
+    if (mode !== "decision" || !isPlaying) return;
+
+    const timer = window.setInterval(() => {
+      setDecisionSeconds((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [isPlaying, mode]);
+
   const activeClip = useMemo<StoryClip | undefined>(() => {
     if (mode === "main") {
       return chapter.clips[clipIndex];
@@ -77,11 +107,79 @@ export function GameScene() {
   const videoFilename =
     mode === "decision" ? "select_decision.mp4" : activeClip?.filename;
 
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.volume = volume;
+  const preloadFilename = useMemo(() => {
+    if (mode === "main") {
+      return chapter.clips[clipIndex + 1]?.filename ?? "select_decision.mp4";
     }
-  }, [videoFilename, volume]);
+
+    if (mode === "branch" && selectedChoice !== null) {
+      const branchClips = chapter.choices[selectedChoice].clips;
+
+      return (
+        branchClips[clipIndex + 1]?.filename ??
+        storyChapters[chapterIndex + 1]?.clips[0]?.filename
+      );
+    }
+
+    return undefined;
+  }, [chapter, chapterIndex, clipIndex, mode, selectedChoice]);
+
+  const activateSlot = useCallback(
+    async (slot: number, filename: string) => {
+      if (filename !== videoFilename) return;
+
+      const nextVideo = videoRefs.current[slot];
+      if (!nextVideo) return;
+
+      if (slot === activeSlot && !nextVideo.paused) return;
+      if (slot === activeSlot && nextVideo.currentTime > 0) return;
+
+      nextVideo.currentTime = 0;
+      nextVideo.volume = volume;
+
+      try {
+        await nextVideo.play();
+        if (slot !== activeSlot) {
+          videoRefs.current[activeSlot]?.pause();
+          if (preloadFilename) {
+            setVideoSlots((slots) => {
+              const next: VideoSlots = [...slots];
+              next[activeSlot] = preloadFilename;
+              return next;
+            });
+          }
+          setActiveSlot(slot);
+        }
+        setCurrentTime(0);
+        setIsPlaying(true);
+      } catch {
+        setIsPlaying(false);
+      }
+    },
+    [activeSlot, preloadFilename, videoFilename, volume],
+  );
+
+  useEffect(() => {
+    if (!videoFilename || videoSlots[activeSlot] === videoFilename) return;
+
+    const nextSlot = activeSlot === 0 ? 1 : 0;
+    const waitingVideo = videoRefs.current[nextSlot];
+
+    if (
+      videoSlots[nextSlot] === videoFilename &&
+      waitingVideo &&
+      waitingVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
+    ) {
+      void activateSlot(nextSlot, videoFilename);
+      return;
+    }
+
+    setVideoSlots((slots) => {
+      const next: VideoSlots = [...slots];
+      next[nextSlot] = videoFilename;
+      return next;
+    });
+  }, [activateSlot, activeSlot, videoFilename, videoSlots]);
 
   function advanceChapter() {
     if (chapterIndex < storyChapters.length - 1) {
@@ -105,6 +203,7 @@ export function GameScene() {
         setClipIndex((value) => value + 1);
       } else {
         setClipIndex(0);
+        setDecisionSeconds(10);
         setMode("decision");
       }
     } else if (mode === "branch" && selectedChoice !== null) {
@@ -118,7 +217,6 @@ export function GameScene() {
     }
 
     setCurrentTime(0);
-    setIsPlaying(true);
   }
 
   function choose(index: number) {
@@ -136,56 +234,94 @@ export function GameScene() {
   }
 
   async function togglePlayback() {
-    const video = videoRef.current;
+    const video = videoRefs.current[activeSlot];
     if (!video) return;
 
     if (video.paused) {
-      await video.play();
-      setIsPlaying(true);
+      try {
+        await video.play();
+        setIsPlaying(true);
+      } catch {
+        setIsPlaying(false);
+      }
     } else {
       video.pause();
       setIsPlaying(false);
     }
   }
 
+  function handleStageClick(event: MouseEvent<HTMLElement>) {
+    const target = event.target as HTMLElement;
+
+    if (target.closest("a, button, input, label")) return;
+    void togglePlayback();
+  }
+
   return (
-    <main className="relative isolate min-h-svh overflow-hidden bg-black text-white">
-      {videoFilename ? (
-        <video
-          autoPlay
-          className="absolute inset-0 size-full object-cover"
-          key={videoFilename}
-          loop={mode === "decision"}
-          onEnded={handleEnded}
-          onPause={() => setIsPlaying(false)}
-          onPlay={() => setIsPlaying(true)}
-          onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
-          playsInline
-          preload="auto"
-          ref={videoRef}
-        >
-          <source
-            src={`/api/videos/${encodeURIComponent(videoFilename)}`}
-            type="video/mp4"
+    <main
+      className="relative isolate min-h-svh cursor-pointer overflow-hidden bg-black text-white"
+      onClick={handleStageClick}
+    >
+      {videoSlots.map((filename, slot) =>
+        filename ? (
+          <video
+            className={`absolute inset-0 size-full object-cover ${
+              slot === activeSlot ? "z-10 visible" : "invisible z-0"
+            }`}
+            key={`${slot}-${filename}`}
+            loop={
+              slot === activeSlot &&
+              mode === "decision" &&
+              filename === videoFilename
+            }
+            onCanPlay={() => void activateSlot(slot, filename)}
+            onEnded={() => {
+              if (slot === activeSlot) handleEnded();
+            }}
+            onTimeUpdate={(event) => {
+              if (slot === activeSlot) {
+                setCurrentTime(event.currentTarget.currentTime);
+              }
+            }}
+            playsInline
+            preload="auto"
+            ref={(element) => {
+              videoRefs.current[slot] = element;
+            }}
+            src={`/api/videos/${encodeURIComponent(filename)}`}
           />
-        </video>
-      ) : (
-        <div className="absolute inset-0 bg-black" aria-label="영상 없음" />
+        ) : null,
       )}
 
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.46),transparent_24%,transparent_68%,rgba(0,0,0,.5))]" />
+      {!videoFilename ? (
+        <div className="absolute inset-0 bg-black" aria-label="영상 없음" />
+      ) : null}
+
+      <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(180deg,rgba(0,0,0,.46),transparent_24%,transparent_68%,rgba(0,0,0,.5))]" />
 
       <header className="absolute left-4 top-4 z-20 sm:left-6 sm:top-6">
         <Link
-          className="block text-[11px] font-semibold tracking-[0.16em] text-white/55 transition hover:text-white"
+          className="block text-sm font-semibold tracking-[0.13em] text-white/65 transition hover:text-white sm:text-base"
           href="/"
         >
           정규직까지 D-7
         </Link>
-        <p className="mt-1 text-sm font-semibold text-white/88">
+        <p className="mt-1.5 text-base font-semibold text-white/92 sm:text-lg">
           {chapter.day} · {chapter.title}
         </p>
       </header>
+
+      {mode !== "complete" ? (
+        <Button
+          aria-label={isPlaying ? "일시정지" : "재생"}
+          className="fixed right-[4.25rem] top-4 z-[90] size-11 rounded-full border border-white/15 bg-black/35 text-white shadow-lg shadow-black/20 backdrop-blur-xl hover:bg-black/55 sm:right-[4.75rem] sm:top-6"
+          onClick={() => void togglePlayback()}
+          size="icon-lg"
+          variant="ghost"
+        >
+          {isPlaying ? <Pause /> : <Play />}
+        </Button>
+      ) : null}
 
       {mode === "decision" ? (
         <DecisionOverlay
@@ -193,7 +329,9 @@ export function GameScene() {
             chapter.choices[0].label,
             chapter.choices[1].label,
           ]}
+          durationSeconds={10}
           onChoose={choose}
+          remainingSeconds={decisionSeconds}
         />
       ) : null}
 
@@ -205,20 +343,8 @@ export function GameScene() {
         }
       />
 
-      {mode !== "decision" && mode !== "complete" ? (
-        <Button
-          aria-label={isPlaying ? "일시정지" : "재생"}
-          className="absolute bottom-4 left-4 z-50 size-10 rounded-full border border-white/15 bg-black/35 text-white backdrop-blur-xl hover:bg-black/55 sm:bottom-6 sm:left-6"
-          onClick={togglePlayback}
-          size="icon"
-          variant="ghost"
-        >
-          {isPlaying ? <Pause /> : <Play />}
-        </Button>
-      ) : null}
-
       {mode === "complete" ? (
-        <section className="absolute inset-0 z-30 grid place-items-center bg-black px-5 text-center">
+        <section className="absolute inset-0 z-30 grid cursor-default place-items-center bg-black px-5 text-center">
           <div>
             <p className="text-xs font-semibold tracking-[0.16em] text-white/45">
               AVAILABLE FOOTAGE COMPLETE

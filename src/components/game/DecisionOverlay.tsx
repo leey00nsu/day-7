@@ -2,15 +2,24 @@ import { cn } from "@/lib/utils";
 
 type DecisionOverlayProps = {
   choices: readonly [string, string];
+  remainingSeconds?: number;
+  durationSeconds?: number;
   onChoose?: (index: number) => void;
   className?: string;
 };
 
 export function DecisionOverlay({
   choices,
+  remainingSeconds = 10,
+  durationSeconds = 10,
   onChoose,
   className,
 }: DecisionOverlayProps) {
+  const progress = Math.max(
+    0,
+    Math.min(100, (remainingSeconds / durationSeconds) * 100),
+  );
+
   return (
     <fieldset
       className={cn("absolute inset-0 z-30", className)}
@@ -27,12 +36,24 @@ export function DecisionOverlay({
           onClick={() => onChoose?.(index)}
           type="button"
         >
-          <span className="mb-1 block text-[10px] font-bold tracking-[0.18em] text-white/48">
-            {index === 0 ? "A" : "B"}
-          </span>
           {choice}
         </button>
       ))}
+
+      <div
+        aria-label={`선택 제한 시간 ${remainingSeconds}초`}
+        className="absolute bottom-[clamp(1.25rem,4vh,3rem)] left-1/2 w-[min(72vw,320px)] -translate-x-1/2 text-center"
+      >
+        <p className="text-sm font-semibold tabular-nums text-white [text-shadow:0_2px_8px_#000]">
+          {remainingSeconds}초
+        </p>
+        <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/25 shadow-lg shadow-black/30">
+          <div
+            className="h-full rounded-full bg-white transition-[width] duration-1000 ease-linear"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
     </fieldset>
   );
 }
