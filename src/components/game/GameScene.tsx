@@ -41,6 +41,7 @@ export function GameScene() {
   const [mode, setMode] = useState<PlaybackMode>("chapterIntro");
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [chapterVideoPending, setChapterVideoPending] = useState(false);
   const [activeSlot, setActiveSlot] = useState(0);
   const [videoSlots, setVideoSlots] = useState<VideoSlots>([
     storyChapters[0].clips[0].filename,
@@ -139,7 +140,6 @@ export function GameScene() {
       if (!nextVideo) return;
 
       if (slot === activeSlot && !nextVideo.paused) return;
-      if (slot === activeSlot && nextVideo.currentTime > 0) return;
 
       nextVideo.currentTime = 0;
       nextVideo.volume = volume;
@@ -159,15 +159,34 @@ export function GameScene() {
         }
         setCurrentTime(0);
         setIsPlaying(true);
+        setChapterVideoPending(false);
       } catch {
+        if (slot !== activeSlot) {
+          videoRefs.current[activeSlot]?.pause();
+          setActiveSlot(slot);
+        }
         setIsPlaying(false);
+        setChapterVideoPending(false);
       }
     },
     [activeSlot, preloadFilename, videoFilename, volume],
   );
 
   useEffect(() => {
-    if (!videoFilename || videoSlots[activeSlot] === videoFilename) return;
+    if (!videoFilename) return;
+
+    if (videoSlots[activeSlot] === videoFilename) {
+      const currentVideo = videoRefs.current[activeSlot];
+
+      if (
+        chapterVideoPending &&
+        currentVideo &&
+        currentVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
+      ) {
+        void activateSlot(activeSlot, videoFilename);
+      }
+      return;
+    }
 
     const nextSlot = activeSlot === 0 ? 1 : 0;
     const waitingVideo = videoRefs.current[nextSlot];
@@ -186,10 +205,19 @@ export function GameScene() {
       next[nextSlot] = videoFilename;
       return next;
     });
-  }, [activateSlot, activeSlot, videoFilename, videoSlots]);
+  }, [
+    activateSlot,
+    activeSlot,
+    chapterVideoPending,
+    videoFilename,
+    videoSlots,
+  ]);
 
   function advanceChapter() {
     if (chapterIndex < storyChapters.length - 1) {
+      for (const video of videoRefs.current) {
+        video?.pause();
+      }
       setChapterIndex((value) => value + 1);
       setClipIndex(0);
       setSelectedChoice(null);
@@ -274,9 +302,10 @@ export function GameScene() {
   }
 
   const finishChapterIntro = useCallback(() => {
+    setChapterVideoPending(true);
     setMode(chapter.clips.length > 0 ? "main" : "decision");
     setCurrentTime(0);
-    setIsPlaying(true);
+    setIsPlaying(false);
   }, [chapter.clips.length]);
 
   return (
@@ -296,11 +325,7 @@ export function GameScene() {
               mode === "decision" &&
               filename === videoFilename
             }
-            muted={
-              slot === activeSlot &&
-              mode === "decision" &&
-              filename === videoFilename
-            }
+            muted={filename === "select_decision.mp4"}
             onCanPlay={() => void activateSlot(slot, filename)}
             onEnded={() => {
               if (slot === activeSlot) handleEnded();
@@ -322,6 +347,14 @@ export function GameScene() {
 
       {!videoFilename ? (
         <div aria-hidden="true" className="absolute inset-0 bg-black" />
+      ) : null}
+
+      {chapterVideoPending ? (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-[60] bg-black"
+          data-testid="chapter-video-cover"
+        />
       ) : null}
 
       <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(180deg,rgba(0,0,0,.46),transparent_24%,transparent_68%,rgba(0,0,0,.5))]" />
