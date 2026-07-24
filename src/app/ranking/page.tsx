@@ -6,6 +6,9 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "랭킹",
+  alternates: {
+    canonical: "/ranking",
+  },
 };
 
 export default function RankingPage() {

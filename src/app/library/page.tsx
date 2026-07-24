@@ -12,6 +12,9 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "기록과 설정",
+  alternates: {
+    canonical: "/library",
+  },
 };
 
 export default function LibraryPage() {
