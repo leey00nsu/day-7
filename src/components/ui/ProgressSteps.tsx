@@ -1,6 +1,6 @@
 import type { HTMLAttributes } from "react";
 
-import { cn } from "./cn";
+import { cn } from "@/lib/utils";
 
 interface ProgressStepsProps
   extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
@@ -35,12 +35,12 @@ export function ProgressSteps({
             key={index}
             className={cn(
               "h-1 flex-1 rounded-full",
-              index < safeCurrent ? "bg-mint" : "bg-white/18",
+              index < safeCurrent ? "bg-primary" : "bg-muted",
             )}
           />
         ))}
       </ol>
-      <span className="font-mono text-xs text-white/55" aria-hidden="true">
+      <span className="font-mono text-xs text-muted-foreground" aria-hidden="true">
         {safeCurrent}/{safeTotal}
       </span>
     </div>

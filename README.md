@@ -8,6 +8,9 @@ AI 영상 기반 인터랙티브 오피스 드라마의 실제 개발 프로젝�
 - React 19
 - TypeScript
 - Tailwind CSS 4
+- shadcn/ui CSS Variables
+- Kibo UI
+- Storybook 10
 - pnpm
 
 ## 실행
@@ -22,6 +25,8 @@ pnpm dev
 ```bash
 pnpm lint
 pnpm build
+pnpm build-storybook
+pnpm test-storybook
 ```
 
 ## 현재 화면
@@ -30,6 +35,25 @@ pnpm build
 - `/story` — 8초 영상형 대화·선택 화면의 초기 런타임
 - `/endings` — 개편된 엔딩 키아트 3종
 - `/library` — 저장과 재생 설정
+
+## UI 개발
+
+```bash
+pnpm storybook
+```
+
+Storybook은 `http://localhost:6006`에서 실행됩니다. 다음 항목을 개별적으로
+검수할 수 있습니다.
+
+- shadcn 기반 Button과 기본 프리미티브
+- GlassCard와 7단계 ProgressSteps
+- Kibo UI Announcement, Choicebox, Status, Pill
+- 전체 스토리 선택 화면
+- 홈, 엔딩, 기록·설정 화면
+
+Kibo UI는 필요한 구성 요소의 소스만 `src/components/kibo-ui` 아래에
+가져오는 방식으로 사용합니다. 공통 색상과 모서리, 포커스 링은
+`src/app/globals.css`의 shadcn CSS Variables에서 관리합니다.
 
 ## 이전 목업에서 가져온 기준
 

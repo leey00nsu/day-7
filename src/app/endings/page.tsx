@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
+import { Pill } from "@/components/kibo-ui/pill";
+import { buttonVariants } from "@/components/ui/button";
 import { endings } from "@/data/game";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "엔딩",
@@ -14,7 +17,7 @@ export default function EndingsPage() {
       <div className="mx-auto max-w-7xl">
         <header className="flex items-end justify-between gap-5">
           <div>
-            <p className="text-xs font-bold tracking-[0.16em] text-ink/45">
+            <p className="text-xs font-bold tracking-[0.16em] text-ink/65">
               ENDING ARCHIVE
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-5xl">
@@ -22,7 +25,10 @@ export default function EndingsPage() {
             </h1>
           </div>
           <Link
-            className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold shadow-sm"
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "rounded-full border-black/10 bg-white text-ink hover:bg-black/5",
+            )}
             href="/"
           >
             홈으로
@@ -46,9 +52,12 @@ export default function EndingsPage() {
                 />
               </div>
               <div className="p-5 sm:p-6">
-                <span className="font-mono text-xs font-bold text-ink/40">
+                <Pill
+                  variant="outline"
+                  className="border-black/10 bg-black/[.03] font-mono text-xs font-bold text-ink/70"
+                >
                   {ending.id}
-                </span>
+                </Pill>
                 <h2 className="mt-2 text-xl font-bold">{ending.title}</h2>
                 <p className="mt-3 text-sm leading-6 text-ink/62">
                   {ending.summary}

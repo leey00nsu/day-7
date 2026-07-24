@@ -4,9 +4,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
-import { ChoiceButton } from "@/components/ui/ChoiceButton";
+import {
+  Choicebox,
+  ChoiceboxIndicator,
+  ChoiceboxItem,
+  ChoiceboxItemHeader,
+  ChoiceboxItemSubtitle,
+  ChoiceboxItemTitle,
+} from "@/components/kibo-ui/choicebox";
+import {
+  Status,
+  StatusIndicator,
+  StatusLabel,
+} from "@/components/kibo-ui/status";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { ProgressSteps } from "@/components/ui/ProgressSteps";
+import { Button } from "@/components/ui/button";
 import { weeklyChoices } from "@/data/game";
 
 export function GameScene() {
@@ -50,9 +63,15 @@ export function GameScene() {
             <h1 className="mt-2 text-xl font-bold">정규직 D-7</h1>
           </div>
           <GlassCard className="w-[min(48vw,320px)] px-4 py-3">
-            <p className="mb-2 text-[11px] font-semibold tracking-[0.12em] text-white/45">
-              {scene.day} · {scene.title}
-            </p>
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground">
+                {scene.day} · {scene.title}
+              </p>
+              <Status status="online" className="shrink-0">
+                <StatusIndicator />
+                <StatusLabel>재생 중</StatusLabel>
+              </Status>
+            </div>
             <ProgressSteps current={sceneIndex + 1} total={7} />
           </GlassCard>
         </header>
@@ -80,28 +99,37 @@ export function GameScene() {
               <legend className="px-1 pb-3 text-xs font-semibold tracking-[0.12em] text-white/48">
                 선택
               </legend>
-              <div className="grid gap-2">
+              <Choicebox
+                className="grid gap-2"
+                value={selected === null ? undefined : String(selected)}
+                onValueChange={(value) => choose(Number(value))}
+              >
                 {scene.choices.map((choice, index) => (
-                  <ChoiceButton
+                  <ChoiceboxItem
                     key={choice}
-                    index={String.fromCharCode(65 + index)}
-                    selected={selected === index}
-                    onClick={() => choose(index)}
+                    id={`choice-${sceneIndex}-${index}`}
+                    value={String(index)}
                   >
-                    {choice}
-                  </ChoiceButton>
+                    <ChoiceboxIndicator id={`choice-${sceneIndex}-${index}`} />
+                    <ChoiceboxItemHeader>
+                      <ChoiceboxItemTitle>{choice}</ChoiceboxItemTitle>
+                      <ChoiceboxItemSubtitle>
+                        선택 {String.fromCharCode(65 + index)}
+                      </ChoiceboxItemSubtitle>
+                    </ChoiceboxItemHeader>
+                  </ChoiceboxItem>
                 ))}
-              </div>
-              <button
-                className="game-button game-button-primary mt-3 w-full disabled:cursor-not-allowed disabled:opacity-35"
-                type="button"
+              </Choicebox>
+              <Button
+                className="mt-3 h-12 w-full rounded-2xl text-sm font-bold"
+                size="lg"
                 disabled={selected === null}
                 onClick={continueStory}
               >
                 {sceneIndex === weeklyChoices.length - 1
                   ? "선택 기록 완료"
                   : "다음 장면"}
-              </button>
+              </Button>
             </fieldset>
           </GlassCard>
         </div>

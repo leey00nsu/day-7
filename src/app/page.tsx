@@ -1,8 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import {
+  Announcement,
+  AnnouncementTag,
+  AnnouncementTitle,
+} from "@/components/kibo-ui/announcement";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { ProgressSteps } from "@/components/ui/ProgressSteps";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
   return (
@@ -52,21 +59,31 @@ export default function Home() {
 
           <GlassCard className="w-full p-4 sm:p-5">
             <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold tracking-[0.14em] text-mint">
-                  CURRENT STORY
-                </p>
-                <p className="mt-1 font-semibold">월요일 · 아직 끝나지 않은 일</p>
-              </div>
+              <Announcement themed className="border-primary/20 bg-primary/8">
+                <AnnouncementTag>DAY 1</AnnouncementTag>
+                <AnnouncementTitle>월요일 · 아직 끝나지 않은 일</AnnouncementTitle>
+              </Announcement>
               <ProgressSteps current={1} total={7} />
             </div>
           </GlassCard>
 
           <div className="flex w-full flex-col gap-3 sm:flex-row">
-            <Link className="game-button game-button-primary flex-1" href="/story">
+            <Link
+              className={cn(
+                buttonVariants({ size: "lg" }),
+                "h-13 flex-1 rounded-2xl px-6 text-[15px] font-bold",
+              )}
+              href="/story"
+            >
               시작하기
             </Link>
-            <Link className="game-button game-button-secondary flex-1" href="/endings">
+            <Link
+              className={cn(
+                buttonVariants({ variant: "outline", size: "lg" }),
+                "h-13 flex-1 rounded-2xl bg-background/35 px-6 text-[15px] font-bold backdrop-blur-xl",
+              )}
+              href="/endings"
+            >
               엔딩 미리보기
             </Link>
           </div>

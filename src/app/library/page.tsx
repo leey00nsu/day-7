@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import {
+  Pill,
+  PillIndicator,
+  PillStatus,
+} from "@/components/kibo-ui/pill";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "기록과 설정",
@@ -18,7 +25,13 @@ export default function LibraryPage() {
             </p>
             <h1 className="mt-2 text-3xl font-bold">기록과 설정</h1>
           </div>
-          <Link className="game-button game-button-secondary" href="/">
+          <Link
+            className={cn(
+              buttonVariants({ variant: "outline", size: "lg" }),
+              "h-11 rounded-full bg-background/35 px-5 backdrop-blur-xl",
+            )}
+            href="/"
+          >
             홈으로
           </Link>
         </header>
@@ -28,7 +41,16 @@ export default function LibraryPage() {
             <p className="text-xs font-semibold tracking-[0.12em] text-white/45">
               SAVE / LOAD
             </p>
-            <h2 className="mt-2 text-xl font-bold">진행 기록</h2>
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <h2 className="text-xl font-bold">진행 기록</h2>
+              <Pill>
+                <PillStatus>
+                  <PillIndicator pulse />
+                  자동 저장
+                </PillStatus>
+                SLOT 01
+              </Pill>
+            </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <button
                 className="min-h-36 rounded-2xl border border-mint/35 bg-mint/10 p-4 text-left focus-visible:outline-2 focus-visible:outline-mint"
@@ -83,6 +105,9 @@ export default function LibraryPage() {
                 </span>
                 <input className="size-5 accent-mint" type="checkbox" />
               </label>
+              <Button className="h-11 w-full rounded-xl" type="submit">
+                설정 저장
+              </Button>
             </form>
           </GlassCard>
         </div>
