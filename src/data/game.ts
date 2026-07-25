@@ -188,6 +188,7 @@ export const endings = [
     title: "정규직이라는 족쇄",
     summary:
       "인력 부족 때문에 전환이 결정됐다. 축하보다 먼저, 더 많은 야근이 기다린다는 말이 돌아온다.",
+    hint: "불편함을 삼키고 회사에 맞춘 선택이 많았다면.",
     image: "/assets/endings/e01-conversion.png",
     clips: [
       clip("e01_conversion_s01.mp4", "정규직 전환 통보"),
@@ -202,6 +203,7 @@ export const endings = [
     title: "회사 사정이라는 핑계",
     summary:
       "회사는 인건비 동결을 내세워 전환을 끝낸다. 남은 것은 모호한 위로와 빈 사무실뿐이다.",
+    hint: "회사의 요구와 자신의 기준 사이에서 몇 번쯤 흔들렸다면.",
     image: "/assets/endings/e02-hold.png",
     clips: [
       clip("e02_hold_s01.mp4", "전환 보류 통보"),
@@ -216,6 +218,7 @@ export const endings = [
     title: "김 인턴의 거절",
     summary:
       "금요일이 되어서야 알았다. 이 회사와 나는 맞지 않는다는 걸.",
+    hint: "나흘 동안 단 한 번도 자신의 기준을 양보하지 않았다면.",
     image: "/assets/endings/e03-decline.png",
     clips: [
       clip("e03_decline_s01.mp4", "전환 제안"),

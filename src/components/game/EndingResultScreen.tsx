@@ -25,16 +25,16 @@ export function EndingResultScreen({
   return (
     <section className="absolute inset-0 z-30 cursor-default overflow-y-auto bg-black px-5 py-12">
       <div className="mx-auto w-full max-w-6xl">
-        <div className="grid items-start gap-8 lg:grid-cols-[minmax(280px,400px)_1fr]">
+        <div className="grid items-start gap-8">
           <EndingCard
-            className="w-full"
+            className="mx-auto w-full max-w-3xl"
             ending={ending}
             isLatestEnding
             reachCount={data?.endings[ending.id]}
             unlocked
           />
 
-          <div>
+          <div className="mx-auto w-full max-w-3xl">
             <p className="text-xs font-semibold tracking-[0.18em] text-white/52">
               MY CHOICES
             </p>

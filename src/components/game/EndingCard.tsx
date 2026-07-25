@@ -93,6 +93,12 @@ export function EndingCard({
             ? ending.summary
             : "게임에서 이 결말에 도달하면 내용이 공개됩니다."}
         </p>
+        {!unlocked ? (
+          <p className="mt-3 text-xs leading-5 text-white/44">
+            <span className="font-bold text-[#60a5fa]">힌트 · </span>
+            {ending.hint}
+          </p>
+        ) : null}
         {reachCount !== undefined ? (
           <p className="mt-4 text-xs font-medium text-[#f87171]">
             {isLatestEnding
