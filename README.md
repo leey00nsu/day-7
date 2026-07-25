@@ -99,24 +99,39 @@ pnpm dev
 
 ### 영상 파일
 
-영상은 저장소에 포함하지 않습니다. 로컬 개발에서는 MP4 파일을 다음
-위치에 준비해야 합니다.
+운영 영상은 Cloudflare R2의 전용 미디어 도메인에서 제공합니다.
 
 ```text
-public/videos/
-├── t00_title_s01.mp4
-├── p00_prologue_s00.mp4
-├── select_decision.mp4
-└── ...
+https://media.example.com/day-7-videos/<filename>
 ```
 
 실제로 참조되는 파일명은
 [`src/data/game.ts`](./src/data/game.ts)에서 확인할 수 있습니다.
-`public/videos/`는 `.gitignore`에 등록되어 있습니다.
+영상 주소는 [`src/lib/video.ts`](./src/lib/video.ts)의 공통 함수를 통해
+생성됩니다. 실행 전에 미디어 경로를 환경 변수로 지정해야 합니다.
 
-현재 코드는 `/videos/<filename>`을 사용합니다. 운영 배포에서는 영상
-파일을 Cloudflare R2의 별도 미디어 도메인으로 옮기는 구성을 준비하고
-있습니다.
+```bash
+NEXT_PUBLIC_VIDEO_BASE_URL=https://media.example.com/day-7-videos
+```
+
+저장소에는 기본 영상 주소가 포함되지 않습니다. 환경 변수가 없거나
+개별 영상을 불러오지 못하면 `동영상 재생에 문제가 생겼습니다`라는
+오류 화면을 표시합니다. 로컬 원본을 보관하는 `public/videos/`는
+`.gitignore`에 등록되어 있으며 애플리케이션 빌드에는 필요하지 않습니다.
+
+### 배포 환경 변수
+
+Coolify에는 실제 서비스 주소를 빌드 변수와 런타임 변수로 등록합니다.
+
+```bash
+NEXT_PUBLIC_SITE_URL=https://실제-게임-도메인
+NEXT_PUBLIC_VIDEO_BASE_URL=https://media.example.com/day-7-videos
+```
+
+`NEXT_PUBLIC_SITE_URL`은 canonical URL, Open Graph, sitemap과 JSON-LD에
+사용됩니다. 생략하면 Coolify가 제공하는 `COOLIFY_URL`의 첫 번째 주소를
+사용합니다. `NEXT_PUBLIC_VIDEO_BASE_URL`은 필수이며, 클라이언트 번들에
+포함되도록 Coolify의 빌드 변수에도 등록해야 합니다.
 
 ## 콘텐츠 수정
 
@@ -189,8 +204,7 @@ src/
 
 public/
 ├── assets/              # 로고, 포스터, 엔딩 키아트
-├── audio/               # BGM, 효과음, 내레이션
-└── videos/              # 로컬 영상, Git 제외
+└── audio/               # BGM, 효과음, 내레이션
 ```
 
 사용한 무료 음원의 출처와 라이선스는

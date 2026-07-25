@@ -4,7 +4,9 @@ import "pretendard/dist/web/variable/pretendardvariable.css";
 import { GameAudio } from "@/components/game/GameAudio";
 import { GameOptions } from "@/components/game/GameOptions";
 import { SoundConsent } from "@/components/game/SoundConsent";
+import { VideoPlaybackError } from "@/components/game/VideoPlaybackError";
 import { siteConfig } from "@/lib/site";
+import { videoBaseUrl } from "@/lib/video";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -106,11 +108,17 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full bg-background font-sans text-foreground">
-        <GameAudio />
-        <SoundConsent>
-          <GameOptions />
-          {children}
-        </SoundConsent>
+        {videoBaseUrl ? (
+          <>
+            <GameAudio />
+            <SoundConsent>
+              <GameOptions />
+              {children}
+            </SoundConsent>
+          </>
+        ) : (
+          <VideoPlaybackError />
+        )}
       </body>
     </html>
   );

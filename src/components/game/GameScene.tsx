@@ -15,6 +15,7 @@ import { DecisionOverlay } from "@/components/game/DecisionOverlay";
 import { ChapterIntro } from "@/components/game/ChapterIntro";
 import { ChoiceFeedback } from "@/components/game/ChoiceFeedback";
 import { EndingCard } from "@/components/game/EndingCard";
+import { GameVideo } from "@/components/game/GameVideo";
 import {
   StoryMusic,
   type StoryMusicMode,
@@ -554,10 +555,11 @@ export function GameScene() {
 
       {videoSlots.map((filename, slot) =>
         filename ? (
-          <video
+          <GameVideo
             className={`absolute inset-0 size-full object-cover max-md:object-contain ${
               slot === activeSlot ? "z-10 visible" : "invisible z-0"
             }`}
+            filename={filename}
             key={`${slot}-${filename}`}
             loop={
               slot === activeSlot &&
@@ -580,7 +582,6 @@ export function GameScene() {
             ref={(element) => {
               videoRefs.current[slot] = element;
             }}
-            src={`/videos/${encodeURIComponent(filename)}`}
           />
         ) : null,
       )}

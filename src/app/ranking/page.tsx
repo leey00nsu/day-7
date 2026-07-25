@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { GameVideo } from "@/components/game/GameVideo";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -14,18 +15,17 @@ export const metadata: Metadata = {
 export default function RankingPage() {
   return (
     <main className="relative isolate min-h-svh overflow-hidden bg-black text-white">
-      <video
+      <GameVideo
         aria-hidden="true"
         autoPlay
         className="fixed inset-[-4%] -z-30 size-[108%] scale-105 object-cover blur-2xl"
+        filename="t00_title_s01.mp4"
         loop
         muted
         playsInline
         poster="/assets/home/home-hero-poster-16x9.png"
         preload="metadata"
-      >
-        <source src="/videos/t00_title_s01.mp4" type="video/mp4" />
-      </video>
+      />
       <div className="fixed inset-0 -z-20 bg-black/68" />
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,.1),transparent_48%),linear-gradient(180deg,rgba(0,0,0,.14),rgba(0,0,0,.54))]" />
 

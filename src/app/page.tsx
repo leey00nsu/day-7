@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
+import { GameVideo } from "@/components/game/GameVideo";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -20,18 +21,17 @@ const menuItems = [
 export default function Home() {
   return (
     <main className="relative isolate min-h-svh overflow-hidden bg-black text-white">
-      <video
+      <GameVideo
         aria-label="정규직 D-7 타이틀 배경"
         autoPlay
         className="absolute inset-0 size-full object-cover"
+        filename="t00_title_s01.mp4"
         loop
         muted
         playsInline
         poster="/assets/home/home-hero-poster-16x9.png"
         preload="auto"
-      >
-        <source src="/videos/t00_title_s01.mp4" type="video/mp4" />
-      </video>
+      />
 
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_5%,rgba(0,0,0,.16)_58%,rgba(0,0,0,.52)),linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.08)_55%,rgba(0,0,0,.5))]" />
 
