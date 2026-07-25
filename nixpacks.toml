@@ -1,5 +1,12 @@
 [phases.install]
+paths = ["/opt/pnpm/bin"]
 cmds = [
-  "npm install --global pnpm@11.17.0",
-  "pnpm install --frozen-lockfile",
+  "npm install --global --prefix /opt/pnpm pnpm@11.17.0",
+  "/opt/pnpm/bin/pnpm install --frozen-lockfile",
 ]
+
+[phases.build]
+cmds = ["/opt/pnpm/bin/pnpm run build"]
+
+[start]
+cmd = "/opt/pnpm/bin/pnpm run db:deploy && /opt/pnpm/bin/pnpm run start"
