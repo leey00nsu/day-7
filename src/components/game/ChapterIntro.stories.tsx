@@ -25,3 +25,10 @@ export const Monday: Story = {
     description: "아직 끝나지 않은 일",
   },
 };
+
+export const WithoutSubtitle: Story = {
+  args: {
+    title: "금요일",
+    description: undefined,
+  },
+};

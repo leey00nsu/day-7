@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { PauseIcon, PlayIcon } from "lucide-react";
+import { CogIcon, PauseIcon, PlayIcon } from "lucide-react";
 
 import { Button } from "./button";
 
@@ -51,11 +51,52 @@ export const Destructive: Story = {
   },
 };
 
+export const Ghost: Story = {
+  args: {
+    variant: "ghost",
+    children: "옵션",
+  },
+};
+
+export const Link: Story = {
+  args: {
+    variant: "link",
+    children: "자세히 보기",
+  },
+};
+
 export const Disabled: Story = {
   args: {
     disabled: true,
     children: "선택 후 계속",
   },
+};
+
+export const Sizes: Story = {
+  render: () => (
+    <div className="flex flex-wrap items-center gap-4">
+      <Button size="xs">아주 작게</Button>
+      <Button size="sm">작게</Button>
+      <Button size="default">기본</Button>
+      <Button size="lg">크게</Button>
+    </div>
+  ),
+};
+
+export const IconButtons: Story = {
+  render: () => (
+    <div className="flex items-center gap-4">
+      <Button aria-label="작은 옵션" size="icon-xs" variant="ghost">
+        <CogIcon />
+      </Button>
+      <Button aria-label="옵션" size="icon" variant="ghost">
+        <CogIcon />
+      </Button>
+      <Button aria-label="큰 옵션" size="icon-lg" variant="ghost">
+        <CogIcon />
+      </Button>
+    </div>
+  ),
 };
 
 export const WithIcons: Story = {

@@ -68,7 +68,7 @@ export function EndingCard({
       </div>
 
       <div className="min-h-40 p-5 sm:p-6">
-        <p className="font-mono text-xs font-bold tracking-[0.14em] text-white/40">
+        <p className="font-mono text-xs font-bold tracking-[0.14em] text-white/60">
           {ending.id}
         </p>
         <h2

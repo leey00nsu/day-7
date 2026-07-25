@@ -20,4 +20,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const FixedTopRight: Story = {};
+export const Open: Story = {
+  args: {
+    defaultOpen: true,
+  },
+};
+
+export const Closed: Story = {};

@@ -80,7 +80,7 @@ E03 김인턴의 거절
 | --- | --- |
 | Framework | Next.js 16 App Router |
 | UI | React 19, TypeScript, Tailwind CSS 4 |
-| Components | Kibo UI, Base UI, shadcn 스타일 시스템 |
+| Components | Base UI 기반 게임 UI 시스템 |
 | Typography | Pretendard Variable |
 | Documentation | Storybook 10 |
 | Package manager | pnpm 11 |
@@ -168,7 +168,6 @@ NEXT_PUBLIC_VIDEO_BASE_URL=https://media.example.com/day-7-videos
 | `/story` | 인터랙티브 스토리 |
 | `/endings` | 해금형 엔딩 앨범 |
 | `/ranking` | 추후 업데이트 안내 |
-| `/library` | UI 개발용 기록·설정 화면 |
 
 ## Storybook
 
@@ -188,6 +187,12 @@ pnpm build-storybook
 pnpm test-storybook
 ```
 
+Storybook에서는 공통 버튼의 모든 variant와 크기, 게임 옵션의 열린·닫힌
+상태, 챕터 전환, 선택지, 선택 결과 메시지, 자막, 엔딩 카드와 앨범,
+사운드 동의, 영상 오류, 주요 화면을 각각 확인할 수 있습니다.
+`GameAudio`, `NarrationAudio`, `StoryMusic`은 화면을 렌더링하지 않는
+재생 제어 컴포넌트라 별도 시각 스토리 대신 `GameScene`에서 통합됩니다.
+
 ## 프로젝트 구조
 
 ```text
@@ -195,8 +200,7 @@ src/
 ├── app/                 # 페이지, SEO 메타데이터, manifest
 ├── components/
 │   ├── game/            # 게임 재생과 선택·엔딩 UI
-│   ├── kibo-ui/         # 프로젝트에 가져온 Kibo UI 컴포넌트
-│   └── ui/              # 버튼과 공통 프리미티브
+│   └── ui/              # 공통 기반 컴포넌트
 ├── data/
 │   ├── game.ts          # 챕터, 선택지, 엔딩
 │   └── subtitles.json   # 영상별 자막

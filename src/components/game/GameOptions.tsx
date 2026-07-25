@@ -16,10 +16,14 @@ import { cn } from "@/lib/utils";
 
 type GameOptionsProps = {
   className?: string;
+  defaultOpen?: boolean;
 };
 
-export function GameOptions({ className }: GameOptionsProps) {
-  const [open, setOpen] = useState(false);
+export function GameOptions({
+  className,
+  defaultOpen = false,
+}: GameOptionsProps) {
+  const [open, setOpen] = useState(defaultOpen);
   const [captions, setCaptions] = useState(() =>
     typeof window === "undefined"
       ? true
