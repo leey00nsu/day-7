@@ -80,13 +80,13 @@ export const storyChapters: readonly StoryChapter[] = [
     choices: [
       {
         label: "지시대로 완료 처리한다.",
-        feedback: "박부장은 김인턴이 지시를 따른 것을 기억할 것입니다.",
+        feedback: "박 부장은 김 인턴이 지시를 따른 것을 기억할 것입니다.",
         clips: [clip("c01_a_complete_s01.mp4", "찝찝한 완료 처리")],
       },
       {
         label: "대기 상태를 그대로 둔다.",
         feedback:
-          "박부장은 김인턴이 지시를 따르지 않은 것을 기억할 것입니다.",
+          "박 부장은 김 인턴이 지시를 따르지 않은 것을 기억할 것입니다.",
         clips: [clip("c01_a_complete_s01.mp4", "찝찝한 완료 처리")],
       },
     ],
@@ -106,14 +106,14 @@ export const storyChapters: readonly StoryChapter[] = [
     choices: [
       {
         label: "가방을 내려놓고 작업을 시작한다.",
-        feedback: "이대리는 김인턴이 야근을 받아들인 것을 기억할 것입니다.",
+        feedback: "이 대리는 김 인턴이 야근을 받아들인 것을 기억할 것입니다.",
         clips: [
           clip("c02_a_finish_tonight_s01.mp4", "남아서 끝내기"),
         ],
       },
       {
         label: "오늘 가능한 범위를 먼저 묻는다.",
-        feedback: "이대리는 김인턴이 선을 그은 것을 기억할 것입니다.",
+        feedback: "이 대리는 김 인턴이 선을 그은 것을 기억할 것입니다.",
         clips: [
           clip("c02_b_set_scope_s01.mp4", "가능한 범위 정하기"),
         ],
@@ -135,12 +135,12 @@ export const storyChapters: readonly StoryChapter[] = [
       {
         label: "억울함을 삼키고 먼저 수습한다.",
         feedback:
-          "이대리는 김인턴이 책임을 대신 진 것을 기억할 것입니다.",
+          "이 대리는 김 인턴이 책임을 대신 진 것을 기억할 것입니다.",
         clips: [clip("c03_a_take_blame_s01.mp4", "수습 우선")],
       },
       {
         label: "수정하되 전달 경위를 밝힌다.",
-        feedback: "이대리는 김인턴이 경위를 밝힌 것을 기억할 것입니다.",
+        feedback: "이 대리는 김 인턴이 경위를 밝힌 것을 기억할 것입니다.",
         clips: [
           clip("c03_b_explain_process_s01.mp4", "전달 경위 밝히기"),
         ],
@@ -162,12 +162,12 @@ export const storyChapters: readonly StoryChapter[] = [
     choices: [
       {
         label: "성과를 지우고 팀 서포트로 낮춘다.",
-        feedback: "이대리는 김인턴이 성과를 양보한 것을 기억할 것입니다.",
+        feedback: "이 대리는 김 인턴이 성과를 양보한 것을 기억할 것입니다.",
         clips: [],
       },
       {
         label: "내가 직접 한 일은 그대로 남긴다.",
-        feedback: "이대리는 김인턴이 자기 성과를 지킨 것을 기억할 것입니다.",
+        feedback: "이 대리는 김 인턴이 자기 성과를 지킨 것을 기억할 것입니다.",
         clips: [],
       },
     ],
@@ -213,7 +213,7 @@ export const endings = [
   },
   {
     id: "E03",
-    title: "김인턴의 거절",
+    title: "김 인턴의 거절",
     summary:
       "금요일이 되어서야 알았다. 이 회사와 나는 맞지 않는다는 걸.",
     image: "/assets/endings/e03-decline.png",

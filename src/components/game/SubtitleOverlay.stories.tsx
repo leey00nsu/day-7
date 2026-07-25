@@ -22,7 +22,7 @@ const meta = {
   ],
   args: {
     line: {
-      speaker: "박부장",
+      speaker: "박 부장",
       text: "김 인턴, 주간보고 왜 아직 대기야? 일단 완료 띄워.",
     },
   },

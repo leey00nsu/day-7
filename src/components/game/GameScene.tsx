@@ -225,7 +225,7 @@ export function GameScene() {
   const decisionThought =
     captionsEnabled && mode === "decision" && chapter.decisionThought
       ? {
-          speaker: "김인턴 (속마음)",
+          speaker: "김 인턴 (속마음)",
           text: chapter.decisionThought,
         }
       : undefined;
@@ -535,7 +535,7 @@ export function GameScene() {
   const endingNarrationLine =
     captionsEnabled && mode === "endingNarration" && activeEnding
       ? {
-          speaker: "김인턴 (내레이션)",
+          speaker: "김 인턴 (내레이션)",
           text: activeEnding.narrationText,
         }
       : undefined;

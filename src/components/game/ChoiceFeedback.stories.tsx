@@ -22,7 +22,7 @@ const meta = {
     ),
   ],
   args: {
-    message: "이대리는 김인턴이 선을 그은 것을 기억할 것입니다.",
+    message: "이 대리는 김 인턴이 선을 그은 것을 기억할 것입니다.",
   },
 } satisfies Meta<typeof ChoiceFeedback>;
 
