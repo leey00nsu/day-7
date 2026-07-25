@@ -125,7 +125,6 @@ export function recordEnding(endingId: EndingId) {
 
 export async function fetchReportData(signal?: AbortSignal) {
   const response = await fetch("/api/report", {
-    cache: "no-store",
     signal,
   });
 

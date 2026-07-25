@@ -10,11 +10,13 @@ import {
   emptyEndingCounts,
   type ReportData,
 } from "@/lib/report-types";
+import {
+  parseReportRequest,
+  ReportRequestError,
+} from "@/lib/report-request";
 
 export const dynamic = "force-dynamic";
 
-const playerIdPattern =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const decisionIdSet = new Set<string>(decisionIds);
 const endingIdSet = new Set<string>(endings.map((ending) => ending.id));
 
@@ -89,7 +91,8 @@ export async function GET() {
 
     return NextResponse.json(data, {
       headers: {
-        "Cache-Control": "no-store",
+        "Cache-Control":
+          "public, max-age=0, s-maxage=15, stale-while-revalidate=45",
       },
     });
   } catch (error) {
@@ -103,28 +106,16 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as Record<string, unknown>;
-    const playerId =
-      typeof body.playerId === "string" ? body.playerId : "";
-
-    if (!playerIdPattern.test(playerId)) {
-      return NextResponse.json(
-        { message: "잘못된 사용자 식별자입니다." },
-        { status: 400 },
-      );
-    }
-
+    const body = await parseReportRequest(request);
     const database = getDatabase();
 
     if (
       body.type === "choice" &&
-      typeof body.decisionId === "string" &&
-      decisionIdSet.has(body.decisionId) &&
-      (body.choiceIndex === 0 || body.choiceIndex === 1)
+      decisionIdSet.has(body.decisionId)
     ) {
       await database.gameChoiceResponse.create({
         data: {
-          playerId,
+          playerId: body.playerId,
           decisionId: body.decisionId,
           choiceIndex: body.choiceIndex,
         },
@@ -135,12 +126,11 @@ export async function POST(request: Request) {
 
     if (
       body.type === "ending" &&
-      typeof body.endingId === "string" &&
       endingIdSet.has(body.endingId)
     ) {
       await database.gameEndingResponse.create({
         data: {
-          playerId,
+          playerId: body.playerId,
           endingId: body.endingId,
         },
       });
@@ -148,11 +138,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ saved: true });
     }
 
-    return NextResponse.json(
-      { message: "잘못된 리포트 이벤트입니다." },
-      { status: 400 },
-    );
+    throw new ReportRequestError("잘못된 리포트 이벤트입니다.", 400);
   } catch (error) {
+    if (error instanceof ReportRequestError) {
+      return NextResponse.json(
+        { message: error.message },
+        {
+          status: error.status,
+          headers: error.headers,
+        },
+      );
+    }
+
     console.error("Failed to save report event", error);
     return NextResponse.json(
       { message: "리포트 기록을 저장하지 못했습니다." },

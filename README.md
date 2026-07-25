@@ -137,6 +137,8 @@ NEXT_PUBLIC_VIDEO_BASE_URL=https://media.example.com/day-7-videos
 NEXT_PUBLIC_SITE_URL=https://실제-게임-도메인
 NEXT_PUBLIC_VIDEO_BASE_URL=https://media.example.com/day-7-videos
 DATABASE_URL=postgresql://game_user:비밀번호@postgres:5432/game
+REPORT_RATE_LIMIT_MAX=30
+REPORT_RATE_LIMIT_WINDOW_SECONDS=600
 ```
 
 `NEXT_PUBLIC_SITE_URL`은 canonical URL, Open Graph, sitemap과 JSON-LD에
