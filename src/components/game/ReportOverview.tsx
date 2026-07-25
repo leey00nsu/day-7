@@ -1,4 +1,4 @@
-import { Check, Lock } from "lucide-react";
+import { Check } from "lucide-react";
 
 import type {
   ChoiceMap,
@@ -57,14 +57,8 @@ export function ReportOverview({
                 </h2>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                {locked ? (
-                  <Lock
-                    aria-hidden="true"
-                    className="size-4 text-white/52"
-                  />
-                ) : null}
                 <span className="text-xs tabular-nums text-white/58">
-                  {decision.total.toLocaleString()}회
+                  {decision.total.toLocaleString()}명이 선택했습니다.
                 </span>
               </div>
             </div>

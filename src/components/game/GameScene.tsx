@@ -74,6 +74,8 @@ function mapCurrentChoices(choiceHistory: readonly number[]): ChoiceMap {
 export function GameScene() {
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
   const choiceFeedbackAudioRef = useRef<HTMLAudioElement>(null);
+  const chapterIntroElapsedRef = useRef(false);
+  const readyVideoFilenamesRef = useRef(new Set<string>());
   const [chapterIndex, setChapterIndex] = useState(0);
   const [clipIndex, setClipIndex] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
@@ -232,6 +234,9 @@ export function GameScene() {
 
   const videoFilename =
     mode === "decision" ? "select_decision.mp4" : activeClip?.filename;
+  const chapterEntryFilename =
+    chapter.clips[0]?.filename ??
+    (chapter.choices ? "select_decision.mp4" : undefined);
   const narrationFilename =
     mode === "decision"
       ? chapter.decisionNarration
@@ -292,6 +297,56 @@ export function GameScene() {
     mode,
     selectedChoice,
   ]);
+
+  useEffect(() => {
+    if (
+      mode !== "chapterIntro" ||
+      !chapterEntryFilename ||
+      videoSlots.includes(chapterEntryFilename)
+    ) {
+      return;
+    }
+
+    const preloadSlot = activeSlot === 0 ? 1 : 0;
+    const updateFrame = window.requestAnimationFrame(() => {
+      setVideoSlots((slots) => {
+        if (slots.includes(chapterEntryFilename)) return slots;
+
+        const next: VideoSlots = [...slots];
+        next[preloadSlot] = chapterEntryFilename;
+        return next;
+      });
+    });
+
+    return () => window.cancelAnimationFrame(updateFrame);
+  }, [
+    activeSlot,
+    chapterEntryFilename,
+    mode,
+    videoSlots,
+  ]);
+
+  const startChapter = useCallback(() => {
+    setChapterVideoPending(true);
+    setMode(chapter.clips.length > 0 ? "main" : "decision");
+    setCurrentTime(0);
+    setIsPlaying(false);
+  }, [chapter.clips.length]);
+
+  const markVideoReady = useCallback(
+    (filename: string) => {
+      readyVideoFilenamesRef.current.add(filename);
+
+      if (
+        mode === "chapterIntro" &&
+        chapterIntroElapsedRef.current &&
+        filename === chapterEntryFilename
+      ) {
+        startChapter();
+      }
+    },
+    [chapterEntryFilename, mode, startChapter],
+  );
 
   const activateSlot = useCallback(
     async (slot: number, filename: string) => {
@@ -388,6 +443,7 @@ export function GameScene() {
       setClipIndex(0);
       setSelectedChoice(null);
       setMode("chapterIntro");
+      chapterIntroElapsedRef.current = false;
       setCurrentTime(0);
       setIsPlaying(false);
       return;
@@ -515,11 +571,15 @@ export function GameScene() {
   }
 
   const finishChapterIntro = useCallback(() => {
-    setChapterVideoPending(true);
-    setMode(chapter.clips.length > 0 ? "main" : "decision");
-    setCurrentTime(0);
-    setIsPlaying(false);
-  }, [chapter.clips.length]);
+    chapterIntroElapsedRef.current = true;
+
+    if (
+      !chapterEntryFilename ||
+      readyVideoFilenamesRef.current.has(chapterEntryFilename)
+    ) {
+      startChapter();
+    }
+  }, [chapterEntryFilename, startChapter]);
 
   const storyMusicMode: StoryMusicMode =
     mode === "decision"
@@ -599,6 +659,7 @@ export function GameScene() {
             }
             muted={filename === "select_decision.mp4"}
             onCanPlay={() => void activateSlot(slot, filename)}
+            onCanPlayThrough={() => markVideoReady(filename)}
             onEnded={() => {
               if (slot === activeSlot) handleEnded();
             }}
