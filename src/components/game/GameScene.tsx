@@ -14,7 +14,7 @@ import {
 import { DecisionOverlay } from "@/components/game/DecisionOverlay";
 import { ChapterIntro } from "@/components/game/ChapterIntro";
 import { ChoiceFeedback } from "@/components/game/ChoiceFeedback";
-import { EndingCard } from "@/components/game/EndingCard";
+import { EndingResultScreen } from "@/components/game/EndingResultScreen";
 import { GameVideo } from "@/components/game/GameVideo";
 import {
   StoryMusic,
@@ -22,7 +22,7 @@ import {
 } from "@/components/game/StoryMusic";
 import { NarrationAudio } from "@/components/game/NarrationAudio";
 import { SubtitleOverlay } from "@/components/game/SubtitleOverlay";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   endings,
   storyChapters,
@@ -34,6 +34,11 @@ import {
   resolveEndingFromChoices,
   unlockEnding,
 } from "@/lib/ending-progress";
+import {
+  recordChoice,
+  recordEnding,
+} from "@/lib/report-client";
+import type { ChoiceMap } from "@/lib/report-types";
 
 type PlaybackMode =
   | "chapterIntro"
@@ -47,6 +52,23 @@ type VideoSlots = [string | undefined, string | undefined];
 
 function findCue(cues: readonly SubtitleCue[] | undefined, time: number) {
   return cues?.find((cue) => time >= cue.start && time < cue.end);
+}
+
+function mapCurrentChoices(choiceHistory: readonly number[]): ChoiceMap {
+  const currentChoices: ChoiceMap = {};
+  let decisionIndex = 0;
+
+  for (const chapter of storyChapters) {
+    if (!chapter.decisionId || !chapter.choices) continue;
+
+    const selectedChoice = choiceHistory[decisionIndex];
+    if (selectedChoice === 0 || selectedChoice === 1) {
+      currentChoices[chapter.decisionId] = selectedChoice;
+    }
+    decisionIndex += 1;
+  }
+
+  return currentChoices;
 }
 
 export function GameScene() {
@@ -100,6 +122,10 @@ export function GameScene() {
   const activeEnding = achievedEndingId
     ? endings.find((ending) => ending.id === achievedEndingId)
     : undefined;
+  const currentChoices = useMemo(
+    () => mapCurrentChoices(choiceHistory),
+    [choiceHistory],
+  );
 
   useEffect(() => {
     function updateCaptions(event: Event) {
@@ -382,6 +408,7 @@ export function GameScene() {
     if (!achievedEndingId) return;
 
     unlockEnding(achievedEndingId);
+    void recordEnding(achievedEndingId);
     setMode("complete");
     setCurrentTime(0);
     setIsPlaying(false);
@@ -423,6 +450,10 @@ export function GameScene() {
 
   function choose(index: number) {
     if (!chapter.choices) return;
+
+    if (chapter.decisionId && (index === 0 || index === 1)) {
+      recordChoice(chapter.decisionId, index);
+    }
 
     const branchClips = chapter.choices[index].clips;
     const nextChoiceHistory = [...choiceHistory, index];
@@ -697,37 +728,12 @@ export function GameScene() {
       ) : null}
 
       {mode === "complete" ? (
-        <section className="absolute inset-0 z-30 grid cursor-default place-items-center overflow-y-auto bg-black px-5 py-12">
-          <div className="w-full max-w-md">
-            {activeEnding ? (
-              <EndingCard
-                className="w-full"
-                ending={activeEnding}
-                unlocked
-              />
-            ) : null}
-            <div className="mt-7 flex justify-center gap-4">
-              <Link
-                className={buttonVariants({
-                  variant: "outline",
-                  size: "lg",
-                })}
-                href="/endings"
-              >
-                앨범 보기
-              </Link>
-              <Link
-                className={buttonVariants({
-                  variant: "outline",
-                  size: "lg",
-                })}
-                href="/"
-              >
-                홈으로
-              </Link>
-            </div>
-          </div>
-        </section>
+        activeEnding ? (
+          <EndingResultScreen
+            currentChoices={currentChoices}
+            ending={activeEnding}
+          />
+        ) : null
       ) : null}
     </main>
   );

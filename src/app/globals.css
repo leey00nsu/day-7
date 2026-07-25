@@ -164,6 +164,18 @@ a {
   }
 }
 
+@keyframes report-card-reveal {
+  from {
+    opacity: 0;
+    translate: 0 24px;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
 .home-logo-reveal {
   animation: home-logo-reveal 1.8s ease-out 0.2s both;
   will-change: opacity;
@@ -204,6 +216,28 @@ a {
   animation-delay: 0.55s;
 }
 
+.report-card-reveal {
+  animation: report-card-reveal 0.7s
+    cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: opacity, translate;
+}
+
+.report-card-reveal:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.report-card-reveal:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.report-card-reveal:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.report-card-reveal:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
 @property --button-border-glow-angle {
   syntax: "<angle>";
   inherits: false;
@@ -220,7 +254,8 @@ a {
   }
 }
 
-.ui-glow-ring::before {
+.ui-glow-ring::before,
+.ui-card-glow::before {
   position: absolute;
   z-index: 1;
   inset: 0;
@@ -250,13 +285,15 @@ a {
 }
 
 @media (hover: hover) {
-  .ui-glow-ring:not(:disabled):hover::before {
+  .ui-glow-ring:not(:disabled):hover::before,
+  .ui-card-glow:hover::before {
     animation: button-border-glow-sweep 1.65s linear infinite;
     opacity: 1;
   }
 }
 
-.ui-glow-ring:not(:disabled):focus-visible::before {
+.ui-glow-ring:not(:disabled):focus-visible::before,
+.ui-card-glow:focus-visible::before {
   animation: button-border-glow-sweep 1.65s linear infinite;
   opacity: 1;
 }

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
 import EndingsPage from "./endings/page";
 import Home from "./page";
-import RankingPage from "./ranking/page";
+import ReportPage from "./report/page";
 
 const meta = {
   title: "Game/Screens",
@@ -22,6 +22,6 @@ export const EndingsScreen: Story = {
   render: () => <EndingsPage />,
 };
 
-export const RankingScreen: Story = {
-  render: () => <RankingPage />,
+export const ReportScreen: Story = {
+  render: () => <ReportPage />,
 };

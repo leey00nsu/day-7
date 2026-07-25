@@ -2,17 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { GameVideo } from "@/components/game/GameVideo";
+import { ReportDashboard } from "@/components/game/ReportDashboard";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "랭킹",
+  title: "리포트",
   alternates: {
-    canonical: "/ranking",
+    canonical: "/report",
   },
 };
 
-export default function RankingPage() {
+export default function ReportPage() {
   return (
     <main className="relative isolate min-h-svh overflow-hidden bg-black text-white">
       <GameVideo
@@ -33,10 +34,10 @@ export default function RankingPage() {
         <header className="flex items-start justify-between gap-5">
           <div>
             <p className="text-xs font-semibold tracking-[0.2em] text-white/48">
-              RANKING
+              REPORT
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-5xl">
-              랭킹
+              리포트
             </h1>
           </div>
           <Link
@@ -50,9 +51,7 @@ export default function RankingPage() {
           </Link>
         </header>
 
-        <p className="my-auto py-16 text-center text-lg font-medium tracking-[-0.01em] text-white/68 sm:text-xl">
-          추후 업데이트 예정입니다.
-        </p>
+        <ReportDashboard />
       </div>
     </main>
   );

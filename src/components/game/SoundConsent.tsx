@@ -7,10 +7,16 @@ import { Button } from "@/components/ui/button";
 const SOUND_CHOICE_STORAGE_KEY = "game-sound-choice";
 const SOUND_CHOICE_EVENT = "game:sound-choice";
 
-function getSoundChoiceSnapshot() {
-  return typeof window === "undefined"
-    ? ""
-    : (window.localStorage.getItem(SOUND_CHOICE_STORAGE_KEY) ?? "");
+type SoundChoiceSnapshot = "loading" | "unset" | "enabled" | "muted";
+
+function getSoundChoiceSnapshot(): SoundChoiceSnapshot {
+  const storedChoice = window.localStorage.getItem(
+    SOUND_CHOICE_STORAGE_KEY,
+  );
+
+  return storedChoice === "enabled" || storedChoice === "muted"
+    ? storedChoice
+    : "unset";
 }
 
 function subscribeToSoundChoice(onStoreChange: () => void) {
@@ -102,8 +108,17 @@ export function SoundConsent({ children }: { children: ReactNode }) {
   const soundChoice = useSyncExternalStore(
     subscribeToSoundChoice,
     getSoundChoiceSnapshot,
-    () => "",
+    () => "loading",
   );
 
-  return soundChoice ? children : <SoundConsentPrompt />;
+  if (soundChoice === "loading") {
+    return (
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 z-[200] bg-black"
+      />
+    );
+  }
+
+  return soundChoice === "unset" ? <SoundConsentPrompt /> : children;
 }

@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const BUTTON_SOUND_GAIN = 0.9;
-const HOME_MUSIC_PATHS = new Set(["/", "/endings", "/ranking"]);
+const HOME_MUSIC_PATHS = new Set(["/", "/endings", "/report"]);
 
 function storedAudioVolume(key: string, fallback: number) {
   if (typeof window === "undefined") return fallback / 100;

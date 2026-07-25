@@ -18,6 +18,8 @@ export type StoryChapter = {
   day: string;
   title: string;
   clips: readonly StoryClip[];
+  decisionId?: DecisionId;
+  decisionPrompt?: string;
   decisionThought?: string;
   decisionNarration?: string;
   choices?: readonly [
@@ -25,6 +27,15 @@ export type StoryChapter = {
     { label: string; feedback: string; clips: readonly StoryClip[] },
   ];
 };
+
+export const decisionIds = [
+  "MONDAY_STATUS",
+  "TUESDAY_OVERTIME",
+  "WEDNESDAY_BLAME",
+  "THURSDAY_CREDIT",
+] as const;
+
+export type DecisionId = (typeof decisionIds)[number];
 
 const subtitleTable = subtitles as Record<string, SubtitleCue[]>;
 
@@ -61,6 +72,8 @@ export const storyChapters: readonly StoryChapter[] = [
       clip("n01_mon_status_s02.mp4", "조직의 룰"),
       clip("n01_mon_status_s03.mp4", "결정 직전"),
     ],
+    decisionId: "MONDAY_STATUS",
+    decisionPrompt: "끝나지 않은 업무를 완료로 처리할 것인가?",
     decisionThought:
       "완료로 바꾸자니 찝찝하고, 그대로 두면 부장님이 또 뭐라고 할 텐데.",
     decisionNarration: "/audio/narration/decision-s1.mp3",
@@ -85,6 +98,8 @@ export const storyChapters: readonly StoryChapter[] = [
       clip("n02_tue_late_request_s01.mp4", "퇴근 직전의 업무 지시"),
       clip("n02_tue_late_request_s02.mp4", "일방적인 마감 지시"),
     ],
+    decisionId: "TUESDAY_OVERTIME",
+    decisionPrompt: "퇴근 직전 추가 업무에 어떻게 대응할 것인가?",
     decisionThought:
       "약속이 있는데... 그렇다고 지금 못 한다고 해도 될까.",
     decisionNarration: "/audio/narration/decision-s2.mp3",
@@ -112,6 +127,8 @@ export const storyChapters: readonly StoryChapter[] = [
       clip("n03_wed_wrong_number_s01.mp4", "회의 직전"),
       clip("n03_wed_wrong_number_s02.mp4", "떠넘겨진 책임"),
     ],
+    decisionId: "WEDNESDAY_BLAME",
+    decisionPrompt: "떠넘겨진 책임에 어떻게 대응할 것인가?",
     decisionThought: "지금 따질까... 아니면 수습부터 해야 할까?",
     decisionNarration: "/audio/narration/decision-s3.mp3",
     choices: [
@@ -137,6 +154,8 @@ export const storyChapters: readonly StoryChapter[] = [
       clip("n04_thu_self_review_s01.mp4", "웃으며 가로채는 공"),
       clip("n04_thu_self_review_s02.mp4", "위계로 누르는 말"),
     ],
+    decisionId: "THURSDAY_CREDIT",
+    decisionPrompt: "평가서에 내 성과를 어떻게 남길 것인가?",
     decisionThought:
       "내가 한 일을 지워야 하나. 그대로 쓰면 찍힐 것 같고.",
     decisionNarration: "/audio/narration/decision-s4.mp3",
@@ -211,3 +230,20 @@ export const endings = [
 
 export type EndingId = (typeof endings)[number]["id"];
 export type Ending = (typeof endings)[number];
+
+export const decisionDefinitions = storyChapters.flatMap((chapter) =>
+  chapter.decisionId && chapter.decisionPrompt && chapter.choices
+    ? [
+        {
+          id: chapter.decisionId,
+          day: chapter.day,
+          title: chapter.title,
+          prompt: chapter.decisionPrompt,
+          choices: [
+            chapter.choices[0].label,
+            chapter.choices[1].label,
+          ] as const,
+        },
+      ]
+    : [],
+);

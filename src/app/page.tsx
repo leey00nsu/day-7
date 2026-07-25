@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 const menuItems = [
   { label: "시작하기", href: "/story", primary: true },
-  { label: "랭킹", href: "/ranking", primary: false },
+  { label: "리포트", href: "/report", primary: false },
   { label: "앨범", href: "/endings", primary: false },
 ] as const;
 

@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model GameChoiceResponse {
+  id          Int      @id @default(autoincrement())
+  playerId    String   @map("player_id") @db.Uuid
+  decisionId  String   @map("decision_id")
+  choiceIndex Int      @map("choice_index") @db.SmallInt
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([playerId, decisionId], map: "game_choice_responses_player_decision_idx")
+  @@index([decisionId, choiceIndex], map: "game_choice_responses_aggregate_idx")
+  @@map("game_choice_responses")
+}
+
+model GameEndingResponse {
+  playerId  String   @map("player_id") @db.Uuid
+  endingId  String   @map("ending_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@id([playerId, endingId])
+  @@index([endingId], map: "game_ending_responses_aggregate_idx")
+  @@map("game_ending_responses")
+}

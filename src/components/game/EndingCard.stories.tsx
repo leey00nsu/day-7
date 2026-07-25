@@ -24,6 +24,7 @@ type Story = StoryObj<typeof meta>;
 export const Unlocked: Story = {
   args: {
     ending: endings[0],
+    reachCount: 74,
     unlocked: true,
   },
 };
@@ -31,7 +32,16 @@ export const Unlocked: Story = {
 export const Locked: Story = {
   args: {
     ending: endings[1],
+    reachCount: 59,
     unlocked: false,
     onSelect: () => undefined,
+  },
+};
+
+export const FirstArrival: Story = {
+  args: {
+    ending: endings[2],
+    reachCount: 0,
+    unlocked: true,
   },
 };

@@ -92,6 +92,7 @@ Node.js 20 이상과 pnpm이 필요합니다.
 ```bash
 corepack enable
 pnpm install
+pnpm db:generate
 pnpm dev
 ```
 
@@ -126,11 +127,48 @@ NEXT_PUBLIC_VIDEO_BASE_URL=https://media.example.com/day-7-videos
 ```bash
 NEXT_PUBLIC_SITE_URL=https://실제-게임-도메인
 NEXT_PUBLIC_VIDEO_BASE_URL=https://media.example.com/day-7-videos
+DATABASE_URL=postgresql://game_user:비밀번호@postgres:5432/game
 ```
 
 `NEXT_PUBLIC_SITE_URL`은 canonical URL, Open Graph, sitemap과 JSON-LD에
 사용됩니다.`NEXT_PUBLIC_VIDEO_BASE_URL`은 필수이며, 클라이언트 번들에
-포함되도록 빌드 변수에도 등록해야 합니다.
+포함되도록 빌드 변수에도 등록해야 합니다. `DATABASE_URL`은 서버에서만
+사용하며 클라이언트 번들에는 포함되지 않습니다.
+
+### PostgreSQL
+
+리포트는 브라우저별 익명 UUID와 함께 월요일부터 목요일까지 발생한 모든
+선택을 PostgreSQL에 저장합니다. 같은 게임을 반복하면 선택 기록도
+플레이한 횟수만큼 누적됩니다. 도달한 엔딩은 브라우저별로 한 번만
+집계됩니다.
+
+로컬에서는 Docker Compose로 PostgreSQL을 실행하고 Prisma 마이그레이션을
+적용합니다.
+
+```bash
+docker compose up -d
+pnpm db:deploy
+```
+
+기본 연결 주소는 `.env.example`과 같습니다. 호스트에서 이미 5432 포트를
+사용한다면 `POSTGRES_PORT=55432 docker compose up -d`처럼 포트를 바꾸고
+`DATABASE_URL`에도 같은 포트를 반영합니다.
+
+스키마를 변경할 때는 개발 DB에서 새 마이그레이션을 만듭니다.
+
+```bash
+pnpm db:migrate -- --name 변경사항
+```
+
+PostgreSQL 서비스의 내부 연결 주소를 `DATABASE_URL`에 등록하고, 새
+애플리케이션을 실행하기 전에 `pnpm db:deploy`를 실행합니다. Prisma
+Client는 `pnpm build` 과정에서 자동 생성됩니다. 운영 환경에서는
+`prisma migrate dev`나 `db push`를 실행하지 않습니다.
+
+Prisma 모델은 [`prisma/schema.prisma`](./prisma/schema.prisma), 실제 변경
+이력은 [`prisma/migrations`](./prisma/migrations)에 보관합니다. 선택지와
+엔딩 식별자를 변경했다면 모델과 마이그레이션의 `CHECK` 조건도 함께
+갱신해야 합니다.
 
 ## 콘텐츠 수정
 
@@ -166,7 +204,7 @@ NEXT_PUBLIC_VIDEO_BASE_URL=https://media.example.com/day-7-videos
 | `/` | 루핑 타이틀 영상과 메인 메뉴 |
 | `/story` | 인터랙티브 스토리 |
 | `/endings` | 해금형 엔딩 앨범 |
-| `/ranking` | 추후 업데이트 안내 |
+| `/report` | 누적 선택 통계와 내 선택 비교 |
 
 ## Storybook
 
@@ -196,7 +234,7 @@ Storybook에서는 공통 버튼의 모든 variant와 크기, 게임 옵션의 �
 
 ```text
 src/
-├── app/                 # 페이지, SEO 메타데이터, manifest
+├── app/                 # 페이지, 리포트 API, SEO 메타데이터
 ├── components/
 │   ├── game/            # 게임 재생과 선택·엔딩 UI
 │   └── ui/              # 공통 기반 컴포넌트
@@ -204,6 +242,12 @@ src/
 │   ├── game.ts          # 챕터, 선택지, 엔딩
 │   └── subtitles.json   # 영상별 자막
 └── lib/                 # 엔딩 저장과 공통 유틸리티
+
+prisma/
+├── schema.prisma        # 리포트 데이터 모델
+└── migrations/          # 운영 DB 마이그레이션 이력
+
+docker-compose.yml       # 로컬 PostgreSQL
 
 public/
 ├── assets/              # 로고, 포스터, 엔딩 키아트

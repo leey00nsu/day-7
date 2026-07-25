@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 type EndingCardProps = {
   ending: Ending;
   unlocked: boolean;
+  reachCount?: number;
   className?: string;
   onSelect?: () => void;
 };
@@ -14,11 +15,12 @@ type EndingCardProps = {
 export function EndingCard({
   ending,
   unlocked,
+  reachCount,
   className,
   onSelect,
 }: EndingCardProps) {
   const cardClassName = cn(
-    "album-ending-card-reveal group relative overflow-hidden rounded-3xl border text-left shadow-2xl backdrop-blur-xl transition duration-300",
+    "album-ending-card-reveal ui-card-glow group relative overflow-hidden rounded-3xl border text-left shadow-2xl backdrop-blur-xl transition duration-300 ease-in-out hover:scale-[1.02]",
     unlocked
       ? "border-white/18 bg-black/34"
       : "border-white/8 bg-black/46",
@@ -89,6 +91,13 @@ export function EndingCard({
             ? ending.summary
             : "게임에서 이 결말에 도달하면 내용이 공개됩니다."}
         </p>
+        {reachCount !== undefined ? (
+          <p className="mt-4 text-xs font-medium text-white/58">
+            {unlocked && reachCount === 0
+              ? "나와 0명의 사람들이 이 엔딩에 도달했습니다."
+              : `${reachCount.toLocaleString()}명의 사람들이 이 엔딩에 도달했습니다.`}
+          </p>
+        ) : null}
       </div>
     </>
   );

@@ -9,18 +9,24 @@ import { EndingCard } from "@/components/game/EndingCard";
 import { GameVideo } from "@/components/game/GameVideo";
 import { buttonVariants } from "@/components/ui/button";
 import { endings, type EndingId } from "@/data/game";
+import { useReportData } from "@/hooks/use-report-data";
 import {
   getEndingProgressSnapshot,
   parseUnlockedEndingIds,
   subscribeToEndingProgress,
 } from "@/lib/ending-progress";
+import type { ReportData } from "@/lib/report-types";
 import { cn } from "@/lib/utils";
 
 type EndingAlbumProps = {
   initialUnlockedIds?: readonly EndingId[];
+  initialReportData?: ReportData;
 };
 
-export function EndingAlbum({ initialUnlockedIds }: EndingAlbumProps) {
+export function EndingAlbum({
+  initialUnlockedIds,
+  initialReportData,
+}: EndingAlbumProps) {
   const storedProgress = useSyncExternalStore(
     subscribeToEndingProgress,
     getEndingProgressSnapshot,
@@ -29,6 +35,7 @@ export function EndingAlbum({ initialUnlockedIds }: EndingAlbumProps) {
   const [selectedEndingId, setSelectedEndingId] = useState<EndingId | null>(
     null,
   );
+  const { data: reportData } = useReportData(initialReportData);
   const unlockedIds = useMemo(
     () => initialUnlockedIds ?? parseUnlockedEndingIds(storedProgress),
     [initialUnlockedIds, storedProgress],
@@ -119,6 +126,7 @@ export function EndingAlbum({ initialUnlockedIds }: EndingAlbumProps) {
                 ending={ending}
                 key={ending.id}
                 onSelect={() => setSelectedEndingId(ending.id)}
+                reachCount={reportData?.endings[ending.id]}
                 unlocked={unlocked}
               />
             );
@@ -169,6 +177,14 @@ export function EndingAlbum({ initialUnlockedIds }: EndingAlbumProps) {
               <p className="mt-4 leading-7 text-white/65">
                 {selectedEnding.summary}
               </p>
+              {reportData ? (
+                <p className="mt-5 text-sm font-medium text-white/58">
+                  {reportData.endings[
+                    selectedEnding.id
+                  ].toLocaleString()}
+                  명의 사람들이 이 엔딩에 도달했습니다.
+                </p>
+              ) : null}
             </div>
           </article>
         </div>
