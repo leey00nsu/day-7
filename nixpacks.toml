@@ -1,0 +1,5 @@
+[phases.install]
+cmds = [
+  "npm install --global pnpm@11.17.0",
+  "pnpm install --frozen-lockfile",
+]
