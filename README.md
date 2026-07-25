@@ -1,27 +1,170 @@
-# 정규직 D-7 · Game
+<p align="center">
+  <img
+    alt="정규직까지 D-7"
+    src="./public/assets/brand/game-title-logo.png"
+    width="280"
+  />
+</p>
 
-AI 영상 기반 인터랙티브 오피스 드라마의 실제 개발 프로젝트입니다.
+<p align="center">
+  선택이 미래를 바꾼다.<br />
+  7일간의 인턴 생활을 영상으로 플레이하는 인터랙티브 오피스 드라마.
+</p>
+
+![정규직까지 D-7 홈 화면](./docs/screenshots/home.jpg)
+
+## 게임 소개
+
+정규직 전환 결과 발표를 일주일 앞둔 김인턴.
+월요일의 석연치 않은 업무 지시부터 금요일의 최종 면담까지, 매일 조직과
+자신 사이에서 선택해야 합니다.
+
+선택은 그 자리에서 끝나지 않습니다. 동료들은 김인턴의 행동을 기억하고,
+나흘 동안 쌓인 결정은 서로 다른 세 가지 결말로 이어집니다.
+
+## 주요 화면
+
+### 시네마틱 스토리
+
+8초 단위의 AI 영상, 대사 자막, 내레이션과 배경음이 하나의 장면처럼
+이어집니다. 영상 재생과 일시정지, 건너뛰기, 자막 크기와 음량을 플레이
+중에도 조절할 수 있습니다.
+
+![프롤로그 인게임 화면](./docs/screenshots/story.jpg)
+
+### 선택과 기억
+
+분기점에서는 김인턴의 속마음과 두 가지 행동이 함께 나타납니다. 선택
+결과는 짧은 피드백으로 남고, 이후 결말 판정에 반영됩니다.
+
+![월요일 선택지 화면](./docs/screenshots/decision.jpg)
+
+### 엔딩 앨범
+
+도달한 엔딩은 브라우저에 저장됩니다. 해금 전에는 엔딩 카드가
+가려지고, 달성한 결말만 앨범에서 다시 볼 수 있습니다.
+
+![잠긴 엔딩 앨범 화면](./docs/screenshots/endings.jpg)
+
+## 플레이 흐름
+
+```text
+프롤로그
+  ↓
+월요일 ─ 화요일 ─ 수요일 ─ 목요일
+  ↓          매일 두 가지 선택
+금요일 최종 면담
+  ↓
+E01 정규직이라는 족쇄
+E02 회사 사정이라는 핑계
+E03 김인턴의 거절
+```
+
+## 구현 기능
+
+- 두 개의 비디오 레이어를 교차 사용하는 끊김 없는 장면 전환
+- 챕터별 인트로와 월요일부터 금요일까지 이어지는 선택형 스토리
+- JSON 기반 화자·대사·타임코드 자막
+- 게임 진행, 선택지, 홈 화면별 BGM과 효과음
+- 전체 음량, 배경음, 효과음, 자막 표시와 크기 설정
+- 최초 방문 사운드 사용 여부 확인 및 설정 저장
+- 선택 결과 피드백과 세 가지 엔딩 판정
+- `localStorage` 기반 엔딩 해금 및 앨범
+- 모바일 화면에서 전체 영상을 유지하는 레터박스 처리
+- Open Graph, favicon, sitemap, robots, JSON-LD
+- UI 컴포넌트와 주요 화면을 확인할 수 있는 Storybook
 
 ## 기술 구성
 
-- Next.js 16 App Router
-- React 19
-- TypeScript
-- Tailwind CSS 4
-- shadcn/ui CSS Variables
-- Kibo UI
-- Storybook 10
-- Pretendard Variable
-- pnpm
+| 영역 | 기술 |
+| --- | --- |
+| Framework | Next.js 16 App Router |
+| UI | React 19, TypeScript, Tailwind CSS 4 |
+| Components | Kibo UI, Base UI, shadcn 스타일 시스템 |
+| Typography | Pretendard Variable |
+| Documentation | Storybook 10 |
+| Package manager | pnpm 11 |
 
-## 실행
+## 시작하기
+
+Node.js 20 이상과 pnpm이 필요합니다.
 
 ```bash
+corepack enable
 pnpm install
 pnpm dev
 ```
 
-검수:
+개발 서버는 기본적으로 `http://localhost:3000`에서 실행됩니다.
+
+### 영상 파일
+
+영상은 저장소에 포함하지 않습니다. 로컬 개발에서는 MP4 파일을 다음
+위치에 준비해야 합니다.
+
+```text
+public/videos/
+├── t00_title_s01.mp4
+├── p00_prologue_s00.mp4
+├── select_decision.mp4
+└── ...
+```
+
+실제로 참조되는 파일명은
+[`src/data/game.ts`](./src/data/game.ts)에서 확인할 수 있습니다.
+`public/videos/`는 `.gitignore`에 등록되어 있습니다.
+
+현재 코드는 `/videos/<filename>`을 사용합니다. 운영 배포에서는 영상
+파일을 Cloudflare R2의 별도 미디어 도메인으로 옮기는 구성을 준비하고
+있습니다.
+
+## 콘텐츠 수정
+
+### 스토리와 분기
+
+장별 영상, 선택지, 피드백과 엔딩 정보는
+[`src/data/game.ts`](./src/data/game.ts)에서 관리합니다.
+
+### 자막
+
+[`src/data/subtitles.json`](./src/data/subtitles.json)의 영상 파일명 아래에
+자막을 추가합니다.
+
+```json
+{
+  "n01_mon_status_s01.mp4": [
+    {
+      "start": 0.3,
+      "end": 3.55,
+      "speaker": "박부장",
+      "text": "오늘 보고 마감이야. 완료로 올리고 나중에 수정하자."
+    }
+  ]
+}
+```
+
+`start`와 `end`는 영상 시작 후 초 단위 시간입니다.
+
+## 경로
+
+| 경로 | 화면 |
+| --- | --- |
+| `/` | 루핑 타이틀 영상과 메인 메뉴 |
+| `/story` | 인터랙티브 스토리 |
+| `/endings` | 해금형 엔딩 앨범 |
+| `/ranking` | 추후 업데이트 안내 |
+| `/library` | UI 개발용 기록·설정 화면 |
+
+## Storybook
+
+```bash
+pnpm storybook
+```
+
+`http://localhost:6006`에서 버튼, 옵션 패널, 챕터 인트로, 자막, 선택지,
+선택 피드백, 엔딩 카드와 주요 페이지를 독립적으로 확인할 수 있습니다.
+
+## 검수
 
 ```bash
 pnpm lint
@@ -30,48 +173,26 @@ pnpm build-storybook
 pnpm test-storybook
 ```
 
-## 현재 화면
+## 프로젝트 구조
 
-- `/` — `t00_title_s01.mp4`를 무한 재생하는 시네마틱 홈
-- `/story` — 보유 영상 자동 재생, HTML 자막, 좌우 선택 분기
-- `/endings` — 개편된 엔딩 키아트 3종
-- `/library` — 저장과 재생 설정
-- `/ranking` — 랭킹 화면의 초기 상태
+```text
+src/
+├── app/                 # 페이지, SEO 메타데이터, manifest
+├── components/
+│   ├── game/            # 게임 재생과 선택·엔딩 UI
+│   ├── kibo-ui/         # 프로젝트에 가져온 Kibo UI 컴포넌트
+│   └── ui/              # 버튼과 공통 프리미티브
+├── data/
+│   ├── game.ts          # 챕터, 선택지, 엔딩
+│   └── subtitles.json   # 영상별 자막
+└── lib/                 # 엔딩 저장과 공통 유틸리티
 
-영상 원본은 `../outputs/videos`에 둡니다. 앱은 `/api/videos/[filename]`
-경로에서 해당 파일을 Range 스트리밍하므로 영상 파일을 저장소 안으로
-복사하지 않습니다. 아직 없는 파일은 재생 목록에 넣지 않습니다.
-
-자막 문구와 노출 시간은 `src/data/subtitles.json`에서 관리합니다.
-영상 파일명을 키로 사용하고 `start`, `end`, `speaker`, `text`를 수정하면
-게임 자막에 바로 반영됩니다. 장면 전환은 두 영상 레이어를 번갈아
-사용해 다음 영상이 준비될 때까지 직전 마지막 프레임을 유지합니다.
-
-## UI 개발
-
-```bash
-pnpm storybook
+public/
+├── assets/              # 로고, 포스터, 엔딩 키아트
+├── audio/               # BGM, 효과음, 내레이션
+└── videos/              # 로컬 영상, Git 제외
 ```
 
-Storybook은 `http://localhost:6006`에서 실행됩니다. 다음 항목을 개별적으로
-검수할 수 있습니다.
-
-- shadcn 기반 Button과 기본 프리미티브
-- GlassCard와 7단계 ProgressSteps
-- Kibo UI Announcement, Choicebox, Status, Pill
-- 상시 옵션, 자막, 좌우 선택 오버레이
-- 전체 스토리 선택 화면
-- 홈, 랭킹, 엔딩, 기록·설정 화면
-
-Kibo UI는 필요한 구성 요소의 소스만 `src/components/kibo-ui` 아래에
-가져오는 방식으로 사용합니다. 공통 색상과 모서리, 포커스 링은
-`src/app/globals.css`의 shadcn CSS Variables에서 관리합니다.
-
-## 이전 목업에서 가져온 기준
-
-`web-ui-mockups`의 글래스 카드, 선택 버튼, 진행 표시, 최소 44px
-터치 영역과 접근성 방향을 재사용했습니다. 오래된 증거 수집 화면, 사원증,
-보고서, 메신저 이미지, Cloudflare/Drizzle 예제는 가져오지 않았습니다.
-
-`html_mockups`와 `web-ui-mockups`는 디자인 참고 자료로만 유지하고, 앞으로의
-게임 구현은 이 저장소를 원본으로 관리합니다.
+사용한 무료 음원의 출처와 라이선스는
+[`public/audio/ATTRIBUTION.md`](./public/audio/ATTRIBUTION.md)에 기록되어
+있습니다.
