@@ -26,7 +26,7 @@
 
 ### 시네마틱 스토리
 
-8초 단위의 AI 영상, 대사 자막, 내레이션과 배경음이 하나의 장면처럼
+AI 영상, 대사 자막, 내레이션과 배경음이 하나의 장면처럼
 이어집니다. 영상 재생과 일시정지, 건너뛰기, 자막 크기와 음량을 플레이
 중에도 조절할 수 있습니다.
 
@@ -121,7 +121,7 @@ NEXT_PUBLIC_VIDEO_BASE_URL=https://media.example.com/day-7-videos
 
 ### 배포 환경 변수
 
-Coolify에는 실제 서비스 주소를 빌드 변수와 런타임 변수로 등록합니다.
+실제 서비스 주소를 빌드 변수와 런타임 변수로 등록합니다.
 
 ```bash
 NEXT_PUBLIC_SITE_URL=https://실제-게임-도메인
@@ -129,9 +129,8 @@ NEXT_PUBLIC_VIDEO_BASE_URL=https://media.example.com/day-7-videos
 ```
 
 `NEXT_PUBLIC_SITE_URL`은 canonical URL, Open Graph, sitemap과 JSON-LD에
-사용됩니다. 생략하면 Coolify가 제공하는 `COOLIFY_URL`의 첫 번째 주소를
-사용합니다. `NEXT_PUBLIC_VIDEO_BASE_URL`은 필수이며, 클라이언트 번들에
-포함되도록 Coolify의 빌드 변수에도 등록해야 합니다.
+사용됩니다.`NEXT_PUBLIC_VIDEO_BASE_URL`은 필수이며, 클라이언트 번들에
+포함되도록 빌드 변수에도 등록해야 합니다.
 
 ## 콘텐츠 수정
 
@@ -210,6 +209,13 @@ public/
 ├── assets/              # 로고, 포스터, 엔딩 키아트
 └── audio/               # BGM, 효과음, 내레이션
 ```
+
+## AI 생성 에셋
+
+게임 내의 모든 이미지와 영상은 AI를 통해 생성되었습니다.
+
+- 이미지 모델: GPT IMAGE 2
+- 동영상 모델: VEO 3.1, SEEDANCE 2.0
 
 사용한 무료 음원의 출처와 라이선스는
 [`public/audio/ATTRIBUTION.md`](./public/audio/ATTRIBUTION.md)에 기록되어
