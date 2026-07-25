@@ -12,6 +12,8 @@ import { endings, type EndingId } from "@/data/game";
 import { useReportData } from "@/hooks/use-report-data";
 import {
   getEndingProgressSnapshot,
+  getLastEndingSnapshot,
+  parseLastEndingId,
   parseUnlockedEndingIds,
   subscribeToEndingProgress,
 } from "@/lib/ending-progress";
@@ -31,6 +33,11 @@ export function EndingAlbum({
     subscribeToEndingProgress,
     getEndingProgressSnapshot,
     () => "[]",
+  );
+  const lastEndingSnapshot = useSyncExternalStore(
+    subscribeToEndingProgress,
+    getLastEndingSnapshot,
+    () => "",
   );
   const [selectedEndingId, setSelectedEndingId] = useState<EndingId | null>(
     null,
@@ -58,6 +65,7 @@ export function EndingAlbum({
   }, [selectedEndingId]);
 
   const unlockedSet = useMemo(() => new Set(unlockedIds), [unlockedIds]);
+  const lastEndingId = parseLastEndingId(lastEndingSnapshot);
   const selectedEnding = endings.find(
     (ending) => ending.id === selectedEndingId,
   );
@@ -124,6 +132,7 @@ export function EndingAlbum({
             return (
               <EndingCard
                 ending={ending}
+                isLatestEnding={lastEndingId === ending.id}
                 key={ending.id}
                 onSelect={() => setSelectedEndingId(ending.id)}
                 reachCount={reportData?.endings[ending.id]}
@@ -178,11 +187,14 @@ export function EndingAlbum({
                 {selectedEnding.summary}
               </p>
               {reportData ? (
-                <p className="mt-5 text-sm font-medium text-white/58">
-                  {reportData.endings[
-                    selectedEnding.id
-                  ].toLocaleString()}
-                  명의 사람들이 이 엔딩에 도달했습니다.
+                <p className="mt-5 text-sm font-medium text-[#f87171]">
+                  {lastEndingId === selectedEnding.id
+                    ? `나와 ${reportData.endings[
+                        selectedEnding.id
+                      ].toLocaleString()}명의 사람들이 이 엔딩에 도달했습니다.`
+                    : `${reportData.endings[
+                        selectedEnding.id
+                      ].toLocaleString()}명의 사람들이 이 엔딩에 도달했습니다.`}
                 </p>
               ) : null}
             </div>

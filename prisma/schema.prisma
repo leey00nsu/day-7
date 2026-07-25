@@ -20,11 +20,12 @@ model GameChoiceResponse {
 }
 
 model GameEndingResponse {
+  id        Int      @id @default(autoincrement())
   playerId  String   @map("player_id") @db.Uuid
   endingId  String   @map("ending_id")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  @@id([playerId, endingId])
+  @@index([playerId, endingId], map: "game_ending_responses_player_ending_idx")
   @@index([endingId], map: "game_ending_responses_aggregate_idx")
   @@map("game_ending_responses")
 }

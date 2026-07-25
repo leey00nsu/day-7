@@ -116,10 +116,13 @@ export function ReportOverview({
                         <div
                           aria-hidden="true"
                           className={cn(
-                            "h-full rounded-full transition-[width] duration-700",
+                            "report-bar-fill h-full rounded-full",
                             selected ? "bg-[#ef4444]" : "bg-white/58",
                           )}
-                          style={{ width: `${choice.percentage}%` }}
+                          style={{
+                            animationDelay: `${0.2 + index * 0.12}s`,
+                            width: `${choice.percentage}%`,
+                          }}
                         />
                       </div>
                     </div>

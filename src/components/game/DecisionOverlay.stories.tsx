@@ -23,6 +23,7 @@ const meta = {
   ],
   args: {
     choices: ["지시대로 완료 처리한다.", "대기 상태를 그대로 둔다."],
+    prompt: "끝나지 않은 업무를 완료로 처리할 것인가?",
   },
 } satisfies Meta<typeof DecisionOverlay>;
 

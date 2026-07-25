@@ -41,6 +41,7 @@ export const Locked: Story = {
 export const FirstArrival: Story = {
   args: {
     ending: endings[2],
+    isLatestEnding: true,
     reachCount: 0,
     unlocked: true,
   },

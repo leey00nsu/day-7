@@ -8,6 +8,7 @@ type EndingCardProps = {
   ending: Ending;
   unlocked: boolean;
   reachCount?: number;
+  isLatestEnding?: boolean;
   className?: string;
   onSelect?: () => void;
 };
@@ -16,6 +17,7 @@ export function EndingCard({
   ending,
   unlocked,
   reachCount,
+  isLatestEnding = false,
   className,
   onSelect,
 }: EndingCardProps) {
@@ -92,9 +94,9 @@ export function EndingCard({
             : "게임에서 이 결말에 도달하면 내용이 공개됩니다."}
         </p>
         {reachCount !== undefined ? (
-          <p className="mt-4 text-xs font-medium text-white/58">
-            {unlocked && reachCount === 0
-              ? "나와 0명의 사람들이 이 엔딩에 도달했습니다."
+          <p className="mt-4 text-xs font-medium text-[#f87171]">
+            {isLatestEnding
+              ? `나와 ${reachCount.toLocaleString()}명의 사람들이 이 엔딩에 도달했습니다.`
               : `${reachCount.toLocaleString()}명의 사람들이 이 엔딩에 도달했습니다.`}
           </p>
         ) : null}

@@ -138,18 +138,11 @@ export async function POST(request: Request) {
       typeof body.endingId === "string" &&
       endingIdSet.has(body.endingId)
     ) {
-      await database.gameEndingResponse.upsert({
-        where: {
-          playerId_endingId: {
-            playerId,
-            endingId: body.endingId,
-          },
-        },
-        create: {
+      await database.gameEndingResponse.create({
+        data: {
           playerId,
           endingId: body.endingId,
         },
-        update: {},
       });
 
       return NextResponse.json({ saved: true });

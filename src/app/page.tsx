@@ -58,9 +58,7 @@ export default function Home() {
                   size: "lg",
                 }),
                 "home-menu-item-reveal h-12 px-3 text-[14px] font-semibold sm:h-13 sm:px-6 sm:text-[15px]",
-                item.primary
-                  ? "border-white"
-                  : "bg-gray-800/30",
+                item.primary && "ui-glow-ring-auto",
               )}
               href={item.href}
               key={item.label}

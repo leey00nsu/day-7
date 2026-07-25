@@ -11,6 +11,15 @@
   7일간의 인턴 생활을 영상으로 플레이하는 인터랙티브 오피스 드라마.
 </p>
 
+<video
+  controls
+  playsinline
+  poster="./docs/screenshots/home.jpg"
+  src="./docs/trailer/steam-trailer-top-flow-readme.mp4"
+  width="100%"
+>
+</video>
+
 ![정규직까지 D-7 홈 화면](./docs/screenshots/home.jpg)
 
 ## 게임 소개

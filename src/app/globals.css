@@ -176,26 +176,82 @@ a {
   }
 }
 
+@keyframes report-bar-fill {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes decision-element-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.decision-question-vignette {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(0 0 0 / 68%) 22%,
+    rgb(0 0 0 / 72%) 50%,
+    rgb(0 0 0 / 68%) 78%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    transparent,
+    #000 24%,
+    #000 74%,
+    transparent
+  );
+}
+
+.decision-prompt-reveal,
+.decision-divider-reveal,
+.decision-choice-reveal {
+  animation: decision-element-reveal 0.65s
+    cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: opacity, transform;
+}
+
+.decision-prompt-reveal {
+  animation-delay: 0.08s;
+}
+
+.decision-divider-reveal {
+  animation-delay: 0.3s;
+}
+
 .home-logo-reveal {
   animation: home-logo-reveal 1.8s ease-out 0.2s both;
   will-change: opacity;
 }
 
 .home-menu-item-reveal {
-  animation: home-menu-item-reveal 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: home-menu-item-reveal 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
   will-change: opacity, transform;
 }
 
 .home-menu-item-reveal:nth-child(1) {
-  animation-delay: 2.1s;
+  animation-delay: 2s;
 }
 
 .home-menu-item-reveal:nth-child(2) {
-  animation-delay: 2.25s;
+  animation-delay: 2.12s;
 }
 
 .home-menu-item-reveal:nth-child(3) {
-  animation-delay: 2.4s;
+  animation-delay: 2.24s;
 }
 
 .album-ending-card-reveal {
@@ -236,6 +292,12 @@ a {
 
 .report-card-reveal:nth-child(4) {
   animation-delay: 0.4s;
+}
+
+.report-bar-fill {
+  animation: report-bar-fill 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: left center;
+  will-change: transform;
 }
 
 @property --button-border-glow-angle {
@@ -298,9 +360,18 @@ a {
   opacity: 1;
 }
 
+.ui-glow-ring-auto::before {
+  animation: button-border-glow-sweep 1.65s linear infinite;
+  opacity: 1;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .home-logo-reveal,
-  .home-menu-item-reveal {
+  .home-menu-item-reveal,
+  .decision-prompt-reveal,
+  .decision-divider-reveal,
+  .decision-choice-reveal,
+  .report-bar-fill {
     animation-delay: 0s !important;
     opacity: 1;
     transform: none;

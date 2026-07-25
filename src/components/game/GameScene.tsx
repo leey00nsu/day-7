@@ -696,6 +696,7 @@ export function GameScene() {
             chapter.choices[1].label,
           ]}
           onChoose={choose}
+          prompt={chapter.decisionPrompt ?? ""}
         />
       ) : null}
 

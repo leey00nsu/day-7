@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="1600" height="120" viewBox="0 0 1600 120"
+     role="img" aria-label="흰색 다이아몬드 장식 구분선">
+  <title>Diamond ornamental divider - white, thinner line, wider gap</title>
+
+  <g fill="none" stroke="#fff" stroke-width="3"
+     stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 40 60 H 744" />
+    <path d="M 856 60 H 1560" />
+    <path d="M 800 42 L 818 60 L 800 78 L 782 60 Z" />
+  </g>
+
+  <path d="M 744 60 L 758 55 L 758 65 Z" fill="#fff"/>
+  <path d="M 856 60 L 842 55 L 842 65 Z" fill="#fff"/>
+</svg>

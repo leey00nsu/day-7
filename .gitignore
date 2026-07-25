@@ -20,6 +20,11 @@
 # production
 /build
 
+# local Remotion editing source and cache
+/remotion/
+/.remotion/
+/public/audio/trailer-top-flow.mp3
+
 # externally hosted game videos
 /public/videos/
 

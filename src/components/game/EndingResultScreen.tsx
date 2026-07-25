@@ -29,6 +29,7 @@ export function EndingResultScreen({
           <EndingCard
             className="w-full"
             ending={ending}
+            isLatestEnding
             reachCount={data?.endings[ending.id]}
             unlocked
           />

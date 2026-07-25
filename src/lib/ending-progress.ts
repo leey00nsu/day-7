@@ -1,6 +1,7 @@
 import type { EndingId } from "@/data/game";
 
 export const ENDING_PROGRESS_STORAGE_KEY = "d7-unlocked-endings";
+export const LAST_ENDING_STORAGE_KEY = "d7-last-ending";
 
 const endingIds = new Set<EndingId>(["E01", "E02", "E03"]);
 
@@ -19,15 +20,32 @@ export function parseUnlockedEndingIds(storedValue: string): EndingId[] {
   }
 }
 
+export function parseLastEndingId(storedValue: string): EndingId | null {
+  return endingIds.has(storedValue as EndingId)
+    ? (storedValue as EndingId)
+    : null;
+}
+
 export function getEndingProgressSnapshot() {
   return typeof window === "undefined"
     ? "[]"
     : (window.localStorage.getItem(ENDING_PROGRESS_STORAGE_KEY) ?? "[]");
 }
 
+export function getLastEndingSnapshot() {
+  return typeof window === "undefined"
+    ? ""
+    : (window.localStorage.getItem(LAST_ENDING_STORAGE_KEY) ?? "");
+}
+
 export function subscribeToEndingProgress(onStoreChange: () => void) {
   function handleStorage(event: StorageEvent) {
-    if (event.key === ENDING_PROGRESS_STORAGE_KEY) onStoreChange();
+    if (
+      event.key === ENDING_PROGRESS_STORAGE_KEY ||
+      event.key === LAST_ENDING_STORAGE_KEY
+    ) {
+      onStoreChange();
+    }
   }
 
   window.addEventListener("storage", handleStorage);
@@ -52,6 +70,7 @@ export function unlockEnding(endingId: EndingId) {
     ENDING_PROGRESS_STORAGE_KEY,
     JSON.stringify([...unlocked]),
   );
+  window.localStorage.setItem(LAST_ENDING_STORAGE_KEY, endingId);
   window.dispatchEvent(new Event("game:ending-unlocked"));
 }
 
