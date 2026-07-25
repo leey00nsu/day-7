@@ -1,26 +1,19 @@
-<p align="center">
-  <img
-    alt="정규직까지 D-7"
-    src="./public/assets/brand/game-title-logo.png"
-    width="280"
-  />
-</p>
+![정규직까지 D-7 홈 화면](./docs/screenshots/home.jpg)
+
+# 정규직까지 D-7
 
 <p align="center">
   선택이 미래를 바꾼다.<br />
   7일간의 인턴 생활을 영상으로 플레이하는 인터랙티브 오피스 드라마.
 </p>
 
-<video
-  controls
-  playsinline
-  poster="./docs/screenshots/home.jpg"
-  src="./docs/trailer/steam-trailer-top-flow-readme.mp4"
-  width="100%"
->
-</video>
 
-![정규직까지 D-7 홈 화면](./docs/screenshots/home.jpg)
+
+https://github.com/user-attachments/assets/f058c330-80ba-4f89-9bff-6bdef65e0fd0
+
+
+
+
 
 ## 게임 소개
 
