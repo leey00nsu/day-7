@@ -19,16 +19,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Consent: Story = {
   args: {
-    supported: true,
     onDownload: () => undefined,
     onStream: () => undefined,
-  },
-};
-
-export const Unsupported: Story = {
-  args: {
-    ...Consent.args,
-    supported: false,
   },
 };
 

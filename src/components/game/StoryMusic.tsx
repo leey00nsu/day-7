@@ -143,14 +143,14 @@ export function StoryMusic({
       <audio
         aria-hidden="true"
         loop
-        preload="auto"
+        preload={mode === "gameplay" ? "auto" : "metadata"}
         ref={gameplayRef}
         src={gameplaySrc}
       />
       <audio
         aria-hidden="true"
         loop
-        preload="auto"
+        preload={mode === "decision" ? "auto" : "metadata"}
         ref={decisionRef}
         src={decisionSrc}
       />

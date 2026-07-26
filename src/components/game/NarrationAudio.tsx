@@ -14,6 +14,8 @@ type NarrationAudioProps = {
   volume: number;
   onEnded?: () => void;
   onError?: () => void;
+  onPause?: () => void;
+  onPlaying?: () => void;
   onReady?: () => void;
   onStalled?: () => void;
   onWaiting?: () => void;
@@ -22,6 +24,7 @@ type NarrationAudioProps = {
 export type NarrationAudioHandle = {
   pause: () => void;
   play: () => Promise<void>;
+  reload: () => void;
   reset: () => void;
   readyState: () => number;
 };
@@ -35,6 +38,8 @@ export const NarrationAudio = forwardRef<
     volume,
     onEnded,
     onError,
+    onPause,
+    onPlaying,
     onReady,
     onStalled,
     onWaiting,
@@ -60,6 +65,14 @@ export const NarrationAudio = forwardRef<
         if (!audio || !resolvedSrc) return;
 
         await audio.play();
+      },
+      reload() {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        audio.pause();
+        audio.currentTime = 0;
+        audio.load();
       },
       reset() {
         const audio = audioRef.current;
@@ -108,6 +121,8 @@ export const NarrationAudio = forwardRef<
       aria-hidden="true"
       onEnded={onEnded}
       onError={onError}
+      onPause={onPause}
+      onPlaying={onPlaying}
       onCanPlay={onReady}
       onCanPlayThrough={onReady}
       onStalled={onStalled}

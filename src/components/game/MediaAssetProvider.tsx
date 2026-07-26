@@ -17,20 +17,15 @@ import mediaManifestJson from "@/data/media-manifest.json";
 import { getVideoUrl } from "@/lib/video";
 
 const STORAGE_CHOICE_KEY = "game-media-storage-choice";
-const MANIFEST_VERSION_KEY = "game-media-manifest-version";
-const CACHE_ROOT_NAME = "day-7-media";
-const STORAGE_MARGIN = 1.2;
+const DOWNLOAD_CONCURRENCY = 2;
 
 type MediaAsset = {
   key: string;
   source: string;
-  cacheName: string;
   size: number;
-  sha256: string;
 };
 
 type MediaManifest = {
-  version: string;
   totalBytes: number;
   assets: MediaAsset[];
 };
@@ -54,7 +49,6 @@ type MediaAssetContextValue = {
 };
 
 const manifest = mediaManifestJson as MediaManifest;
-const manifestDirectoryName = `v-${manifest.version}`;
 
 function getAssetKey(source: string) {
   if (source.startsWith("/audio/")) return source.slice(1);
@@ -80,92 +74,14 @@ const fallbackContext: MediaAssetContextValue = {
 const MediaAssetContext =
   createContext<MediaAssetContextValue>(fallbackContext);
 
-function supportsOpfs() {
-  return (
-    typeof navigator !== "undefined" &&
-    "storage" in navigator &&
-    typeof navigator.storage.getDirectory === "function"
-  );
-}
-
 function formatMegabytes(bytes: number) {
   return `${Math.ceil(bytes / 1_000_000)}MB`;
 }
 
-async function sha256(file: File) {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    await file.arrayBuffer(),
-  );
-
-  return Array.from(new Uint8Array(digest), (byte) =>
-    byte.toString(16).padStart(2, "0"),
-  ).join("");
-}
-
-async function getManifestDirectory(create: boolean) {
-  const root = await navigator.storage.getDirectory();
-  const cacheRoot = await root.getDirectoryHandle(CACHE_ROOT_NAME, {
-    create,
-  });
-
-  return cacheRoot.getDirectoryHandle(manifestDirectoryName, {
-    create,
-  });
-}
-
-async function removeAllDownloadedMedia() {
-  if (!supportsOpfs()) return;
-
-  const root = await navigator.storage.getDirectory();
-
-  try {
-    await root.removeEntry(CACHE_ROOT_NAME, { recursive: true });
-  } catch (error) {
-    if (!(error instanceof DOMException && error.name === "NotFoundError")) {
-      throw error;
-    }
-  }
-}
-
-async function removeManifestDirectory(version: string) {
-  if (!supportsOpfs() || !/^[a-zA-Z0-9._-]+$/.test(version)) return;
-
-  try {
-    const root = await navigator.storage.getDirectory();
-    const cacheRoot = await root.getDirectoryHandle(CACHE_ROOT_NAME);
-    await cacheRoot.removeEntry(`v-${version}`, { recursive: true });
-  } catch (error) {
-    if (!(error instanceof DOMException && error.name === "NotFoundError")) {
-      throw error;
-    }
-  }
-}
-
-async function readCachedAssets() {
-  const directory = await getManifestDirectory(false);
-  const files = new Map<string, File>();
-
-  for (const asset of manifest.assets) {
-    const handle = await directory.getFileHandle(asset.cacheName);
-    const file = await handle.getFile();
-
-    if (file.size !== asset.size) {
-      throw new Error(`캐시 크기 불일치: ${asset.source}`);
-    }
-
-    files.set(asset.key, file);
-  }
-
-  return files;
-}
-
 export function MediaDownloadPrompt({
-  supported,
   onDownload,
   onStream,
 }: {
-  supported: boolean;
   onDownload: () => void;
   onStream: () => void;
 }) {
@@ -188,22 +104,16 @@ export function MediaDownloadPrompt({
           영상 및 음성 데이터를 미리 다운로드 할까요?
         </h1>
         <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-white/62 sm:text-base">
-          원활한 재생을 위해 영상과 음성 약 40MB를 이 기기에 저장합니다.
-          저장한 데이터는 브라우저 설정이나 저장 공간 상태에 따라 삭제될 수
-          있습니다. 저장하지 않더라도 스트리밍으로 진행할 수 있으며 지연이
-          발생할 수 있습니다.
+          원활한 재생을 위해 영상과 음성 약{" "}
+          {formatMegabytes(manifest.totalBytes)}를 현재 탭에 미리
+          다운로드합니다. 탭을 닫거나 새로고침하면 준비한 데이터는
+          삭제됩니다. 다운로드하지 않더라도 스트리밍으로 진행할 수 있으며
+          지연이 발생할 수 있습니다.
         </p>
-        {!supported ? (
-          <p className="mt-4 text-sm font-medium text-red-300">
-            이 브라우저에서는 기기 저장을 지원하지 않아 스트리밍으로
-            재생해야 합니다.
-          </p>
-        ) : null}
         <div className="mt-8 flex flex-wrap justify-center gap-4">
           <Button
             className="min-w-44"
             data-sound="none"
-            disabled={!supported}
             onClick={onDownload}
             size="lg"
             variant="outline"
@@ -257,8 +167,8 @@ export function MediaDeletePrompt({
           영상 및 음성 데이터를 삭제할까요?
         </h1>
         <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-white/62 sm:text-base">
-          삭제한 뒤에도 스트리밍으로 진행할 수 있으며 지연이 발생할 수
-          있습니다.
+          현재 탭에 미리 준비한 데이터를 삭제합니다. 삭제한 뒤에도
+          스트리밍으로 진행할 수 있으며 지연이 발생할 수 있습니다.
         </p>
         {error ? (
           <p className="mt-4 text-sm font-medium text-red-300">{error}</p>
@@ -382,20 +292,19 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
   const [assetUrls, setAssetUrls] = useState<Map<string, string>>(
     () => new Map(),
   );
-  const supported = supportsOpfs();
 
   const revokeObjectUrls = useCallback(() => {
     for (const url of objectUrlsRef.current) URL.revokeObjectURL(url);
     objectUrlsRef.current = [];
   }, []);
 
-  const activateCachedFiles = useCallback(
-    (files: Map<string, File>) => {
+  const activateDownloadedBlobs = useCallback(
+    (blobs: Map<string, Blob>) => {
       revokeObjectUrls();
 
       const urls = new Map<string, string>();
-      for (const [key, file] of files) {
-        const url = URL.createObjectURL(file);
+      for (const [key, blob] of blobs) {
+        const url = URL.createObjectURL(blob);
         objectUrlsRef.current.push(url);
         urls.set(key, url);
       }
@@ -410,12 +319,6 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
   );
 
   const startDownload = useCallback(async () => {
-    if (!supportsOpfs()) {
-      setDownloadError("이 브라우저에서는 기기 저장을 지원하지 않습니다.");
-      setGateState("error");
-      return;
-    }
-
     abortControllerRef.current?.abort();
     const controller = new AbortController();
     abortControllerRef.current = controller;
@@ -424,97 +327,52 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
     setGateState("downloading");
 
     try {
-      const estimate = await navigator.storage.estimate();
-      const availableBytes = Math.max(
-        (estimate.quota ?? 0) - (estimate.usage ?? 0),
-        0,
-      );
-      const requiredBytes = manifest.totalBytes * STORAGE_MARGIN;
-
-      if (estimate.quota && availableBytes < requiredBytes) {
-        throw new Error(
-          `저장 공간이 부족합니다. 최소 ${formatMegabytes(
-            requiredBytes,
-          )}의 여유 공간이 필요합니다.`,
-        );
-      }
-
-      await navigator.storage.persist?.().catch(() => false);
-
-      const directory = await getManifestDirectory(true);
-      let completedBytes = 0;
-      const pendingAssets: MediaAsset[] = [];
-
-      for (const asset of manifest.assets) {
-        try {
-          const handle = await directory.getFileHandle(asset.cacheName);
-          const file = await handle.getFile();
-          if (file.size !== asset.size) throw new Error("size mismatch");
-          completedBytes += asset.size;
-        } catch {
-          pendingAssets.push(asset);
-        }
-      }
-      setDownloadedBytes(completedBytes);
-
       let nextAssetIndex = 0;
-      let transferredBytes = completedBytes;
-      const workerCount = Math.min(3, pendingAssets.length);
+      let transferredBytes = 0;
+      const blobs = new Map<string, Blob>();
+      const workerCount = Math.min(
+        DOWNLOAD_CONCURRENCY,
+        manifest.assets.length,
+      );
 
       async function downloadNext() {
-        while (nextAssetIndex < pendingAssets.length) {
-          const asset = pendingAssets[nextAssetIndex++];
+        while (nextAssetIndex < manifest.assets.length) {
+          const asset = manifest.assets[nextAssetIndex++];
           const networkUrl = getNetworkUrl(asset.source);
           if (!networkUrl) {
             throw new Error(`미디어 주소가 없습니다: ${asset.source}`);
           }
 
-          const response = await fetch(networkUrl, {
-            cache: "no-store",
-            signal: controller.signal,
-          });
+          let response: Response;
+          try {
+            response = await fetch(networkUrl, {
+              cache: "default",
+              signal: controller.signal,
+            });
+          } catch {
+            throw new Error(
+              `${asset.source} 다운로드 중 네트워크 연결이 끊겼습니다.`,
+            );
+          }
 
-          if (!response.ok || !response.body) {
+          if (!response.ok) {
             throw new Error(
               `${asset.source} 다운로드에 실패했습니다 (${response.status}).`,
             );
           }
 
-          const handle = await directory.getFileHandle(asset.cacheName, {
-            create: true,
-          });
-          const writable = await handle.createWritable();
-          const reader = response.body.getReader();
-
-          try {
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-
-              await writable.write(value);
-              transferredBytes += value.byteLength;
-              setDownloadedBytes(
-                Math.min(transferredBytes, manifest.totalBytes),
-              );
-            }
-            await writable.close();
-          } catch (error) {
-            await writable.abort().catch(() => undefined);
-            await directory
-              .removeEntry(asset.cacheName)
-              .catch(() => undefined);
-            throw error;
-          }
-
-          const file = await handle.getFile();
-          if (file.size !== asset.size || (await sha256(file)) !== asset.sha256) {
-            await directory
-              .removeEntry(asset.cacheName)
-              .catch(() => undefined);
+          const blob = await response.blob();
+          if (blob.size !== asset.size) {
             throw new Error(
               `${asset.source} 파일 검증에 실패했습니다. 다시 시도해 주세요.`,
             );
           }
+
+          blobs.set(asset.key, blob);
+          transferredBytes += blob.size;
+          setDownloadedBytes(
+            Math.min(transferredBytes, manifest.totalBytes),
+          );
         }
       }
 
@@ -523,69 +381,45 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
       );
       setDownloadedBytes(manifest.totalBytes);
 
-      const files = await readCachedAssets();
-      const previousVersion = window.localStorage.getItem(
-        MANIFEST_VERSION_KEY,
-      );
+      if (controller.signal.aborted) return;
+
       window.localStorage.setItem(STORAGE_CHOICE_KEY, "download");
-      window.localStorage.setItem(MANIFEST_VERSION_KEY, manifest.version);
-      if (previousVersion && previousVersion !== manifest.version) {
-        await removeManifestDirectory(previousVersion).catch(() => undefined);
-      }
-      activateCachedFiles(files);
+      activateDownloadedBlobs(blobs);
     } catch (error) {
       if (controller.signal.aborted) return;
 
       setDownloadError(
-        error instanceof TypeError
-          ? "미디어 서버에 연결하지 못했습니다. R2 CORS 설정과 네트워크 상태를 확인해 주세요."
-          : error instanceof Error
-            ? error.message
-            : "알 수 없는 오류가 발생했습니다.",
+        error instanceof Error
+          ? error.message
+          : "알 수 없는 오류가 발생했습니다.",
       );
       setGateState("error");
     }
-  }, [activateCachedFiles]);
+  }, [activateDownloadedBlobs]);
 
-  const chooseStreaming = useCallback(async () => {
+  const chooseStreaming = useCallback(() => {
     abortControllerRef.current?.abort();
-    setGateState("checking");
-    revokeObjectUrls();
-    if (!cachedDataAvailable) {
-      await removeAllDownloadedMedia().catch(() => undefined);
-      window.localStorage.removeItem(MANIFEST_VERSION_KEY);
-    }
     window.localStorage.setItem(STORAGE_CHOICE_KEY, "stream");
-    setAssetUrls(new Map());
     setStorageMode("stream");
     setAppReady(true);
     setGateState("ready");
-  }, [cachedDataAvailable, revokeObjectUrls]);
+  }, []);
 
-  const deleteDownloadedAssets = useCallback(async () => {
+  const deleteDownloadedAssets = useCallback(() => {
     abortControllerRef.current?.abort();
     setDeleting(true);
     setDeleteError(undefined);
 
-    try {
-      await removeAllDownloadedMedia();
-      revokeObjectUrls();
-      window.localStorage.setItem(STORAGE_CHOICE_KEY, "stream");
-      window.localStorage.removeItem(MANIFEST_VERSION_KEY);
-      setAssetUrls(new Map());
-      setCachedDataAvailable(false);
-      setStorageMode("stream");
-      setDeleting(false);
-      setGateState("ready");
-    } catch {
-      setDeleting(false);
-      setDeleteError(
-        "저장된 데이터를 삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.",
-      );
-    }
+    revokeObjectUrls();
+    window.localStorage.setItem(STORAGE_CHOICE_KEY, "stream");
+    setAssetUrls(new Map());
+    setCachedDataAvailable(false);
+    setStorageMode("stream");
+    setDeleting(false);
+    setGateState("ready");
   }, [revokeObjectUrls]);
 
-  const chooseDownloadedPlayback = useCallback(async () => {
+  const chooseDownloadedPlayback = useCallback(() => {
     if (!cachedDataAvailable) {
       setDownloadError(undefined);
       setDownloadedBytes(0);
@@ -593,38 +427,18 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    try {
-      const files = await readCachedAssets();
-      window.localStorage.setItem(STORAGE_CHOICE_KEY, "download");
-      window.localStorage.setItem(MANIFEST_VERSION_KEY, manifest.version);
-      activateCachedFiles(files);
-    } catch {
-      await removeAllDownloadedMedia().catch(() => undefined);
-      window.localStorage.removeItem(MANIFEST_VERSION_KEY);
-      setCachedDataAvailable(false);
-      setDownloadError(undefined);
-      setDownloadedBytes(0);
-      setGateState("prompt");
-    }
-  }, [activateCachedFiles, cachedDataAvailable]);
+    window.localStorage.setItem(STORAGE_CHOICE_KEY, "download");
+    setStorageMode("download");
+    setGateState("ready");
+  }, [cachedDataAvailable]);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function initialize() {
+    function initialize() {
       const choice = window.localStorage.getItem(STORAGE_CHOICE_KEY);
 
       if (choice === "stream") {
-        try {
-          const version = window.localStorage.getItem(MANIFEST_VERSION_KEY);
-          if (version === manifest.version) {
-            await readCachedAssets();
-            if (!cancelled) setCachedDataAvailable(true);
-          }
-        } catch {
-          await removeAllDownloadedMedia().catch(() => undefined);
-          window.localStorage.removeItem(MANIFEST_VERSION_KEY);
-        }
         if (cancelled) return;
         setStorageMode("stream");
         setAppReady(true);
@@ -632,30 +446,22 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (choice !== "download" || !supportsOpfs()) {
+      if (choice !== "download") {
         setGateState("prompt");
         return;
       }
 
-      try {
-        const version = window.localStorage.getItem(MANIFEST_VERSION_KEY);
-        if (version !== manifest.version) throw new Error("update required");
-
-        const files = await readCachedAssets();
-        if (!cancelled) activateCachedFiles(files);
-      } catch {
-        if (!cancelled) void startDownload();
-      }
+      if (!cancelled) void startDownload();
     }
 
-    void initialize();
+    initialize();
 
     return () => {
       cancelled = true;
       abortControllerRef.current?.abort();
       revokeObjectUrls();
     };
-  }, [activateCachedFiles, revokeObjectUrls, startDownload]);
+  }, [revokeObjectUrls, startDownload]);
 
   const contextValue = useMemo<MediaAssetContextValue>(
     () => ({
@@ -670,12 +476,12 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
       resolveAssetUrl(source) {
         if (!source) return undefined;
 
-        return (
-          assetUrls.get(getAssetKey(source)) ?? getNetworkUrl(source)
-        );
+        return storageMode === "download"
+          ? assetUrls.get(getAssetKey(source))
+          : getNetworkUrl(source);
       },
       selectStreaming() {
-        void chooseStreaming();
+        chooseStreaming();
       },
       storageMode,
     }),
@@ -697,7 +503,6 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
       <MediaDownloadPrompt
         onDownload={() => void startDownload()}
         onStream={chooseStreaming}
-        supported={supported}
       />
     );
   }
@@ -734,7 +539,6 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
         <MediaDownloadPrompt
           onDownload={() => void startDownload()}
           onStream={chooseStreaming}
-          supported={supported}
         />
       ) : null}
       {gateState === "deletePrompt" ? (
