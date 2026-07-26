@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 import { cn } from "@/lib/utils";
 
 import { useMediaAssetUrl } from "./MediaAssetProvider";
-import { useWebAudioMedia } from "./WebAudioProvider";
+import { useHowlerSound } from "./useHowlerSound";
 
 type ChapterIntroProps = {
   title: string;
@@ -25,25 +25,28 @@ export function ChapterIntro({
   muted = false,
   className,
 }: ChapterIntroProps) {
-  const audioRef = useRef<HTMLAudioElement>(null);
   const chapterSoundSrc = useMediaAssetUrl(
     "/audio/chapter-clock-ticking.mp3",
   );
-  useWebAudioMedia(audioRef, {
-    channel: "effects",
-    gain: CHAPTER_SOUND_GAIN,
-    muted,
-  });
+  const { play: playChapterSound, stop: stopChapterSound } =
+    useHowlerSound({
+      channel: "effects",
+      gain: CHAPTER_SOUND_GAIN,
+      muted,
+      src: chapterSoundSrc,
+    });
 
   useEffect(() => {
+    playChapterSound({ restart: true });
     const completeTimer = window.setTimeout(() => {
       onComplete?.();
     }, INTRO_DURATION_MS);
 
     return () => {
       window.clearTimeout(completeTimer);
+      stopChapterSound();
     };
-  }, [onComplete]);
+  }, [onComplete, playChapterSound, stopChapterSound]);
 
   return (
     <section
@@ -66,15 +69,6 @@ export function ChapterIntro({
           {description || "\u00a0"}
         </p>
       </div>
-      <audio
-        aria-hidden="true"
-        autoPlay
-        crossOrigin="anonymous"
-        muted={muted}
-        preload="auto"
-        ref={audioRef}
-        src={chapterSoundSrc}
-      />
     </section>
   );
 }

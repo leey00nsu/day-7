@@ -12,6 +12,7 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
+import { Howler } from "howler";
 
 export type WebAudioChannel = "voice" | "music" | "effects";
 
@@ -36,6 +37,7 @@ type AudioGraph = {
 };
 
 type WebAudioContextValue = AudioSettings & {
+  graphRevision: number;
   registerMediaElement: (
     element: HTMLMediaElement,
     channel: WebAudioChannel,
@@ -58,6 +60,7 @@ const DEFAULT_AUDIO_SETTINGS: AudioSettings = {
 
 const WebAudioContext = createContext<WebAudioContextValue>({
   ...DEFAULT_AUDIO_SETTINGS,
+  graphRevision: 0,
   registerMediaElement: () => null,
 });
 
@@ -85,12 +88,37 @@ function readAudioSettings(): AudioSettings {
   };
 }
 
+function connectMediaElement(
+  graph: AudioGraph,
+  bindings: WeakMap<HTMLMediaElement, MediaBinding>,
+  element: HTMLMediaElement,
+  channel: WebAudioChannel,
+) {
+  const existingBinding = bindings.get(element);
+  if (existingBinding) return existingBinding;
+
+  const source = graph.context.createMediaElementSource(element);
+  const gain = graph.context.createGain();
+
+  source.connect(gain);
+  gain.connect(graph[channel]);
+
+  const binding = { channel, gain };
+  bindings.set(element, binding);
+  element.volume = 1;
+  return binding;
+}
+
 export function WebAudioProvider({ children }: { children: ReactNode }) {
   const graphRef = useRef<AudioGraph | null>(null);
   const mediaBindingsRef = useRef(
     new WeakMap<HTMLMediaElement, MediaBinding>(),
   );
+  const pendingMediaRef = useRef(
+    new Map<HTMLMediaElement, WebAudioChannel>(),
+  );
   const webAudioUnavailableRef = useRef(false);
+  const [graphRevision, setGraphRevision] = useState(0);
   const [settings, setSettings] = useState(readAudioSettings);
 
   const applySettings = useCallback((nextSettings: AudioSettings) => {
@@ -98,11 +126,8 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
     if (!graph) return;
 
     const now = graph.context.currentTime;
-    const enabledMasterVolume = nextSettings.soundEnabled
-      ? nextSettings.masterVolume
-      : 0;
-
-    graph.master.gain.setValueAtTime(enabledMasterVolume, now);
+    Howler.volume(nextSettings.masterVolume);
+    Howler.mute(!nextSettings.soundEnabled);
     graph.voice.gain.setValueAtTime(1, now);
     graph.music.gain.setValueAtTime(nextSettings.musicVolume, now);
     graph.effects.gain.setValueAtTime(nextSettings.effectsVolume, now);
@@ -115,8 +140,16 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const context = new AudioContext();
-      const master = context.createGain();
+      Howler.autoUnlock = true;
+      Howler.autoSuspend = false;
+      Howler.volume(readAudioSettings().masterVolume);
+
+      if (!Howler.usingWebAudio || !Howler.ctx || !Howler.masterGain) {
+        throw new Error("Web Audio is not available.");
+      }
+
+      const context = Howler.ctx;
+      const master = Howler.masterGain;
       const voice = context.createGain();
       const music = context.createGain();
       const effects = context.createGain();
@@ -124,11 +157,25 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
       voice.connect(master);
       music.connect(master);
       effects.connect(master);
-      master.connect(context.destination);
 
       const graph = { context, effects, master, music, voice };
       graphRef.current = graph;
       applySettings(readAudioSettings());
+
+      for (const [element, channel] of pendingMediaRef.current) {
+        try {
+          connectMediaElement(
+            graph,
+            mediaBindingsRef.current,
+            element,
+            channel,
+          );
+        } catch (error) {
+          console.error("미디어를 Web Audio에 연결하지 못했습니다.", error);
+        }
+      }
+      pendingMediaRef.current.clear();
+      setGraphRevision((revision) => revision + 1);
       return graph;
     } catch (error) {
       webAudioUnavailableRef.current = true;
@@ -140,19 +187,29 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
     }
   }, [applySettings]);
 
-  const resumeAudioGraph = useCallback(() => {
-    const currentSettings = readAudioSettings();
-    if (!currentSettings.soundEnabled || currentSettings.masterVolume <= 0) {
-      return;
-    }
+  const resumeAudioGraph = useCallback(
+    (allowCreate = false) => {
+      const currentSettings = readAudioSettings();
+      if (
+        !currentSettings.soundEnabled ||
+        currentSettings.masterVolume <= 0
+      ) {
+        return;
+      }
 
-    const graph = ensureAudioGraph();
-    if (!graph || graph.context.state === "running") return;
+      const graph =
+        graphRef.current ?? (allowCreate ? ensureAudioGraph() : null);
+      if (!graph || graph.context.state === "running") return;
 
-    void graph.context.resume().catch((error) => {
-      console.warn("Web Audio 재개가 브라우저에 의해 보류되었습니다.", error);
-    });
-  }, [ensureAudioGraph]);
+      void graph.context.resume().catch((error) => {
+        console.warn(
+          "Web Audio 재개가 브라우저에 의해 보류되었습니다.",
+          error,
+        );
+      });
+    },
+    [ensureAudioGraph],
+  );
 
   const registerMediaElement = useCallback(
     (element: HTMLMediaElement, channel: WebAudioChannel) => {
@@ -160,30 +217,45 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
       if (existingBinding) return existingBinding;
 
       const currentSettings = readAudioSettings();
-      if (!currentSettings.soundEnabled) return null;
+      if (!currentSettings.soundEnabled) {
+        pendingMediaRef.current.delete(element);
+        return null;
+      }
 
-      const graph = ensureAudioGraph();
-      if (!graph) return null;
+      const graph = graphRef.current;
+      if (!graph) {
+        pendingMediaRef.current.set(element, channel);
+        return null;
+      }
 
       try {
-        const source = graph.context.createMediaElementSource(element);
-        const gain = graph.context.createGain();
-        const channelGain = graph[channel];
-
-        source.connect(gain);
-        gain.connect(channelGain);
-
-        const binding = { channel, gain };
-        mediaBindingsRef.current.set(element, binding);
-        element.volume = 1;
-        return binding;
+        pendingMediaRef.current.delete(element);
+        return connectMediaElement(
+          graph,
+          mediaBindingsRef.current,
+          element,
+          channel,
+        );
       } catch (error) {
         console.error("미디어를 Web Audio에 연결하지 못했습니다.", error);
         return null;
       }
     },
-    [ensureAudioGraph],
+    [],
   );
+
+  useEffect(() => {
+    const currentSettings = readAudioSettings();
+    if (
+      currentSettings.soundEnabled &&
+      currentSettings.masterVolume > 0
+    ) {
+      const setupFrame = window.requestAnimationFrame(() => {
+        ensureAudioGraph();
+      });
+      return () => window.cancelAnimationFrame(setupFrame);
+    }
+  }, [ensureAudioGraph]);
 
   useEffect(() => {
     function updateSettings() {
@@ -192,7 +264,7 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
       applySettings(nextSettings);
 
       if (nextSettings.soundEnabled && nextSettings.masterVolume > 0) {
-        resumeAudioGraph();
+        resumeAudioGraph(true);
       }
     }
 
@@ -211,7 +283,7 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     function unlockAudio() {
-      resumeAudioGraph();
+      resumeAudioGraph(true);
     }
 
     function handleVisibilityChange() {
@@ -220,6 +292,7 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
 
     window.addEventListener("click", unlockAudio, true);
     window.addEventListener("keydown", unlockAudio, true);
+    window.addEventListener("pointerdown", unlockAudio, true);
     window.addEventListener("pointerup", unlockAudio, true);
     window.addEventListener("touchend", unlockAudio, true);
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -227,6 +300,7 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener("click", unlockAudio, true);
       window.removeEventListener("keydown", unlockAudio, true);
+      window.removeEventListener("pointerdown", unlockAudio, true);
       window.removeEventListener("pointerup", unlockAudio, true);
       window.removeEventListener("touchend", unlockAudio, true);
       document.removeEventListener(
@@ -237,8 +311,8 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
   }, [resumeAudioGraph]);
 
   const value = useMemo(
-    () => ({ ...settings, registerMediaElement }),
-    [registerMediaElement, settings],
+    () => ({ ...settings, graphRevision, registerMediaElement }),
+    [graphRevision, registerMediaElement, settings],
   );
 
   return (
@@ -263,6 +337,7 @@ export function useWebAudioMedia<T extends HTMLMediaElement>(
 ) {
   const {
     effectsVolume,
+    graphRevision,
     masterVolume,
     musicVolume,
     registerMediaElement,
@@ -315,6 +390,7 @@ export function useWebAudioMedia<T extends HTMLMediaElement>(
     channel,
     effectsVolume,
     gain,
+    graphRevision,
     masterVolume,
     musicVolume,
     muted,

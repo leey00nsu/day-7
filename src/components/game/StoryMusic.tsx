@@ -3,10 +3,8 @@
 import { useEffect, useRef } from "react";
 
 import { useMediaAssetUrl } from "./MediaAssetProvider";
-import {
-  useWebAudioMedia,
-  useWebAudioSettings,
-} from "./WebAudioProvider";
+import { useWebAudioSettings } from "./WebAudioProvider";
+import { useHowlerSound } from "./useHowlerSound";
 
 export type StoryMusicMode = "silent" | "gameplay" | "decision";
 
@@ -23,8 +21,6 @@ export function StoryMusic({
   mode,
   suspended = false,
 }: StoryMusicProps) {
-  const gameplayRef = useRef<HTMLAudioElement>(null);
-  const decisionRef = useRef<HTMLAudioElement>(null);
   const previousModeRef = useRef<StoryMusicMode>(mode);
   const { masterVolume, musicVolume, soundEnabled } =
     useWebAudioSettings();
@@ -39,41 +35,37 @@ export function StoryMusic({
     !soundEnabled ||
     masterVolume <= 0 ||
     musicVolume <= 0;
-  const gameplayGain =
-    !hardMuted && mode === "gameplay" ? GAMEPLAY_GAIN : 0;
-  const decisionGain =
-    !hardMuted && mode === "decision" ? DECISION_GAIN : 0;
-
-  useWebAudioMedia(gameplayRef, {
+  const { getSound: getGameplaySound } = useHowlerSound({
     channel: "music",
-    gain: gameplayGain,
+    gain: GAMEPLAY_GAIN,
+    loop: true,
     muted: hardMuted,
-    rampMs: FADE_DURATION_MS,
+    src: gameplaySrc,
   });
-  useWebAudioMedia(decisionRef, {
+  const { getSound: getDecisionSound } = useHowlerSound({
     channel: "music",
-    gain: decisionGain,
+    gain: DECISION_GAIN,
+    loop: true,
     muted: hardMuted,
-    rampMs: FADE_DURATION_MS,
+    src: decisionSrc,
   });
 
   useEffect(() => {
-    const gameplay = gameplayRef.current;
-    const decision = decisionRef.current;
+    const gameplay = getGameplaySound();
+    const decision = getDecisionSound();
     if (!gameplay || !decision) return;
 
     if (
       mode === "decision" &&
       previousModeRef.current !== "decision"
     ) {
-      decision.pause();
-      decision.currentTime = 0;
+      decision.stop();
     }
-    previousModeRef.current = mode;
 
     if (hardMuted) {
       gameplay.pause();
       decision.pause();
+      previousModeRef.current = mode;
       return;
     }
 
@@ -90,50 +82,50 @@ export function StoryMusic({
           ? gameplay
           : null;
 
-    function retry() {
-      if (activeAudio) void activeAudio.play().catch(() => undefined);
-    }
-
     if (activeAudio) {
-      void activeAudio.play().catch(() => {
-        window.addEventListener("click", retry, { once: true });
-        window.addEventListener("keydown", retry, { once: true });
-        window.addEventListener("touchend", retry, { once: true });
-      });
+      const targetVolume =
+        musicVolume *
+        (mode === "decision" ? DECISION_GAIN : GAMEPLAY_GAIN);
+      const currentVolume = activeAudio.playing()
+        ? activeAudio.volume()
+        : 0;
+
+      activeAudio.mute(false);
+      activeAudio.volume(currentVolume);
+      if (!activeAudio.playing()) activeAudio.play();
+      activeAudio.fade(currentVolume, targetVolume, FADE_DURATION_MS);
     }
 
-    const pauseTimer = window.setTimeout(() => {
-      inactiveAudio?.pause();
-    }, FADE_DURATION_MS);
+    const soundsToFade =
+      mode === "silent"
+        ? [gameplay, decision]
+        : inactiveAudio
+          ? [inactiveAudio]
+          : [];
+
+    for (const sound of soundsToFade) {
+      if (sound.playing()) {
+        const currentVolume = sound.volume();
+        sound.fade(currentVolume, 0, FADE_DURATION_MS);
+        sound.once("fade", () => sound.pause());
+      } else {
+        sound.volume(0);
+      }
+    }
+
+    previousModeRef.current = mode;
 
     return () => {
-      window.clearTimeout(pauseTimer);
-      window.removeEventListener("click", retry);
-      window.removeEventListener("keydown", retry);
-      window.removeEventListener("touchend", retry);
+      gameplay.off("fade");
+      decision.off("fade");
     };
-  }, [hardMuted, mode]);
+  }, [
+    getDecisionSound,
+    getGameplaySound,
+    hardMuted,
+    mode,
+    musicVolume,
+  ]);
 
-  return (
-    <>
-      <audio
-        aria-hidden="true"
-        crossOrigin="anonymous"
-        loop
-        muted={hardMuted}
-        preload={mode === "gameplay" ? "auto" : "metadata"}
-        ref={gameplayRef}
-        src={gameplaySrc}
-      />
-      <audio
-        aria-hidden="true"
-        crossOrigin="anonymous"
-        loop
-        muted={hardMuted}
-        preload={mode === "decision" ? "auto" : "metadata"}
-        ref={decisionRef}
-        src={decisionSrc}
-      />
-    </>
-  );
+  return null;
 }

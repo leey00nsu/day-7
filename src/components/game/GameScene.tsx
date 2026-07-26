@@ -29,10 +29,8 @@ import {
   type NarrationAudioHandle,
 } from "@/components/game/NarrationAudio";
 import { SubtitleOverlay } from "@/components/game/SubtitleOverlay";
-import {
-  useWebAudioMedia,
-  useWebAudioSettings,
-} from "@/components/game/WebAudioProvider";
+import { useWebAudioSettings } from "@/components/game/WebAudioProvider";
+import { useHowlerSound } from "@/components/game/useHowlerSound";
 import { Button } from "@/components/ui/button";
 import {
   endings,
@@ -114,7 +112,6 @@ export function GameScene() {
   const { storageMode } = useMediaAssetStorage();
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
   const narrationRef = useRef<NarrationAudioHandle>(null);
-  const choiceFeedbackAudioRef = useRef<HTMLAudioElement>(null);
   const chapterIntroElapsedRef = useRef(false);
   const readyVideoFilenamesRef = useRef(new Set<string>());
   const startedSceneKeyRef = useRef<string | null>(null);
@@ -164,10 +161,14 @@ export function GameScene() {
   );
   const [captionSize, setCaptionSize] = useState(getInitialCaptionSize);
   const { masterVolume, soundEnabled } = useWebAudioSettings();
-  useWebAudioMedia(choiceFeedbackAudioRef, {
+  const choiceFeedbackSrc = useMediaAssetUrl(
+    "/audio/choice-feedback-chime.mp3",
+  );
+  const { play: playChoiceFeedback } = useHowlerSound({
     channel: "effects",
     gain: 0.675,
     muted: !soundEnabled || masterVolume <= 0,
+    src: choiceFeedbackSrc,
   });
 
   const chapter = storyChapters[chapterIndex];
@@ -359,9 +360,6 @@ export function GameScene() {
   ]);
   const preloadNarrationSrc = useMediaAssetUrl(
     preloadNarrationFilename,
-  );
-  const choiceFeedbackSrc = useMediaAssetUrl(
-    "/audio/choice-feedback-chime.mp3",
   );
 
   useEffect(() => {
@@ -850,13 +848,7 @@ export function GameScene() {
     videoRefs.current[activeSlot]?.pause();
     narrationRef.current?.pause();
 
-    const feedbackAudio = choiceFeedbackAudioRef.current;
-    if (feedbackAudio && soundEnabled && masterVolume > 0) {
-      feedbackAudio.currentTime = 0;
-      void feedbackAudio.play().catch((error) => {
-        console.error("Failed to play choice feedback sound", error);
-      });
-    }
+    playChoiceFeedback({ restart: true });
 
     if (chapter.decisionId && (index === 0 || index === 1)) {
       recordChoice(chapter.decisionId, index);
@@ -1103,15 +1095,6 @@ export function GameScene() {
           src={preloadNarrationSrc}
         />
       ) : null}
-      <audio
-        aria-hidden="true"
-        crossOrigin="anonymous"
-        muted={!soundEnabled || masterVolume <= 0}
-        preload="auto"
-        ref={choiceFeedbackAudioRef}
-        src={choiceFeedbackSrc}
-      />
-
       {videoSlots.map((filename, slot) =>
         filename ? (
           <GameVideo

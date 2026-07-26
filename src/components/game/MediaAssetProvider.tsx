@@ -20,7 +20,7 @@ const STORAGE_CHOICE_KEY = "game-media-storage-choice";
 const DOWNLOAD_CONCURRENCY = 1;
 const DOWNLOAD_RETRY_LIMIT = 2;
 const DOWNLOAD_ERROR_MESSAGE =
-  "영상 및 음성 데이터를 다운로드하지 못했습니다. 잠시 후 다시 시도하거나 스트리밍으로 진행해 주세요.";
+  "영상 및 음성 데이터를 다운로드하지 못했습니다. 네트워크 연결을 확인한 뒤 다시 시도해 주세요.";
 
 type MediaAsset = {
   key: string;
@@ -39,12 +39,12 @@ type GateState =
   | "prompt"
   | "deletePrompt"
   | "downloading"
-  | "restoring"
   | "ready"
   | "error";
 
 type MediaAssetContextValue = {
   cachedDataAvailable: boolean;
+  downloadRequired: boolean;
   requestDownload: () => void;
   requestDelete: () => void;
   resolveAssetUrl: (source?: string) => string | undefined;
@@ -66,8 +66,26 @@ function getNetworkUrl(source?: string) {
   return getVideoUrl(source);
 }
 
+function requiresDownloadedPlayback() {
+  if (typeof navigator === "undefined") return false;
+
+  const navigatorWithUserAgentData = navigator as Navigator & {
+    userAgentData?: { mobile?: boolean };
+  };
+  if (navigatorWithUserAgentData.userAgentData?.mobile) return true;
+
+  const userAgent = navigator.userAgent;
+  const isMobileUserAgent =
+    /Android|iPhone|iPad|iPod|IEMobile|Mobile/i.test(userAgent);
+  const isTouchIPad =
+    /Macintosh/i.test(userAgent) && navigator.maxTouchPoints > 1;
+
+  return isMobileUserAgent || isTouchIPad;
+}
+
 const fallbackContext: MediaAssetContextValue = {
   cachedDataAvailable: false,
+  downloadRequired: false,
   requestDownload() {},
   requestDelete() {},
   resolveAssetUrl: getNetworkUrl,
@@ -99,9 +117,11 @@ function waitForDownloadRetry(delay: number, signal: AbortSignal) {
 }
 
 export function MediaDownloadPrompt({
+  downloadRequired = false,
   onDownload,
   onStream,
 }: {
+  downloadRequired?: boolean;
   onDownload: () => void;
   onStream: () => void;
 }) {
@@ -121,14 +141,18 @@ export function MediaDownloadPrompt({
           className="text-2xl font-bold tracking-tight sm:text-3xl"
           id="media-download-title"
         >
-          영상 및 음성 데이터를 미리 다운로드 할까요?
+          {downloadRequired
+            ? "영상 및 음성 데이터를 다운로드합니다"
+            : "영상 및 음성 데이터를 미리 다운로드 할까요?"}
         </h1>
         <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-white/62 sm:text-base">
           원활한 재생을 위해 영상과 음성 약{" "}
           {formatMegabytes(manifest.totalBytes)}를 현재 탭에 미리
           다운로드합니다. 탭을 닫거나 새로고침하면 준비한 데이터는
-          삭제됩니다. 다운로드하지 않더라도 스트리밍으로 진행할 수 있으며
-          지연이 발생할 수 있습니다.
+          삭제됩니다.{" "}
+          {downloadRequired
+            ? "모바일에서는 끊김 없는 재생을 위해 다운로드가 완료된 뒤 게임을 시작할 수 있습니다."
+            : "다운로드하지 않더라도 스트리밍으로 진행할 수 있으며 지연이 발생할 수 있습니다."}
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-4">
           <Button
@@ -141,16 +165,18 @@ export function MediaDownloadPrompt({
             <Download data-icon="inline-start" />
             다운로드하고 시작
           </Button>
-          <Button
-            className="min-w-44"
-            data-sound="none"
-            onClick={onStream}
-            size="lg"
-            variant="outline"
-          >
-            <Wifi data-icon="inline-start" />
-            스트리밍으로 시작
-          </Button>
+          {!downloadRequired ? (
+            <Button
+              className="min-w-44"
+              data-sound="none"
+              onClick={onStream}
+              size="lg"
+              variant="outline"
+            >
+              <Wifi data-icon="inline-start" />
+              스트리밍으로 시작
+            </Button>
+          ) : null}
         </div>
       </div>
     </section>
@@ -159,11 +185,13 @@ export function MediaDownloadPrompt({
 
 export function MediaDeletePrompt({
   deleting = false,
+  downloadRequired = false,
   error,
   onCancel,
   onDelete,
 }: {
   deleting?: boolean;
+  downloadRequired?: boolean;
   error?: string;
   onCancel: () => void;
   onDelete: () => void;
@@ -187,8 +215,10 @@ export function MediaDeletePrompt({
           영상 및 음성 데이터를 삭제할까요?
         </h1>
         <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-white/62 sm:text-base">
-          현재 탭에 미리 준비한 데이터를 삭제합니다. 삭제한 뒤에도
-          스트리밍으로 진행할 수 있으며 지연이 발생할 수 있습니다.
+          현재 탭에 미리 준비한 데이터를 삭제합니다.{" "}
+          {downloadRequired
+            ? "모바일에서 다시 게임을 시작하려면 데이터를 다시 다운로드해야 합니다."
+            : "삭제한 뒤에도 스트리밍으로 진행할 수 있으며 지연이 발생할 수 있습니다."}
         </p>
         {error ? (
           <p className="mt-4 text-sm font-medium text-red-300">{error}</p>
@@ -221,11 +251,13 @@ export function MediaDeletePrompt({
 }
 
 export function MediaDownloadProgress({
+  allowStreaming = true,
   downloadedBytes,
   error,
   onRetry,
   onStream,
 }: {
+  allowStreaming?: boolean;
   downloadedBytes: number;
   error?: string;
   onRetry: () => void;
@@ -262,15 +294,17 @@ export function MediaDownloadProgress({
               >
                 다시 시도
               </Button>
-              <Button
-                className="min-w-36"
-                data-sound="none"
-                onClick={onStream}
-                size="lg"
-                variant="outline"
-              >
-                스트리밍으로 시작
-              </Button>
+              {allowStreaming ? (
+                <Button
+                  className="min-w-36"
+                  data-sound="none"
+                  onClick={onStream}
+                  size="lg"
+                  variant="outline"
+                >
+                  스트리밍으로 시작
+                </Button>
+              ) : null}
             </div>
           </>
         ) : (
@@ -303,6 +337,7 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
   const downloadedBlobsRef = useRef(new Map<string, Blob>());
   const abortControllerRef = useRef<AbortController | null>(null);
   const [appReady, setAppReady] = useState(false);
+  const [downloadRequired, setDownloadRequired] = useState(false);
   const [gateState, setGateState] = useState<GateState>("checking");
   const [storageMode, setStorageMode] = useState<StorageMode>("stream");
   const [cachedDataAvailable, setCachedDataAvailable] = useState(false);
@@ -340,12 +375,12 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
   );
 
   const startDownload = useCallback(
-    async ({ quiet = false }: { quiet?: boolean } = {}) => {
+    async () => {
       abortControllerRef.current?.abort();
       const controller = new AbortController();
       abortControllerRef.current = controller;
       setDownloadError(undefined);
-      setGateState(quiet ? "restoring" : "downloading");
+      setGateState("downloading");
 
       try {
         let nextAssetIndex = 0;
@@ -450,13 +485,21 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
   );
 
   const chooseStreaming = useCallback(() => {
+    if (downloadRequired) {
+      setAppReady(false);
+      setDownloadError(undefined);
+      setDownloadedBytes(0);
+      setGateState("prompt");
+      return;
+    }
+
     abortControllerRef.current?.abort();
     downloadedBlobsRef.current.clear();
     window.localStorage.setItem(STORAGE_CHOICE_KEY, "stream");
     setStorageMode("stream");
     setAppReady(true);
     setGateState("ready");
-  }, []);
+  }, [downloadRequired]);
 
   const deleteDownloadedAssets = useCallback(() => {
     abortControllerRef.current?.abort();
@@ -470,8 +513,9 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
     setCachedDataAvailable(false);
     setStorageMode("stream");
     setDeleting(false);
-    setGateState("ready");
-  }, [revokeObjectUrls]);
+    setAppReady(!downloadRequired);
+    setGateState(downloadRequired ? "prompt" : "ready");
+  }, [downloadRequired, revokeObjectUrls]);
 
   const chooseDownloadedPlayback = useCallback(() => {
     if (!cachedDataAvailable) {
@@ -490,9 +534,11 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
 
     function initialize() {
+      const mustDownload = requiresDownloadedPlayback();
       const choice = window.localStorage.getItem(STORAGE_CHOICE_KEY);
+      setDownloadRequired(mustDownload);
 
-      if (choice === "stream") {
+      if (!mustDownload && choice === "stream") {
         if (cancelled) return;
         setStorageMode("stream");
         setAppReady(true);
@@ -505,7 +551,11 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (!cancelled) void startDownload({ quiet: true });
+      if (cancelled) return;
+      setStorageMode("stream");
+      setCachedDataAvailable(false);
+      setDownloadedBytes(0);
+      setGateState("prompt");
     }
 
     initialize();
@@ -516,11 +566,12 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
       revokeObjectUrls();
       downloadedBlobsRef.current.clear();
     };
-  }, [revokeObjectUrls, startDownload]);
+  }, [revokeObjectUrls]);
 
   const contextValue = useMemo<MediaAssetContextValue>(
     () => ({
       cachedDataAvailable,
+      downloadRequired,
       requestDownload() {
         void chooseDownloadedPlayback();
       },
@@ -545,6 +596,7 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
       cachedDataAvailable,
       chooseDownloadedPlayback,
       chooseStreaming,
+      downloadRequired,
       storageMode,
     ],
   );
@@ -553,24 +605,10 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
     return <div aria-hidden="true" className="fixed inset-0 z-[210] bg-black" />;
   }
 
-  if (!appReady && gateState === "restoring") {
-    return (
-      <div
-        aria-label="미디어 준비 중"
-        className="fixed inset-0 z-[210] grid place-items-center bg-black"
-        role="status"
-      >
-        <span
-          aria-hidden="true"
-          className="size-11 animate-spin rounded-full border-[3px] border-white/20 border-t-white"
-        />
-      </div>
-    );
-  }
-
   if (!appReady && gateState === "prompt") {
     return (
       <MediaDownloadPrompt
+        downloadRequired={downloadRequired}
         onDownload={() => void startDownload()}
         onStream={chooseStreaming}
       />
@@ -581,6 +619,7 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
     return (
       <MediaDeletePrompt
         deleting={deleting}
+        downloadRequired={downloadRequired}
         error={deleteError}
         onCancel={() => setGateState("ready")}
         onDelete={() => void deleteDownloadedAssets()}
@@ -594,6 +633,7 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
   ) {
     return (
       <MediaDownloadProgress
+        allowStreaming={!downloadRequired}
         downloadedBytes={downloadedBytes}
         error={gateState === "error" ? downloadError : undefined}
         onRetry={() => void startDownload()}
@@ -607,6 +647,7 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
       {children}
       {gateState === "prompt" ? (
         <MediaDownloadPrompt
+          downloadRequired={downloadRequired}
           onDownload={() => void startDownload()}
           onStream={chooseStreaming}
         />
@@ -614,6 +655,7 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
       {gateState === "deletePrompt" ? (
         <MediaDeletePrompt
           deleting={deleting}
+          downloadRequired={downloadRequired}
           error={deleteError}
           onCancel={() => setGateState("ready")}
           onDelete={() => void deleteDownloadedAssets()}
@@ -621,6 +663,7 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
       ) : null}
       {gateState === "downloading" || gateState === "error" ? (
         <MediaDownloadProgress
+          allowStreaming={!downloadRequired}
           downloadedBytes={downloadedBytes}
           error={gateState === "error" ? downloadError : undefined}
           onRetry={() => void startDownload()}
@@ -638,6 +681,7 @@ export function useMediaAssetUrl(source?: string) {
 export function useMediaAssetStorage() {
   const {
     cachedDataAvailable,
+    downloadRequired,
     requestDelete,
     requestDownload,
     selectStreaming,
@@ -646,6 +690,7 @@ export function useMediaAssetStorage() {
 
   return {
     cachedDataAvailable,
+    downloadRequired,
     requestDelete,
     requestDownload,
     selectStreaming,
@@ -665,6 +710,7 @@ export function MediaAssetStoragePreview({
   const value = useMemo<MediaAssetContextValue>(
     () => ({
       cachedDataAvailable,
+      downloadRequired: false,
       requestDelete() {},
       requestDownload() {},
       resolveAssetUrl: getNetworkUrl,

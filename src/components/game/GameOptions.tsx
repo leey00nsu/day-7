@@ -32,6 +32,7 @@ export function GameOptions({
   const router = useRouter();
   const {
     cachedDataAvailable,
+    downloadRequired,
     requestDelete,
     requestDownload,
     selectStreaming,
@@ -223,18 +224,24 @@ export function GameOptions({
                 type="checkbox"
               />
             </label>
-            <label className="flex min-h-10 cursor-pointer items-center gap-3 rounded-xl px-2 hover:bg-white/[.07]">
-              <Wifi className="size-4 text-white/62" />
-              <span className="flex-1 text-sm font-medium">스트리밍</span>
-              <input
-                checked={storageMode === "stream"}
-                className="size-4 accent-white"
-                onChange={(event) => {
-                  if (event.target.checked) selectStreaming();
-                }}
-                type="checkbox"
-              />
-            </label>
+            {!downloadRequired ? (
+              <label className="flex min-h-10 cursor-pointer items-center gap-3 rounded-xl px-2 hover:bg-white/[.07]">
+                <Wifi className="size-4 text-white/62" />
+                <span className="flex-1 text-sm font-medium">스트리밍</span>
+                <input
+                  checked={storageMode === "stream"}
+                  className="size-4 accent-white"
+                  onChange={(event) => {
+                    if (event.target.checked) selectStreaming();
+                  }}
+                  type="checkbox"
+                />
+              </label>
+            ) : (
+              <p className="px-2 py-1 text-xs leading-5 text-white/45">
+                모바일에서는 다운로드 재생만 지원합니다.
+              </p>
+            )}
             {cachedDataAvailable ? (
               <Button
                 className="mt-2 h-10 w-full"
