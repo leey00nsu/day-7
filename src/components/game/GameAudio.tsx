@@ -1,18 +1,16 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 import { useMediaAssetUrl } from "./MediaAssetProvider";
+import {
+  useWebAudioMedia,
+  useWebAudioSettings,
+} from "./WebAudioProvider";
 
 const BUTTON_SOUND_GAIN = 0.9;
 const HOME_MUSIC_PATHS = new Set(["/", "/endings", "/report"]);
-
-function storedAudioVolume(key: string, fallback: number) {
-  if (typeof window === "undefined") return fallback / 100;
-
-  return Number(window.localStorage.getItem(key) ?? fallback) / 100;
-}
 
 export function GameAudio() {
   const pathname = usePathname();
@@ -24,60 +22,27 @@ export function GameAudio() {
   );
   const musicRef = useRef<HTMLAudioElement>(null);
   const buttonSoundRef = useRef<HTMLAudioElement>(null);
-  const [masterVolume, setMasterVolume] = useState(() =>
-    storedAudioVolume("game-volume", 80),
-  );
-  const [musicVolume, setMusicVolume] = useState(() =>
-    storedAudioVolume("game-music-volume", 28),
-  );
-  const [effectsVolume, setEffectsVolume] = useState(() =>
-    storedAudioVolume("game-effects-volume", 40),
-  );
-  const [hasSoundChoice, setHasSoundChoice] = useState(() =>
-    typeof window === "undefined"
-      ? false
-      : window.localStorage.getItem("game-sound-choice") !== null,
-  );
+  const { masterVolume, soundEnabled } = useWebAudioSettings();
 
-  useEffect(() => {
-    function updateMasterVolume(event: Event) {
-      setMasterVolume((event as CustomEvent<number>).detail / 100);
-    }
-
-    function updateMusicVolume(event: Event) {
-      setMusicVolume((event as CustomEvent<number>).detail / 100);
-    }
-
-    function updateEffectsVolume(event: Event) {
-      setEffectsVolume((event as CustomEvent<number>).detail / 100);
-    }
-
-    function updateSoundChoice() {
-      setHasSoundChoice(
-        window.localStorage.getItem("game-sound-choice") !== null,
-      );
-    }
-
-    window.addEventListener("game:volume", updateMasterVolume);
-    window.addEventListener("game:music-volume", updateMusicVolume);
-    window.addEventListener("game:effects-volume", updateEffectsVolume);
-    window.addEventListener("game:sound-choice", updateSoundChoice);
-
-    return () => {
-      window.removeEventListener("game:volume", updateMasterVolume);
-      window.removeEventListener("game:music-volume", updateMusicVolume);
-      window.removeEventListener("game:effects-volume", updateEffectsVolume);
-      window.removeEventListener("game:sound-choice", updateSoundChoice);
-    };
-  }, []);
+  useWebAudioMedia(musicRef, {
+    channel: "music",
+    muted: !soundEnabled || masterVolume <= 0,
+  });
+  useWebAudioMedia(buttonSoundRef, {
+    channel: "effects",
+    gain: BUTTON_SOUND_GAIN,
+    muted: !soundEnabled || masterVolume <= 0,
+  });
 
   useEffect(() => {
     const music = musicRef.current;
     if (!music) return;
 
-    music.volume = masterVolume * musicVolume;
-
-    if (!hasSoundChoice || !HOME_MUSIC_PATHS.has(pathname)) {
+    if (
+      !soundEnabled ||
+      masterVolume <= 0 ||
+      !HOME_MUSIC_PATHS.has(pathname)
+    ) {
       music.pause();
       music.currentTime = 0;
       return;
@@ -87,7 +52,14 @@ export function GameAudio() {
 
     function startMusic() {
       const activeMusic = musicRef.current;
-      if (!activeMusic || !HOME_MUSIC_PATHS.has(pathname)) return;
+      if (
+        !activeMusic ||
+        !soundEnabled ||
+        masterVolume <= 0 ||
+        !HOME_MUSIC_PATHS.has(pathname)
+      ) {
+        return;
+      }
 
       void activeMusic.play().then(
         () => {
@@ -110,16 +82,10 @@ export function GameAudio() {
       window.removeEventListener("pointerdown", startMusic);
       window.removeEventListener("keydown", startMusic);
     };
-  }, [hasSoundChoice, masterVolume, musicVolume, pathname]);
+  }, [masterVolume, pathname, soundEnabled]);
 
   useEffect(() => {
-    const buttonSound = buttonSoundRef.current;
-    if (!buttonSound) return;
-
-    buttonSound.volume =
-      masterVolume * effectsVolume * BUTTON_SOUND_GAIN;
-
-    if (!hasSoundChoice) return;
+    if (!soundEnabled || masterVolume <= 0) return;
 
     function playButtonSound(event: PointerEvent) {
       const target = event.target as HTMLElement;
@@ -138,19 +104,23 @@ export function GameAudio() {
 
     document.addEventListener("pointerdown", playButtonSound);
     return () => document.removeEventListener("pointerdown", playButtonSound);
-  }, [effectsVolume, hasSoundChoice, masterVolume]);
+  }, [masterVolume, soundEnabled]);
 
   return (
     <>
       <audio
         aria-hidden="true"
+        crossOrigin="anonymous"
         loop
+        muted={!soundEnabled || masterVolume <= 0}
         preload="auto"
         ref={musicRef}
         src={homeMusicSrc}
       />
       <audio
         aria-hidden="true"
+        crossOrigin="anonymous"
+        muted={!soundEnabled || masterVolume <= 0}
         preload="auto"
         ref={buttonSoundRef}
         src={buttonSoundSrc}

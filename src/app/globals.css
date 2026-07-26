@@ -366,28 +366,6 @@ a {
   opacity: 1;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .home-logo-reveal,
-  .home-menu-item-reveal,
-  .decision-prompt-reveal,
-  .decision-divider-reveal,
-  .decision-choice-reveal,
-  .report-bar-fill {
-    animation-delay: 0s !important;
-    opacity: 1;
-    transform: none;
-  }
-
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-  }
-}
-
 .dark {
   --background: oklch(0.155 0.012 155);
   --foreground: oklch(0.97 0.004 155);

@@ -8,10 +8,12 @@ import {
 } from "react";
 
 import { useMediaAssetUrl } from "./MediaAssetProvider";
+import { useWebAudioMedia } from "./WebAudioProvider";
 
 type NarrationAudioProps = {
+  gain?: number;
+  muted?: boolean;
   src?: string;
-  volume: number;
   onEnded?: () => void;
   onError?: () => void;
   onPause?: () => void;
@@ -35,7 +37,8 @@ export const NarrationAudio = forwardRef<
 >(function NarrationAudio(
   {
     src,
-    volume,
+    gain = 1,
+    muted = false,
     onEnded,
     onError,
     onPause,
@@ -49,6 +52,11 @@ export const NarrationAudio = forwardRef<
   const audioRef = useRef<HTMLAudioElement>(null);
   const onReadyRef = useRef(onReady);
   const resolvedSrc = useMediaAssetUrl(src);
+  useWebAudioMedia(audioRef, {
+    channel: "voice",
+    gain,
+    muted,
+  });
 
   useEffect(() => {
     onReadyRef.current = onReady;
@@ -92,13 +100,6 @@ export const NarrationAudio = forwardRef<
     const audio = audioRef.current;
     if (!audio) return;
 
-    audio.volume = Math.min(Math.max(volume, 0), 1);
-  }, [volume]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
     audio.pause();
     audio.currentTime = 0;
     audio.load();
@@ -119,6 +120,7 @@ export const NarrationAudio = forwardRef<
   return (
     <audio
       aria-hidden="true"
+      crossOrigin="anonymous"
       onEnded={onEnded}
       onError={onError}
       onPause={onPause}
@@ -127,6 +129,7 @@ export const NarrationAudio = forwardRef<
       onCanPlayThrough={onReady}
       onStalled={onStalled}
       onWaiting={onWaiting}
+      muted={muted}
       preload="auto"
       ref={audioRef}
       src={resolvedSrc}

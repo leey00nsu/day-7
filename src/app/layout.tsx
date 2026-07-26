@@ -6,6 +6,7 @@ import { GameOptions } from "@/components/game/GameOptions";
 import { MediaAssetProvider } from "@/components/game/MediaAssetProvider";
 import { SoundConsent } from "@/components/game/SoundConsent";
 import { VideoPlaybackError } from "@/components/game/VideoPlaybackError";
+import { WebAudioProvider } from "@/components/game/WebAudioProvider";
 import { siteConfig } from "@/lib/site";
 import { videoBaseUrl } from "@/lib/video";
 import "./globals.css";
@@ -111,11 +112,13 @@ export default function RootLayout({
       <body className="min-h-full bg-background font-sans text-foreground">
         {videoBaseUrl ? (
           <MediaAssetProvider>
-            <GameAudio />
-            <SoundConsent>
-              <GameOptions />
-              {children}
-            </SoundConsent>
+            <WebAudioProvider>
+              <GameAudio />
+              <SoundConsent>
+                <GameOptions />
+                {children}
+              </SoundConsent>
+            </WebAudioProvider>
           </MediaAssetProvider>
         ) : (
           <VideoPlaybackError />

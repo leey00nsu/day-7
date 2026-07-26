@@ -77,7 +77,12 @@ export function GameOptions({
   function updateVolume(value: number) {
     setVolume(value);
     window.localStorage.setItem("game-volume", String(value));
+    window.localStorage.setItem(
+      "game-sound-choice",
+      value > 0 ? "enabled" : "muted",
+    );
     window.dispatchEvent(new CustomEvent("game:volume", { detail: value }));
+    window.dispatchEvent(new Event("game:sound-choice"));
   }
 
   function updateMusicVolume(value: number) {

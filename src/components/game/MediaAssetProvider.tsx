@@ -17,7 +17,10 @@ import mediaManifestJson from "@/data/media-manifest.json";
 import { getVideoUrl } from "@/lib/video";
 
 const STORAGE_CHOICE_KEY = "game-media-storage-choice";
-const DOWNLOAD_CONCURRENCY = 2;
+const DOWNLOAD_CONCURRENCY = 1;
+const DOWNLOAD_RETRY_LIMIT = 2;
+const DOWNLOAD_ERROR_MESSAGE =
+  "영상 및 음성 데이터를 다운로드하지 못했습니다. 잠시 후 다시 시도하거나 스트리밍으로 진행해 주세요.";
 
 type MediaAsset = {
   key: string;
@@ -77,6 +80,22 @@ const MediaAssetContext =
 
 function formatMegabytes(bytes: number) {
   return `${Math.ceil(bytes / 1_000_000)}MB`;
+}
+
+function waitForDownloadRetry(delay: number, signal: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    function handleAbort() {
+      window.clearTimeout(timer);
+      reject(new DOMException("Download aborted", "AbortError"));
+    }
+
+    const timer = window.setTimeout(() => {
+      signal.removeEventListener("abort", handleAbort);
+      resolve();
+    }, delay);
+
+    signal.addEventListener("abort", handleAbort, { once: true });
+  });
 }
 
 export function MediaDownloadPrompt({
@@ -281,6 +300,7 @@ export function MediaDownloadProgress({
 
 export function MediaAssetProvider({ children }: { children: ReactNode }) {
   const objectUrlsRef = useRef<string[]>([]);
+  const downloadedBlobsRef = useRef(new Map<string, Blob>());
   const abortControllerRef = useRef<AbortController | null>(null);
   const [appReady, setAppReady] = useState(false);
   const [gateState, setGateState] = useState<GateState>("checking");
@@ -325,13 +345,16 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
       const controller = new AbortController();
       abortControllerRef.current = controller;
       setDownloadError(undefined);
-      setDownloadedBytes(0);
       setGateState(quiet ? "restoring" : "downloading");
 
       try {
         let nextAssetIndex = 0;
-        let transferredBytes = 0;
-        const blobs = new Map<string, Blob>();
+        const blobs = downloadedBlobsRef.current;
+        let transferredBytes = Array.from(blobs.values()).reduce(
+          (total, blob) => total + blob.size,
+          0,
+        );
+        setDownloadedBytes(transferredBytes);
         const workerCount = Math.min(
           DOWNLOAD_CONCURRENCY,
           manifest.assets.length,
@@ -340,35 +363,59 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
         async function downloadNext() {
           while (nextAssetIndex < manifest.assets.length) {
             const asset = manifest.assets[nextAssetIndex++];
+            if (blobs.has(asset.key)) continue;
+
             const networkUrl = getNetworkUrl(asset.source);
             if (!networkUrl) {
               throw new Error(`미디어 주소가 없습니다: ${asset.source}`);
             }
 
-            let response: Response;
-            try {
-              response = await fetch(networkUrl, {
-                cache: "default",
-                signal: controller.signal,
-              });
-            } catch {
-              throw new Error(
-                `${asset.source} 다운로드 중 네트워크 연결이 끊겼습니다.`,
-              );
+            let blob: Blob | undefined;
+            let lastError: unknown;
+
+            for (
+              let attempt = 0;
+              attempt <= DOWNLOAD_RETRY_LIMIT;
+              attempt += 1
+            ) {
+              try {
+                const response = await fetch(networkUrl, {
+                  cache: "default",
+                  mode: "cors",
+                  signal: controller.signal,
+                });
+
+                if (!response.ok) {
+                  throw new Error(`HTTP ${response.status}`);
+                }
+
+                const downloadedBlob = await response.blob();
+                if (downloadedBlob.size !== asset.size) {
+                  throw new Error(
+                    `Size mismatch: expected ${asset.size}, received ${downloadedBlob.size}`,
+                  );
+                }
+
+                blob = downloadedBlob;
+                break;
+              } catch (error) {
+                lastError = error;
+              }
+
+              if (controller.signal.aborted) return;
+              if (attempt < DOWNLOAD_RETRY_LIMIT) {
+                await waitForDownloadRetry(
+                  500 * 2 ** attempt,
+                  controller.signal,
+                );
+              }
             }
 
-            if (!response.ok) {
-              throw new Error(
-                `${asset.source} 다운로드에 실패했습니다 (${response.status}).`,
-              );
+            if (!blob) {
+              console.error(`Failed to download ${asset.source}`, lastError);
+              throw new Error(DOWNLOAD_ERROR_MESSAGE);
             }
-
-            const blob = await response.blob();
-            if (blob.size !== asset.size) {
-              throw new Error(
-                `${asset.source} 파일 검증에 실패했습니다. 다시 시도해 주세요.`,
-              );
-            }
+            if (controller.signal.aborted) return;
 
             blobs.set(asset.key, blob);
             transferredBytes += blob.size;
@@ -387,6 +434,7 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
 
         window.localStorage.setItem(STORAGE_CHOICE_KEY, "download");
         activateDownloadedBlobs(blobs);
+        downloadedBlobsRef.current = new Map();
       } catch (error) {
         if (controller.signal.aborted) return;
 
@@ -403,6 +451,7 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
 
   const chooseStreaming = useCallback(() => {
     abortControllerRef.current?.abort();
+    downloadedBlobsRef.current.clear();
     window.localStorage.setItem(STORAGE_CHOICE_KEY, "stream");
     setStorageMode("stream");
     setAppReady(true);
@@ -415,6 +464,7 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
     setDeleteError(undefined);
 
     revokeObjectUrls();
+    downloadedBlobsRef.current.clear();
     window.localStorage.setItem(STORAGE_CHOICE_KEY, "stream");
     setAssetUrls(new Map());
     setCachedDataAvailable(false);
@@ -464,6 +514,7 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
       cancelled = true;
       abortControllerRef.current?.abort();
       revokeObjectUrls();
+      downloadedBlobsRef.current.clear();
     };
   }, [revokeObjectUrls, startDownload]);
 

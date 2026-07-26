@@ -5,12 +5,13 @@ import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 import { useMediaAssetUrl } from "./MediaAssetProvider";
+import { useWebAudioMedia } from "./WebAudioProvider";
 
 type ChapterIntroProps = {
   title: string;
   description?: string;
   onComplete?: () => void;
-  effectsVolume?: number;
+  muted?: boolean;
   className?: string;
 };
 
@@ -21,13 +22,18 @@ export function ChapterIntro({
   title,
   description,
   onComplete,
-  effectsVolume = 0.4,
+  muted = false,
   className,
 }: ChapterIntroProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const chapterSoundSrc = useMediaAssetUrl(
     "/audio/chapter-clock-ticking.mp3",
   );
+  useWebAudioMedia(audioRef, {
+    channel: "effects",
+    gain: CHAPTER_SOUND_GAIN,
+    muted,
+  });
 
   useEffect(() => {
     const completeTimer = window.setTimeout(() => {
@@ -38,13 +44,6 @@ export function ChapterIntro({
       window.clearTimeout(completeTimer);
     };
   }, [onComplete]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    audio.volume = Math.min(effectsVolume * CHAPTER_SOUND_GAIN, 1);
-  }, [effectsVolume]);
 
   return (
     <section
@@ -70,6 +69,8 @@ export function ChapterIntro({
       <audio
         aria-hidden="true"
         autoPlay
+        crossOrigin="anonymous"
+        muted={muted}
         preload="auto"
         ref={audioRef}
         src={chapterSoundSrc}

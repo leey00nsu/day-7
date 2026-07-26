@@ -2,27 +2,64 @@
 
 import {
   forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
   useState,
   type ComponentPropsWithoutRef,
 } from "react";
 
 import { useMediaAssetUrl } from "./MediaAssetProvider";
 import { VideoPlaybackError } from "./VideoPlaybackError";
+import {
+  useWebAudioMedia,
+  type WebAudioChannel,
+} from "./WebAudioProvider";
 
 type GameVideoProps = Omit<ComponentPropsWithoutRef<"video">, "src"> & {
+  audioChannel?: WebAudioChannel;
+  audioGain?: number;
   filename: string;
 };
 
 export const GameVideo = forwardRef<HTMLVideoElement, GameVideoProps>(
-  function GameVideo({ filename, onError, ...props }, ref) {
+  function GameVideo(
+    {
+      audioChannel = "voice",
+      audioGain = 1,
+      filename,
+      muted = false,
+      onError,
+      ...props
+    },
+    ref,
+  ) {
     const src = useMediaAssetUrl(filename);
     const [hasError, setHasError] = useState(!src);
+    const videoRef = useRef<HTMLVideoElement>(null);
+
+    useImperativeHandle(
+      ref,
+      () => videoRef.current as HTMLVideoElement,
+      [],
+    );
+    useWebAudioMedia(videoRef, {
+      channel: audioChannel,
+      gain: audioGain,
+      muted,
+    });
+
+    useEffect(() => {
+      setHasError(!src);
+    }, [src]);
 
     return (
       <>
         <video
           {...props}
-          ref={ref}
+          crossOrigin="anonymous"
+          muted={muted}
+          ref={videoRef}
           src={src}
           onError={(event) => {
             setHasError(true);
