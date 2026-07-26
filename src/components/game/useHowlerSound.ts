@@ -55,7 +55,7 @@ export function useHowlerSound({
       if (soundRef.current === sound) soundRef.current = null;
       sound.unload();
     };
-  }, [src, loop]);
+  }, [loop, src]);
 
   useEffect(() => {
     const sound = soundRef.current;
@@ -63,7 +63,7 @@ export function useHowlerSound({
 
     sound.volume(outputVolume);
     sound.mute(hardMuted);
-  }, [hardMuted, outputVolume]);
+  }, [hardMuted, outputVolume, src]);
 
   const play = useCallback(
     ({ restart = false }: { restart?: boolean } = {}) => {
