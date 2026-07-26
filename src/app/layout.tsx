@@ -111,15 +111,15 @@ export default function RootLayout({
       </head>
       <body className="min-h-full bg-background font-sans text-foreground">
         {videoBaseUrl ? (
-          <MediaAssetProvider>
-            <WebAudioProvider>
+          <WebAudioProvider>
+            <MediaAssetProvider>
               <GameAudio />
               <SoundConsent>
                 <GameOptions />
                 {children}
               </SoundConsent>
-            </WebAudioProvider>
-          </MediaAssetProvider>
+            </MediaAssetProvider>
+          </WebAudioProvider>
         ) : (
           <VideoPlaybackError />
         )}

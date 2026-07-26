@@ -189,14 +189,6 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
 
   const resumeAudioGraph = useCallback(
     (allowCreate = false) => {
-      const currentSettings = readAudioSettings();
-      if (
-        !currentSettings.soundEnabled ||
-        currentSettings.masterVolume <= 0
-      ) {
-        return;
-      }
-
       const graph =
         graphRef.current ?? (allowCreate ? ensureAudioGraph() : null);
       if (!graph || graph.context.state === "running") return;
