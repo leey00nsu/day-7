@@ -16,6 +16,7 @@
     "db:studio": "prisma studio",
     "start": "next start",
     "lint": "eslint",
+    "media:manifest": "node scripts/generate-media-manifest.mjs",
     "storybook": "storybook dev -p 6006 --disable-telemetry",
     "build-storybook": "storybook build --disable-telemetry",
     "test-storybook": "vitest --run"

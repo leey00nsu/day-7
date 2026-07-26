@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
 import { GameOptions } from "./GameOptions";
+import { MediaAssetStoragePreview } from "./MediaAssetProvider";
 
 const meta = {
   title: "Game/Options",
@@ -27,3 +28,28 @@ export const Open: Story = {
 };
 
 export const Closed: Story = {};
+
+export const DownloadedMedia: Story = {
+  args: {
+    defaultOpen: true,
+  },
+  render: (args) => (
+    <MediaAssetStoragePreview
+      cachedDataAvailable
+      storageMode="download"
+    >
+      <GameOptions {...args} />
+    </MediaAssetStoragePreview>
+  ),
+};
+
+export const StreamingWithDownloadedData: Story = {
+  args: {
+    defaultOpen: true,
+  },
+  render: (args) => (
+    <MediaAssetStoragePreview cachedDataAvailable storageMode="stream">
+      <GameOptions {...args} />
+    </MediaAssetStoragePreview>
+  ),
+};

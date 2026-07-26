@@ -2,12 +2,15 @@
 
 import { useEffect, useRef } from "react";
 
+import { useMediaAssetUrl } from "./MediaAssetProvider";
+
 export type StoryMusicMode = "silent" | "gameplay" | "decision";
 
 type StoryMusicProps = {
   mode: StoryMusicMode;
   masterVolume: number;
   musicVolume: number;
+  suspended?: boolean;
 };
 
 const GAMEPLAY_GAIN = 0.32;
@@ -52,14 +55,37 @@ export function StoryMusic({
   mode,
   masterVolume,
   musicVolume,
+  suspended = false,
 }: StoryMusicProps) {
   const gameplayRef = useRef<HTMLAudioElement>(null);
   const decisionRef = useRef<HTMLAudioElement>(null);
+  const previousModeRef = useRef<StoryMusicMode>(mode);
+  const gameplaySrc = useMediaAssetUrl(
+    "/audio/story-subdued-drama.mp3",
+  );
+  const decisionSrc = useMediaAssetUrl(
+    "/audio/decision-minimal-tension.mp3",
+  );
 
   useEffect(() => {
     const gameplay = gameplayRef.current;
     const decision = decisionRef.current;
     if (!gameplay || !decision) return;
+
+    if (
+      mode === "decision" &&
+      previousModeRef.current !== "decision"
+    ) {
+      decision.pause();
+      decision.currentTime = 0;
+    }
+    previousModeRef.current = mode;
+
+    if (suspended) {
+      gameplay.pause();
+      decision.pause();
+      return;
+    }
 
     const gameplayTarget =
       mode === "gameplay"
@@ -110,7 +136,7 @@ export function StoryMusic({
       cancelGameplayStart();
       cancelDecisionStart();
     };
-  }, [masterVolume, mode, musicVolume]);
+  }, [masterVolume, mode, musicVolume, suspended]);
 
   return (
     <>
@@ -119,14 +145,14 @@ export function StoryMusic({
         loop
         preload="auto"
         ref={gameplayRef}
-        src="/audio/story-subdued-drama.mp3"
+        src={gameplaySrc}
       />
       <audio
         aria-hidden="true"
         loop
         preload="auto"
         ref={decisionRef}
-        src="/audio/decision-minimal-tension.mp3"
+        src={decisionSrc}
       />
     </>
   );

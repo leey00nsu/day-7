@@ -3,6 +3,8 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { useMediaAssetUrl } from "./MediaAssetProvider";
+
 const BUTTON_SOUND_GAIN = 0.9;
 const HOME_MUSIC_PATHS = new Set(["/", "/endings", "/report"]);
 
@@ -14,6 +16,12 @@ function storedAudioVolume(key: string, fallback: number) {
 
 export function GameAudio() {
   const pathname = usePathname();
+  const homeMusicSrc = useMediaAssetUrl(
+    "/audio/home-minimal-piano-pulse.mp3",
+  );
+  const buttonSoundSrc = useMediaAssetUrl(
+    "/audio/ui-select-click.mp3",
+  );
   const musicRef = useRef<HTMLAudioElement>(null);
   const buttonSoundRef = useRef<HTMLAudioElement>(null);
   const [masterVolume, setMasterVolume] = useState(() =>
@@ -139,13 +147,13 @@ export function GameAudio() {
         loop
         preload="auto"
         ref={musicRef}
-        src="/audio/home-minimal-piano-pulse.mp3"
+        src={homeMusicSrc}
       />
       <audio
         aria-hidden="true"
         preload="auto"
         ref={buttonSoundRef}
-        src="/audio/ui-select-click.mp3"
+        src={buttonSoundSrc}
       />
     </>
   );

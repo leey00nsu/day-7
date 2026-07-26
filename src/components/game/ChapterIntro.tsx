@@ -4,6 +4,8 @@ import { useEffect, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 
+import { useMediaAssetUrl } from "./MediaAssetProvider";
+
 type ChapterIntroProps = {
   title: string;
   description?: string;
@@ -23,6 +25,9 @@ export function ChapterIntro({
   className,
 }: ChapterIntroProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const chapterSoundSrc = useMediaAssetUrl(
+    "/audio/chapter-clock-ticking.mp3",
+  );
 
   useEffect(() => {
     const completeTimer = window.setTimeout(() => {
@@ -67,7 +72,7 @@ export function ChapterIntro({
         autoPlay
         preload="auto"
         ref={audioRef}
-        src="/audio/chapter-clock-ticking.mp3"
+        src={chapterSoundSrc}
       />
     </section>
   );

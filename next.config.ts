@@ -23,7 +23,7 @@ const contentSecurityPolicy = [
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
   `media-src 'self' blob:${videoOrigin ? ` ${videoOrigin}` : ""}`,
-  "connect-src 'self'",
+  `connect-src 'self'${videoOrigin ? ` ${videoOrigin}` : ""}`,
   "manifest-src 'self'",
   "worker-src 'self' blob:",
   "upgrade-insecure-requests",

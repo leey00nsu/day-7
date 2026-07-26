@@ -6,8 +6,7 @@ import {
   type ComponentPropsWithoutRef,
 } from "react";
 
-import { getVideoUrl } from "@/lib/video";
-
+import { useMediaAssetUrl } from "./MediaAssetProvider";
 import { VideoPlaybackError } from "./VideoPlaybackError";
 
 type GameVideoProps = Omit<ComponentPropsWithoutRef<"video">, "src"> & {
@@ -16,7 +15,7 @@ type GameVideoProps = Omit<ComponentPropsWithoutRef<"video">, "src"> & {
 
 export const GameVideo = forwardRef<HTMLVideoElement, GameVideoProps>(
   function GameVideo({ filename, onError, ...props }, ref) {
-    const src = getVideoUrl(filename);
+    const src = useMediaAssetUrl(filename);
     const [hasError, setHasError] = useState(!src);
 
     return (

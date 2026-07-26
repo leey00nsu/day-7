@@ -1,0 +1,300 @@
+{
+  "version": "2026-07-26-d3887da8452e",
+  "totalBytes": 35205870,
+  "assets": [
+    {
+      "key": "audio/chapter-clock-ticking.mp3",
+      "source": "/audio/chapter-clock-ticking.mp3",
+      "cacheName": "audio__chapter-clock-ticking.mp3",
+      "size": 259134,
+      "sha256": "711ad6c1be639b4f89d755285e01d1ec0a54fe9f1446713f7cd625a5a57eb5bc"
+    },
+    {
+      "key": "audio/choice-feedback-chime.mp3",
+      "source": "/audio/choice-feedback-chime.mp3",
+      "cacheName": "audio__choice-feedback-chime.mp3",
+      "size": 23040,
+      "sha256": "19ab7193f626ff57fdeef60b45543bac416fcbcec803cfb417abe4b271c1b352"
+    },
+    {
+      "key": "audio/decision-minimal-tension.mp3",
+      "source": "/audio/decision-minimal-tension.mp3",
+      "cacheName": "audio__decision-minimal-tension.mp3",
+      "size": 4028160,
+      "sha256": "8468c97f4d610d99d70053c16c3aae38e078ff37c931b346363ab0d2856b2c20"
+    },
+    {
+      "key": "audio/home-minimal-piano-pulse.mp3",
+      "source": "/audio/home-minimal-piano-pulse.mp3",
+      "cacheName": "audio__home-minimal-piano-pulse.mp3",
+      "size": 2868480,
+      "sha256": "4d3fc4a99edfcf3ae1957221fda68b87eb33f83bd913f026ce6fe101ae6ea75a"
+    },
+    {
+      "key": "audio/narration/decision-s1.mp3",
+      "source": "/audio/narration/decision-s1.mp3",
+      "cacheName": "audio__narration__decision-s1.mp3",
+      "size": 169965,
+      "sha256": "4b013a60574f9549f7bce561ce107f265d9c2198ab259b6686f85c47dcd41f09"
+    },
+    {
+      "key": "audio/narration/decision-s2.mp3",
+      "source": "/audio/narration/decision-s2.mp3",
+      "cacheName": "audio__narration__decision-s2.mp3",
+      "size": 147885,
+      "sha256": "c4472be49aac4ad9353e2966593da98387cbd1e8c44c953904e4ffc5814ea80b"
+    },
+    {
+      "key": "audio/narration/decision-s3.mp3",
+      "source": "/audio/narration/decision-s3.mp3",
+      "cacheName": "audio__narration__decision-s3.mp3",
+      "size": 132045,
+      "sha256": "204d113f82f4969d25f7c436f29ff91de3e00a975482fd743ebab903857d21d2"
+    },
+    {
+      "key": "audio/narration/decision-s4.mp3",
+      "source": "/audio/narration/decision-s4.mp3",
+      "cacheName": "audio__narration__decision-s4.mp3",
+      "size": 150765,
+      "sha256": "33073c22afa0ced2c1a609ef4c7946f125aa6dfd041bf7898c52b2a574b6cf94"
+    },
+    {
+      "key": "audio/narration/ending-e1.mp3",
+      "source": "/audio/narration/ending-e1.mp3",
+      "cacheName": "audio__narration__ending-e1.mp3",
+      "size": 172269,
+      "sha256": "77582e97f5a4d5d79e6621ff9dc9097d91652207fe4c7d1a2e3fe57741f1af40"
+    },
+    {
+      "key": "audio/narration/ending-e2.mp3",
+      "source": "/audio/narration/ending-e2.mp3",
+      "cacheName": "audio__narration__ending-e2.mp3",
+      "size": 161325,
+      "sha256": "a5fba800fe41b70b1c626b0ca59a778f4a4e8903841a71881d3677032524db9c"
+    },
+    {
+      "key": "audio/narration/ending-e3.mp3",
+      "source": "/audio/narration/ending-e3.mp3",
+      "cacheName": "audio__narration__ending-e3.mp3",
+      "size": 145197,
+      "sha256": "574760e3c4b91c406b9c94b251e950d1a68eefee976e2be043d0c9e5b72bc927"
+    },
+    {
+      "key": "audio/narration/prologue-p1.mp3",
+      "source": "/audio/narration/prologue-p1.mp3",
+      "cacheName": "audio__narration__prologue-p1.mp3",
+      "size": 193768,
+      "sha256": "2e44e0de3c14d30fd8fbed3a3220fda60a5d74649e881857fc9bfa65d9e12680"
+    },
+    {
+      "key": "audio/story-subdued-drama.mp3",
+      "source": "/audio/story-subdued-drama.mp3",
+      "cacheName": "audio__story-subdued-drama.mp3",
+      "size": 3264768,
+      "sha256": "8dd42c6d4089c4ef614a6a99e360eb989f00a6ac093c10d13700695d3addc83a"
+    },
+    {
+      "key": "audio/ui-select-click.mp3",
+      "source": "/audio/ui-select-click.mp3",
+      "cacheName": "audio__ui-select-click.mp3",
+      "size": 1536,
+      "sha256": "1917edcb943af4110a51eb5912d0eb3634a2ca1fb3800c128d996cf4ac7e359c"
+    },
+    {
+      "key": "video/c01_a_complete_s01.mp4",
+      "source": "c01_a_complete_s01.mp4",
+      "cacheName": "video__c01_a_complete_s01.mp4",
+      "size": 523791,
+      "sha256": "0a98cfb0be3e880083526e80d3be751e758979b8fb4d632fece2c287e636f6cd"
+    },
+    {
+      "key": "video/c02_a_finish_tonight_s01.mp4",
+      "source": "c02_a_finish_tonight_s01.mp4",
+      "cacheName": "video__c02_a_finish_tonight_s01.mp4",
+      "size": 1278327,
+      "sha256": "c5c96bda61dd9530f04b39084c6928a06b9b973a3e85b630e49185bb368e7435"
+    },
+    {
+      "key": "video/c02_b_set_scope_s01.mp4",
+      "source": "c02_b_set_scope_s01.mp4",
+      "cacheName": "video__c02_b_set_scope_s01.mp4",
+      "size": 925374,
+      "sha256": "0af665852d1712623b75d70cac9fb775f70fdd8d5885754999de510d96cd6d2d"
+    },
+    {
+      "key": "video/c03_a_take_blame_s01.mp4",
+      "source": "c03_a_take_blame_s01.mp4",
+      "cacheName": "video__c03_a_take_blame_s01.mp4",
+      "size": 589550,
+      "sha256": "31ac60ca24741b34dac0aa62f2949092e89b0b0a49391feca5c319424036f6a5"
+    },
+    {
+      "key": "video/c03_b_explain_process_s01.mp4",
+      "source": "c03_b_explain_process_s01.mp4",
+      "cacheName": "video__c03_b_explain_process_s01.mp4",
+      "size": 987967,
+      "sha256": "f00bee325c2d4e5cd60d851bb8005f7a7f1addaaaa4d5af45fc546eda0e52cbc"
+    },
+    {
+      "key": "video/e01_conversion_s01.mp4",
+      "source": "e01_conversion_s01.mp4",
+      "cacheName": "video__e01_conversion_s01.mp4",
+      "size": 757107,
+      "sha256": "7eb3bbeb8f754323d94a3dee9be13c9cb787467fbea6fc3829808fc5ae14f7bf"
+    },
+    {
+      "key": "video/e01_conversion_s02.mp4",
+      "source": "e01_conversion_s02.mp4",
+      "cacheName": "video__e01_conversion_s02.mp4",
+      "size": 1136978,
+      "sha256": "bc029641222f5aba5149ea8706fd8f3e9a95dd337f0bc3cd1fcae296a977e871"
+    },
+    {
+      "key": "video/e02_hold_s01.mp4",
+      "source": "e02_hold_s01.mp4",
+      "cacheName": "video__e02_hold_s01.mp4",
+      "size": 870231,
+      "sha256": "3cf8480706f625550bbfef17483f6ca5c491c90c1163c37d2ad67120613eeb26"
+    },
+    {
+      "key": "video/e02_hold_s02.mp4",
+      "source": "e02_hold_s02.mp4",
+      "cacheName": "video__e02_hold_s02.mp4",
+      "size": 1239361,
+      "sha256": "2dfeb495904ccf3cb1bd4c9fc89982839bd33a53f27a02c5823ec2372bbc01ba"
+    },
+    {
+      "key": "video/e03_decline_s01.mp4",
+      "source": "e03_decline_s01.mp4",
+      "cacheName": "video__e03_decline_s01.mp4",
+      "size": 448351,
+      "sha256": "c70141748ff257315c24ff58f2f437bc4f7c7da4baf46e1ffbcb0a3ec63a3ecb"
+    },
+    {
+      "key": "video/e03_decline_s02.mp4",
+      "source": "e03_decline_s02.mp4",
+      "cacheName": "video__e03_decline_s02.mp4",
+      "size": 471152,
+      "sha256": "46960918d2e38138038e2ed068a6ab89e6ce9a69d1491b8cb5d72fe04fff4bb3"
+    },
+    {
+      "key": "video/e03_decline_s05.mp4",
+      "source": "e03_decline_s05.mp4",
+      "cacheName": "video__e03_decline_s05.mp4",
+      "size": 386103,
+      "sha256": "cf4ff0625e2c8870a153a987b23cdbf616c9e59f433f2b600a832eb60465f6d0"
+    },
+    {
+      "key": "video/n01_mon_status_s01.mp4",
+      "source": "n01_mon_status_s01.mp4",
+      "cacheName": "video__n01_mon_status_s01.mp4",
+      "size": 729962,
+      "sha256": "aed4377602b9308a399ccc545bf943027923438b1731bc4988dc6f1a71b00cf3"
+    },
+    {
+      "key": "video/n01_mon_status_s02.mp4",
+      "source": "n01_mon_status_s02.mp4",
+      "cacheName": "video__n01_mon_status_s02.mp4",
+      "size": 520016,
+      "sha256": "11742dd8e3449bb03ee7c07c1dc4f3eddc9d08b808544cb8f965b5b0276cb80a"
+    },
+    {
+      "key": "video/n01_mon_status_s03.mp4",
+      "source": "n01_mon_status_s03.mp4",
+      "cacheName": "video__n01_mon_status_s03.mp4",
+      "size": 345861,
+      "sha256": "9177b2e921ffb39367126576b577c5a8250eadfc185384b641ce8fe4901f22bf"
+    },
+    {
+      "key": "video/n02_tue_late_request_s01.mp4",
+      "source": "n02_tue_late_request_s01.mp4",
+      "cacheName": "video__n02_tue_late_request_s01.mp4",
+      "size": 1221885,
+      "sha256": "c18f54cf6cca6654f2213bfb59337428e4a81106e1fab3180c44a4ff88f61f6f"
+    },
+    {
+      "key": "video/n02_tue_late_request_s02.mp4",
+      "source": "n02_tue_late_request_s02.mp4",
+      "cacheName": "video__n02_tue_late_request_s02.mp4",
+      "size": 865107,
+      "sha256": "c115777797042e973f56ea7c8f2aeaa36f32343f3397af738bce479ef8b599fc"
+    },
+    {
+      "key": "video/n03_wed_wrong_number_s01.mp4",
+      "source": "n03_wed_wrong_number_s01.mp4",
+      "cacheName": "video__n03_wed_wrong_number_s01.mp4",
+      "size": 1113221,
+      "sha256": "01b8bb58edc2bb5c733851405caaa4eb779f9b47dff7a7fae12528ba3fe34970"
+    },
+    {
+      "key": "video/n03_wed_wrong_number_s02.mp4",
+      "source": "n03_wed_wrong_number_s02.mp4",
+      "cacheName": "video__n03_wed_wrong_number_s02.mp4",
+      "size": 806615,
+      "sha256": "8ad15e6d11b85e6e10e5c554729a1c5a8b2e39ab5947874c11a805639af838e9"
+    },
+    {
+      "key": "video/n04_thu_self_review_s01.mp4",
+      "source": "n04_thu_self_review_s01.mp4",
+      "cacheName": "video__n04_thu_self_review_s01.mp4",
+      "size": 1094897,
+      "sha256": "14bb47508f6e75e29c1daff779e05efec3bbd0bcd2cd824a852b202eea1c921c"
+    },
+    {
+      "key": "video/n04_thu_self_review_s02.mp4",
+      "source": "n04_thu_self_review_s02.mp4",
+      "cacheName": "video__n04_thu_self_review_s02.mp4",
+      "size": 1009586,
+      "sha256": "bff2ec1e1cf209ed179e1e76f094633942a9c99e6871bf7ee2253cf478e5e463"
+    },
+    {
+      "key": "video/n05_fri_result_intro_s01.mp4",
+      "source": "n05_fri_result_intro_s01.mp4",
+      "cacheName": "video__n05_fri_result_intro_s01.mp4",
+      "size": 494757,
+      "sha256": "7e39a555ae097cab8b47d2d0ecf5e59ecb331aa889480f819c6516d2752b6018"
+    },
+    {
+      "key": "video/n05_fri_result_intro_s02.mp4",
+      "source": "n05_fri_result_intro_s02.mp4",
+      "cacheName": "video__n05_fri_result_intro_s02.mp4",
+      "size": 1074397,
+      "sha256": "994d1e29e6cf007cc7fca04b5cc5184b2f511b1893c50bd920ebdbea0ad93add"
+    },
+    {
+      "key": "video/p00_prologue_s00.mp4",
+      "source": "p00_prologue_s00.mp4",
+      "cacheName": "video__p00_prologue_s00.mp4",
+      "size": 1076846,
+      "sha256": "db26c4231e4ccd05dd511e68ce36580e62cd50ecdff3a760f556b138364c4cd9"
+    },
+    {
+      "key": "video/p00_prologue_s01.mp4",
+      "source": "p00_prologue_s01.mp4",
+      "cacheName": "video__p00_prologue_s01.mp4",
+      "size": 1106822,
+      "sha256": "61959d39c0182e422f95a72e25363b551c07a1b458dc092d3cbc826643313adf"
+    },
+    {
+      "key": "video/p00_prologue_s02.mp4",
+      "source": "p00_prologue_s02.mp4",
+      "cacheName": "video__p00_prologue_s02.mp4",
+      "size": 504306,
+      "sha256": "3ea43137a17854ee45b60908df3562eefb229ed96f25df9a621196a0c0296675"
+    },
+    {
+      "key": "video/select_decision.mp4",
+      "source": "select_decision.mp4",
+      "cacheName": "video__select_decision.mp4",
+      "size": 528937,
+      "sha256": "c096ee49f28106e4e5d652be80fcffb36794cc40303343375612734bca9cbe26"
+    },
+    {
+      "key": "video/t00_title_s01.mp4",
+      "source": "t00_title_s01.mp4",
+      "cacheName": "video__t00_title_s01.mp4",
+      "size": 1380026,
+      "sha256": "19ef73fea069a1d37cd37af570f735b9a8b0ca0166d10430ba2257b61e71f45f"
+    }
+  ]
+}

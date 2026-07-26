@@ -16,11 +16,15 @@ import { ChapterIntro } from "@/components/game/ChapterIntro";
 import { ChoiceFeedback } from "@/components/game/ChoiceFeedback";
 import { EndingResultScreen } from "@/components/game/EndingResultScreen";
 import { GameVideo } from "@/components/game/GameVideo";
+import { useMediaAssetUrl } from "@/components/game/MediaAssetProvider";
 import {
   StoryMusic,
   type StoryMusicMode,
 } from "@/components/game/StoryMusic";
-import { NarrationAudio } from "@/components/game/NarrationAudio";
+import {
+  NarrationAudio,
+  type NarrationAudioHandle,
+} from "@/components/game/NarrationAudio";
 import { SubtitleOverlay } from "@/components/game/SubtitleOverlay";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +38,7 @@ import {
   resolveEndingFromChoices,
   unlockEnding,
 } from "@/lib/ending-progress";
+import { getInitialCaptionSize } from "@/lib/game-preferences";
 import {
   recordChoice,
   recordEnding,
@@ -73,9 +78,15 @@ function mapCurrentChoices(choiceHistory: readonly number[]): ChoiceMap {
 
 export function GameScene() {
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
+  const narrationRef = useRef<NarrationAudioHandle>(null);
   const choiceFeedbackAudioRef = useRef<HTMLAudioElement>(null);
   const chapterIntroElapsedRef = useRef(false);
   const readyVideoFilenamesRef = useRef(new Set<string>());
+  const startedSceneKeyRef = useRef<string | null>(null);
+  const videoEndedRef = useRef(false);
+  const narrationEndedRef = useRef(false);
+  const resumeAfterBufferingRef = useRef(false);
+  const wasPlayingBeforeHiddenRef = useRef(false);
   const [chapterIndex, setChapterIndex] = useState(0);
   const [clipIndex, setClipIndex] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
@@ -89,6 +100,15 @@ export function GameScene() {
   const [choiceFeedback, setChoiceFeedback] = useState<string | null>(null);
   const [choiceFeedbackExiting, setChoiceFeedbackExiting] = useState(false);
   const [chapterVideoPending, setChapterVideoPending] = useState(false);
+  const [narrationReadySource, setNarrationReadySource] = useState<
+    string | null
+  >(null);
+  const [narrationFailedSource, setNarrationFailedSource] = useState<
+    string | null
+  >(null);
+  const [mediaBuffering, setMediaBuffering] = useState(false);
+  const [resumeRequired, setResumeRequired] = useState(false);
+  const [pageHidden, setPageHidden] = useState(false);
   const [activeSlot, setActiveSlot] = useState(0);
   const [videoSlots, setVideoSlots] = useState<VideoSlots>([
     storyChapters[0].clips[0].filename,
@@ -99,11 +119,7 @@ export function GameScene() {
       ? true
       : window.localStorage.getItem("game-captions") !== "false",
   );
-  const [captionSize, setCaptionSize] = useState(() =>
-    typeof window === "undefined"
-      ? 100
-      : Number(window.localStorage.getItem("game-caption-size") ?? 100),
-  );
+  const [captionSize, setCaptionSize] = useState(getInitialCaptionSize);
   const [volume, setVolume] = useState(() =>
     typeof window === "undefined"
       ? 0.8
@@ -175,20 +191,6 @@ export function GameScene() {
   useEffect(() => {
     if (!choiceFeedback) return;
 
-    const playTimer = window.setTimeout(() => {
-      const audio = choiceFeedbackAudioRef.current;
-      if (!audio) return;
-
-      audio.currentTime = 0;
-      void audio.play().catch(() => undefined);
-    }, 100);
-
-    return () => window.clearTimeout(playTimer);
-  }, [choiceFeedback]);
-
-  useEffect(() => {
-    if (!choiceFeedback) return;
-
     const exitTimer = window.setTimeout(() => {
       setChoiceFeedbackExiting(true);
     }, 3000);
@@ -227,7 +229,7 @@ export function GameScene() {
   const decisionThought =
     captionsEnabled && mode === "decision" && chapter.decisionThought
       ? {
-          speaker: "김 인턴 (속마음)",
+          speaker: "김 인턴",
           text: chapter.decisionThought,
         }
       : undefined;
@@ -243,7 +245,19 @@ export function GameScene() {
       : mode === "endingNarration"
         ? activeEnding?.narrationAudio
         : activeClip?.narration;
-  const videoVolume = volume * (narrationFilename ? 0.35 : 1);
+  const hasPlayableNarration = Boolean(
+    narrationFilename &&
+      narrationFailedSource !== narrationFilename,
+  );
+  const videoVolume = volume * (hasPlayableNarration ? 0.35 : 1);
+  const sceneKey = [
+    mode,
+    chapterIndex,
+    clipIndex,
+    selectedChoice ?? "none",
+    videoFilename ?? "no-video",
+    narrationFilename ?? "no-narration",
+  ].join(":");
 
   useEffect(() => {
     for (const video of videoRefs.current) {
@@ -298,6 +312,59 @@ export function GameScene() {
     selectedChoice,
   ]);
 
+  const preloadNarrationFilename = useMemo(() => {
+    const nextChapter = storyChapters[chapterIndex + 1];
+    const nextChapterNarration =
+      nextChapter?.clips[0]?.narration ??
+      (nextChapter?.clips.length ? undefined : nextChapter?.decisionNarration);
+
+    if (mode === "main") {
+      const nextClip = chapter.clips[clipIndex + 1];
+      if (nextClip) return nextClip.narration;
+
+      return (
+        chapter.choices
+          ? chapter.decisionNarration
+          : nextChapterNarration
+      );
+    }
+
+    if (mode === "branch" && selectedChoice !== null && chapter.choices) {
+      const branchClips = chapter.choices[selectedChoice].clips;
+      const nextClip = branchClips[clipIndex + 1];
+      if (nextClip) return nextClip.narration;
+
+      return nextChapterNarration;
+    }
+
+    if (mode === "ending" && activeEnding) {
+      const nextClip = activeEnding.clips[clipIndex + 1];
+      return nextClip ? nextClip.narration : activeEnding.narrationAudio;
+    }
+
+    return undefined;
+  }, [
+    activeEnding,
+    chapter,
+    chapterIndex,
+    clipIndex,
+    mode,
+    selectedChoice,
+  ]);
+  const preloadNarrationSrc = useMediaAssetUrl(
+    preloadNarrationFilename,
+  );
+  const choiceFeedbackSrc = useMediaAssetUrl(
+    "/audio/choice-feedback-chime.mp3",
+  );
+
+  useEffect(() => {
+    startedSceneKeyRef.current = null;
+    videoEndedRef.current = false;
+    narrationEndedRef.current = !narrationFilename;
+    resumeAfterBufferingRef.current = false;
+  }, [narrationFilename, sceneKey]);
+
   useEffect(() => {
     if (
       mode !== "chapterIntro" ||
@@ -348,45 +415,129 @@ export function GameScene() {
     [chapterEntryFilename, mode, startChapter],
   );
 
+  const markNarrationReady = useCallback(() => {
+    if (narrationFilename) {
+      setNarrationFailedSource((failedSource) =>
+        failedSource === narrationFilename ? null : failedSource,
+      );
+      setNarrationReadySource(narrationFilename);
+    }
+  }, [narrationFilename]);
+
   const activateSlot = useCallback(
     async (slot: number, filename: string) => {
       if (filename !== videoFilename) return;
+      if (
+        hasPlayableNarration &&
+        narrationReadySource !== narrationFilename
+      ) {
+        return;
+      }
 
       const nextVideo = videoRefs.current[slot];
       if (!nextVideo) return;
 
-      if (slot === activeSlot && !nextVideo.paused) return;
+      if (slot !== activeSlot) {
+        videoRefs.current[activeSlot]?.pause();
+        narrationRef.current?.pause();
+
+        if (preloadFilename) {
+          setVideoSlots((slots) => {
+            const next: VideoSlots = [...slots];
+            next[activeSlot] = preloadFilename;
+            return next;
+          });
+        }
+
+        setActiveSlot(slot);
+        return;
+      }
+
+      if (startedSceneKeyRef.current === sceneKey) return;
 
       nextVideo.currentTime = 0;
       nextVideo.volume = videoVolume;
+      narrationRef.current?.reset();
+
+      const videoPlayback = nextVideo.play();
+      const narrationPlayback = hasPlayableNarration
+        ? narrationRef.current?.play()
+        : undefined;
 
       try {
-        await nextVideo.play();
-        if (slot !== activeSlot) {
-          videoRefs.current[activeSlot]?.pause();
-          if (preloadFilename) {
-            setVideoSlots((slots) => {
-              const next: VideoSlots = [...slots];
-              next[activeSlot] = preloadFilename;
-              return next;
-            });
-          }
-          setActiveSlot(slot);
-        }
+        await Promise.all(
+          [videoPlayback, narrationPlayback].filter(
+            (playback): playback is Promise<void> => Boolean(playback),
+          ),
+        );
+        startedSceneKeyRef.current = sceneKey;
         setCurrentTime(0);
         setIsPlaying(true);
         setChapterVideoPending(false);
-      } catch {
-        if (slot !== activeSlot) {
-          videoRefs.current[activeSlot]?.pause();
-          setActiveSlot(slot);
-        }
+      } catch (error) {
+        nextVideo.pause();
+        narrationRef.current?.pause();
+        console.error("Failed to start scene media", error);
         setIsPlaying(false);
         setChapterVideoPending(false);
       }
     },
-    [activeSlot, preloadFilename, videoFilename, videoVolume],
+    [
+      activeSlot,
+      hasPlayableNarration,
+      narrationFilename,
+      narrationReadySource,
+      preloadFilename,
+      sceneKey,
+      videoFilename,
+      videoVolume,
+    ],
   );
+
+  const resumeBufferedMedia = useCallback(async () => {
+    if (!mediaBuffering || !resumeAfterBufferingRef.current) return;
+
+    const video = videoRefs.current[activeSlot];
+    const narration = narrationRef.current;
+    const videoReady =
+      !videoFilename ||
+      (video && video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA);
+    const narrationReady =
+      !hasPlayableNarration ||
+      narrationEndedRef.current ||
+      (narration &&
+        narration.readyState() >= HTMLMediaElement.HAVE_FUTURE_DATA);
+
+    if (!videoReady || !narrationReady) return;
+
+    try {
+      await Promise.all(
+        [
+          videoFilename ? video?.play() : undefined,
+          hasPlayableNarration && !narrationEndedRef.current
+            ? narration?.play()
+            : undefined,
+        ].filter(
+          (playback): playback is Promise<void> => Boolean(playback),
+        ),
+      );
+      resumeAfterBufferingRef.current = false;
+      setMediaBuffering(false);
+      setIsPlaying(true);
+    } catch (error) {
+      video?.pause();
+      narration?.pause();
+      resumeAfterBufferingRef.current = false;
+      setMediaBuffering(false);
+      setIsPlaying(false);
+      console.error("Failed to resume buffered scene media", error);
+    }
+  }, [
+    activeSlot,
+    hasPlayableNarration,
+    mediaBuffering,
+    videoFilename,
+  ]);
 
   useEffect(() => {
     if (!videoFilename) return;
@@ -395,9 +546,8 @@ export function GameScene() {
       const currentVideo = videoRefs.current[activeSlot];
 
       if (
-        chapterVideoPending &&
         currentVideo &&
-        currentVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
+        currentVideo.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA
       ) {
         void activateSlot(activeSlot, videoFilename);
       }
@@ -410,7 +560,7 @@ export function GameScene() {
     if (videoSlots[nextSlot] === videoFilename) {
       if (
         waitingVideo &&
-        waitingVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
+        waitingVideo.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA
       ) {
         void activateSlot(nextSlot, videoFilename);
       }
@@ -434,7 +584,52 @@ export function GameScene() {
     videoSlots,
   ]);
 
+  useEffect(() => {
+    if (
+      videoFilename ||
+      !hasPlayableNarration ||
+      narrationReadySource !== narrationFilename ||
+      startedSceneKeyRef.current === sceneKey
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function startNarrationOnlyScene() {
+      narrationRef.current?.reset();
+
+      try {
+        await narrationRef.current?.play();
+        if (cancelled) return;
+
+        startedSceneKeyRef.current = sceneKey;
+        setIsPlaying(true);
+        setChapterVideoPending(false);
+      } catch (error) {
+        if (cancelled) return;
+
+        console.error("Failed to start narration-only scene", error);
+        setIsPlaying(false);
+        setChapterVideoPending(false);
+      }
+    }
+
+    void startNarrationOnlyScene();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    hasPlayableNarration,
+    narrationFilename,
+    narrationReadySource,
+    sceneKey,
+    videoFilename,
+  ]);
+
   function advanceChapter(completedChoices = choiceHistory) {
+    setMediaBuffering(false);
+
     if (chapterIndex < storyChapters.length - 1) {
       for (const video of videoRefs.current) {
         video?.pause();
@@ -470,7 +665,64 @@ export function GameScene() {
     setIsPlaying(false);
   }
 
+  function handleVideoEnded() {
+    videoEndedRef.current = true;
+
+    if (!narrationFilename || narrationEndedRef.current) {
+      handleEnded();
+    }
+  }
+
+  function handleNarrationEnded() {
+    narrationEndedRef.current = true;
+
+    if (mode === "endingNarration") {
+      completeEnding();
+      return;
+    }
+
+    if (mode !== "decision" && videoEndedRef.current) {
+      handleEnded();
+    }
+  }
+
+  function handleNarrationError() {
+    if (!narrationFilename) return;
+
+    console.error(`Failed to load narration: ${narrationFilename}`);
+    narrationEndedRef.current = true;
+    setNarrationFailedSource(narrationFilename);
+    setNarrationReadySource(narrationFilename);
+
+    if (mode === "endingNarration") {
+      completeEnding();
+    } else if (mode !== "decision" && videoEndedRef.current) {
+      handleEnded();
+    }
+  }
+
+  function pauseForBuffering() {
+    if (
+      !isPlaying ||
+      startedSceneKeyRef.current !== sceneKey ||
+      mediaBuffering
+    ) {
+      return;
+    }
+
+    resumeAfterBufferingRef.current = true;
+    videoRefs.current[activeSlot]?.pause();
+    narrationRef.current?.pause();
+    setMediaBuffering(true);
+    setIsPlaying(false);
+  }
+
   function handleEnded() {
+    startedSceneKeyRef.current = null;
+    videoEndedRef.current = false;
+    narrationEndedRef.current = false;
+    setMediaBuffering(false);
+
     if (mode === "main") {
       if (clipIndex < chapter.clips.length - 1) {
         setClipIndex((value) => value + 1);
@@ -507,6 +759,14 @@ export function GameScene() {
   function choose(index: number) {
     if (!chapter.choices) return;
 
+    const feedbackAudio = choiceFeedbackAudioRef.current;
+    if (feedbackAudio) {
+      feedbackAudio.currentTime = 0;
+      void feedbackAudio.play().catch((error) => {
+        console.error("Failed to play choice feedback sound", error);
+      });
+    }
+
     if (chapter.decisionId && (index === 0 || index === 1)) {
       recordChoice(chapter.decisionId, index);
     }
@@ -516,6 +776,7 @@ export function GameScene() {
     setChoiceHistory(nextChoiceHistory);
     setChoiceFeedbackExiting(false);
     setChoiceFeedback(chapter.choices[index].feedback);
+    setMediaBuffering(false);
     setSelectedChoice(index);
     setCurrentTime(0);
     setClipIndex(0);
@@ -530,7 +791,18 @@ export function GameScene() {
 
   async function togglePlayback() {
     if (mode === "endingNarration") {
-      setIsPlaying((value) => !value);
+      if (isPlaying) {
+        narrationRef.current?.pause();
+        setIsPlaying(false);
+      } else {
+        try {
+          await narrationRef.current?.play();
+          setIsPlaying(true);
+        } catch (error) {
+          console.error("Failed to toggle ending narration", error);
+          setIsPlaying(false);
+        }
+      }
       return;
     }
 
@@ -541,16 +813,29 @@ export function GameScene() {
     const video = videoRefs.current[activeSlot];
     if (!video) return;
 
-    if (video.paused) {
+    if (isPlaying) {
+      video.pause();
+      narrationRef.current?.pause();
+      setIsPlaying(false);
+    } else {
       try {
-        await video.play();
+        await Promise.all(
+          [
+            videoEndedRef.current ? undefined : video.play(),
+            hasPlayableNarration && !narrationEndedRef.current
+              ? narrationRef.current?.play()
+              : undefined,
+          ].filter(
+            (playback): playback is Promise<void> => Boolean(playback),
+          ),
+        );
         setIsPlaying(true);
-      } catch {
+      } catch (error) {
+        video.pause();
+        narrationRef.current?.pause();
+        console.error("Failed to toggle scene playback", error);
         setIsPlaying(false);
       }
-    } else {
-      video.pause();
-      setIsPlaying(false);
     }
   }
 
@@ -558,6 +843,7 @@ export function GameScene() {
     if (mode !== "main" && mode !== "branch" && mode !== "ending") return;
 
     videoRefs.current[activeSlot]?.pause();
+    narrationRef.current?.pause();
     handleEnded();
   }
 
@@ -581,8 +867,63 @@ export function GameScene() {
     }
   }, [chapterEntryFilename, startChapter]);
 
+  const resumeInterruptedPlayback = useCallback(async () => {
+    try {
+      const video = videoRefs.current[activeSlot];
+
+      await Promise.all(
+        [
+          videoFilename && !videoEndedRef.current
+            ? video?.play()
+            : undefined,
+          hasPlayableNarration && !narrationEndedRef.current
+            ? narrationRef.current?.play()
+            : undefined,
+        ].filter(
+          (playback): playback is Promise<void> => Boolean(playback),
+        ),
+      );
+      wasPlayingBeforeHiddenRef.current = false;
+      setResumeRequired(false);
+      setIsPlaying(true);
+    } catch (error) {
+      console.error("Failed to resume interrupted playback", error);
+      setIsPlaying(false);
+    }
+  }, [activeSlot, hasPlayableNarration, videoFilename]);
+
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState === "hidden") {
+        setPageHidden(true);
+        wasPlayingBeforeHiddenRef.current = isPlaying;
+
+        if (isPlaying) {
+          videoRefs.current[activeSlot]?.pause();
+          narrationRef.current?.pause();
+          setIsPlaying(false);
+        }
+        return;
+      }
+
+      setPageHidden(false);
+      if (wasPlayingBeforeHiddenRef.current) {
+        setResumeRequired(true);
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange,
+      );
+  }, [activeSlot, isPlaying]);
+
   const storyMusicMode: StoryMusicMode =
-    mode === "decision"
+    pageHidden || resumeRequired
+      ? "silent"
+      : mode === "decision"
       ? "decision"
       : mode === "main" ||
           mode === "branch" ||
@@ -595,7 +936,7 @@ export function GameScene() {
   const endingNarrationLine =
     captionsEnabled && mode === "endingNarration" && activeEnding
       ? {
-          speaker: "김 인턴 (내레이션)",
+          speaker: "김 인턴",
           text: activeEnding.narrationText,
         }
       : undefined;
@@ -628,20 +969,34 @@ export function GameScene() {
         masterVolume={volume}
         mode={storyMusicMode}
         musicVolume={musicVolume}
+        suspended={pageHidden || resumeRequired}
       />
       <NarrationAudio
-        onEnded={
-          mode === "endingNarration" ? completeEnding : undefined
-        }
-        paused={!isPlaying}
+        onEnded={handleNarrationEnded}
+        onError={handleNarrationError}
+        onReady={() => {
+          markNarrationReady();
+          void resumeBufferedMedia();
+        }}
+        onStalled={pauseForBuffering}
+        onWaiting={pauseForBuffering}
+        ref={narrationRef}
         src={narrationFilename}
         volume={volume}
       />
+      {preloadNarrationFilename &&
+      preloadNarrationFilename !== narrationFilename ? (
+        <audio
+          aria-hidden="true"
+          preload="auto"
+          src={preloadNarrationSrc}
+        />
+      ) : null}
       <audio
         aria-hidden="true"
         preload="auto"
         ref={choiceFeedbackAudioRef}
-        src="/audio/choice-feedback-chime.mp3"
+        src={choiceFeedbackSrc}
       />
 
       {videoSlots.map((filename, slot) =>
@@ -658,10 +1013,22 @@ export function GameScene() {
               filename === videoFilename
             }
             muted={filename === "select_decision.mp4"}
-            onCanPlay={() => void activateSlot(slot, filename)}
+            onCanPlay={() => {
+              markVideoReady(filename);
+              void activateSlot(slot, filename);
+              if (slot === activeSlot) {
+                void resumeBufferedMedia();
+              }
+            }}
             onCanPlayThrough={() => markVideoReady(filename)}
             onEnded={() => {
-              if (slot === activeSlot) handleEnded();
+              if (slot === activeSlot) handleVideoEnded();
+            }}
+            onStalled={() => {
+              if (slot === activeSlot) pauseForBuffering();
+            }}
+            onWaiting={() => {
+              if (slot === activeSlot) pauseForBuffering();
             }}
             onTimeUpdate={(event) => {
               if (slot === activeSlot) {
@@ -688,6 +1055,32 @@ export function GameScene() {
           className="pointer-events-none absolute inset-0 z-[60] bg-black"
           data-testid="chapter-video-cover"
         />
+      ) : null}
+
+      {resumeRequired ? (
+        <div className="fixed inset-0 z-[190] grid place-items-center bg-black/60 px-6 backdrop-blur-sm">
+          <Button
+            className="min-w-40"
+            onClick={() => void resumeInterruptedPlayback()}
+            size="lg"
+            variant="outline"
+          >
+            계속하기
+          </Button>
+        </div>
+      ) : null}
+
+      {mediaBuffering && !resumeRequired ? (
+        <div
+          aria-label="재생 준비 중"
+          className="pointer-events-none fixed inset-0 z-[80] grid place-items-center"
+          role="status"
+        >
+          <span
+            aria-hidden="true"
+            className="size-11 animate-spin rounded-full border-[3px] border-white/25 border-t-white drop-shadow-[0_2px_12px_rgba(0,0,0,.8)]"
+          />
+        </div>
       ) : null}
 
       <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(180deg,rgba(0,0,0,.46),transparent_24%,transparent_68%,rgba(0,0,0,.5))]" />

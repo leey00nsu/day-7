@@ -27,6 +27,7 @@
 
 # externally hosted game videos
 /public/videos/
+/video-originals/
 
 # misc
 .DS_Store
