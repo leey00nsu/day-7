@@ -42,6 +42,7 @@ export function useHowlerSound({
     }
 
     const sound = new Howl({
+      format: ["mp3"],
       html5: false,
       loop,
       mute: true,
