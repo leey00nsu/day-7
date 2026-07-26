@@ -36,6 +36,7 @@ type GateState =
   | "prompt"
   | "deletePrompt"
   | "downloading"
+  | "restoring"
   | "ready"
   | "error";
 
@@ -318,84 +319,87 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
     [revokeObjectUrls],
   );
 
-  const startDownload = useCallback(async () => {
-    abortControllerRef.current?.abort();
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-    setDownloadError(undefined);
-    setDownloadedBytes(0);
-    setGateState("downloading");
+  const startDownload = useCallback(
+    async ({ quiet = false }: { quiet?: boolean } = {}) => {
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+      setDownloadError(undefined);
+      setDownloadedBytes(0);
+      setGateState(quiet ? "restoring" : "downloading");
 
-    try {
-      let nextAssetIndex = 0;
-      let transferredBytes = 0;
-      const blobs = new Map<string, Blob>();
-      const workerCount = Math.min(
-        DOWNLOAD_CONCURRENCY,
-        manifest.assets.length,
-      );
+      try {
+        let nextAssetIndex = 0;
+        let transferredBytes = 0;
+        const blobs = new Map<string, Blob>();
+        const workerCount = Math.min(
+          DOWNLOAD_CONCURRENCY,
+          manifest.assets.length,
+        );
 
-      async function downloadNext() {
-        while (nextAssetIndex < manifest.assets.length) {
-          const asset = manifest.assets[nextAssetIndex++];
-          const networkUrl = getNetworkUrl(asset.source);
-          if (!networkUrl) {
-            throw new Error(`미디어 주소가 없습니다: ${asset.source}`);
-          }
+        async function downloadNext() {
+          while (nextAssetIndex < manifest.assets.length) {
+            const asset = manifest.assets[nextAssetIndex++];
+            const networkUrl = getNetworkUrl(asset.source);
+            if (!networkUrl) {
+              throw new Error(`미디어 주소가 없습니다: ${asset.source}`);
+            }
 
-          let response: Response;
-          try {
-            response = await fetch(networkUrl, {
-              cache: "default",
-              signal: controller.signal,
-            });
-          } catch {
-            throw new Error(
-              `${asset.source} 다운로드 중 네트워크 연결이 끊겼습니다.`,
+            let response: Response;
+            try {
+              response = await fetch(networkUrl, {
+                cache: "default",
+                signal: controller.signal,
+              });
+            } catch {
+              throw new Error(
+                `${asset.source} 다운로드 중 네트워크 연결이 끊겼습니다.`,
+              );
+            }
+
+            if (!response.ok) {
+              throw new Error(
+                `${asset.source} 다운로드에 실패했습니다 (${response.status}).`,
+              );
+            }
+
+            const blob = await response.blob();
+            if (blob.size !== asset.size) {
+              throw new Error(
+                `${asset.source} 파일 검증에 실패했습니다. 다시 시도해 주세요.`,
+              );
+            }
+
+            blobs.set(asset.key, blob);
+            transferredBytes += blob.size;
+            setDownloadedBytes(
+              Math.min(transferredBytes, manifest.totalBytes),
             );
           }
-
-          if (!response.ok) {
-            throw new Error(
-              `${asset.source} 다운로드에 실패했습니다 (${response.status}).`,
-            );
-          }
-
-          const blob = await response.blob();
-          if (blob.size !== asset.size) {
-            throw new Error(
-              `${asset.source} 파일 검증에 실패했습니다. 다시 시도해 주세요.`,
-            );
-          }
-
-          blobs.set(asset.key, blob);
-          transferredBytes += blob.size;
-          setDownloadedBytes(
-            Math.min(transferredBytes, manifest.totalBytes),
-          );
         }
+
+        await Promise.all(
+          Array.from({ length: workerCount }, () => downloadNext()),
+        );
+        setDownloadedBytes(manifest.totalBytes);
+
+        if (controller.signal.aborted) return;
+
+        window.localStorage.setItem(STORAGE_CHOICE_KEY, "download");
+        activateDownloadedBlobs(blobs);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+
+        setDownloadError(
+          error instanceof Error
+            ? error.message
+            : "알 수 없는 오류가 발생했습니다.",
+        );
+        setGateState("error");
       }
-
-      await Promise.all(
-        Array.from({ length: workerCount }, () => downloadNext()),
-      );
-      setDownloadedBytes(manifest.totalBytes);
-
-      if (controller.signal.aborted) return;
-
-      window.localStorage.setItem(STORAGE_CHOICE_KEY, "download");
-      activateDownloadedBlobs(blobs);
-    } catch (error) {
-      if (controller.signal.aborted) return;
-
-      setDownloadError(
-        error instanceof Error
-          ? error.message
-          : "알 수 없는 오류가 발생했습니다.",
-      );
-      setGateState("error");
-    }
-  }, [activateDownloadedBlobs]);
+    },
+    [activateDownloadedBlobs],
+  );
 
   const chooseStreaming = useCallback(() => {
     abortControllerRef.current?.abort();
@@ -451,7 +455,7 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (!cancelled) void startDownload();
+      if (!cancelled) void startDownload({ quiet: true });
     }
 
     initialize();
@@ -496,6 +500,21 @@ export function MediaAssetProvider({ children }: { children: ReactNode }) {
 
   if (!appReady && gateState === "checking") {
     return <div aria-hidden="true" className="fixed inset-0 z-[210] bg-black" />;
+  }
+
+  if (!appReady && gateState === "restoring") {
+    return (
+      <div
+        aria-label="미디어 준비 중"
+        className="fixed inset-0 z-[210] grid place-items-center bg-black"
+        role="status"
+      >
+        <span
+          aria-hidden="true"
+          className="size-11 animate-spin rounded-full border-[3px] border-white/20 border-t-white"
+        />
+      </div>
+    );
   }
 
   if (!appReady && gateState === "prompt") {

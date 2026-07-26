@@ -16,7 +16,10 @@ import { ChapterIntro } from "@/components/game/ChapterIntro";
 import { ChoiceFeedback } from "@/components/game/ChoiceFeedback";
 import { EndingResultScreen } from "@/components/game/EndingResultScreen";
 import { GameVideo } from "@/components/game/GameVideo";
-import { useMediaAssetUrl } from "@/components/game/MediaAssetProvider";
+import {
+  useMediaAssetStorage,
+  useMediaAssetUrl,
+} from "@/components/game/MediaAssetProvider";
 import {
   StoryMusic,
   type StoryMusicMode,
@@ -100,6 +103,7 @@ function mapCurrentChoices(choiceHistory: readonly number[]): ChoiceMap {
 }
 
 export function GameScene() {
+  const { storageMode } = useMediaAssetStorage();
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
   const narrationRef = useRef<NarrationAudioHandle>(null);
   const choiceFeedbackAudioRef = useRef<HTMLAudioElement>(null);
@@ -288,6 +292,7 @@ export function GameScene() {
     selectedChoice ?? "none",
     videoFilename ?? "no-video",
     narrationFilename ?? "no-narration",
+    storageMode,
   ].join(":");
   currentSceneKeyRef.current = sceneKey;
   activeSlotRef.current = activeSlot;

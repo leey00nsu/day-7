@@ -11,6 +11,7 @@ import {
   Wifi,
   X,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ export function GameOptions({
   className,
   defaultOpen = false,
 }: GameOptionsProps) {
+  const router = useRouter();
   const {
     cachedDataAvailable,
     requestDelete,
@@ -242,7 +244,7 @@ export function GameOptions({
           <div className="mt-3 border-t border-white/10 pt-3">
             <Button
               className="h-10 w-full"
-              onClick={() => window.location.assign("/")}
+              onClick={() => router.push("/")}
               variant="outline"
             >
               <House data-icon="inline-start" />
