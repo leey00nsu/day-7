@@ -12,7 +12,7 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import { Howler } from "howler";
+import { Howl, Howler } from "howler";
 
 export type WebAudioChannel = "voice" | "music" | "effects";
 
@@ -34,6 +34,10 @@ type AudioGraph = {
   master: GainNode;
   music: GainNode;
   voice: GainNode;
+};
+
+type AudioContextWindow = Window & {
+  webkitAudioContext?: typeof AudioContext;
 };
 
 type WebAudioContextValue = AudioSettings & {
@@ -122,12 +126,17 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState(readAudioSettings);
 
   const applySettings = useCallback((nextSettings: AudioSettings) => {
+    Howler.volume(nextSettings.masterVolume);
+    Howler.mute(!nextSettings.soundEnabled);
+
     const graph = graphRef.current;
     if (!graph) return;
 
     const now = graph.context.currentTime;
-    Howler.volume(nextSettings.masterVolume);
-    Howler.mute(!nextSettings.soundEnabled);
+    graph.master.gain.setValueAtTime(
+      nextSettings.soundEnabled ? nextSettings.masterVolume : 0,
+      now,
+    );
     graph.voice.gain.setValueAtTime(1, now);
     graph.music.gain.setValueAtTime(nextSettings.musicVolume, now);
     graph.effects.gain.setValueAtTime(nextSettings.effectsVolume, now);
@@ -140,20 +149,20 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      Howler.autoUnlock = true;
-      Howler.autoSuspend = false;
-      Howler.volume(readAudioSettings().masterVolume);
-
-      if (!Howler.usingWebAudio || !Howler.ctx || !Howler.masterGain) {
+      const AudioContextConstructor =
+        window.AudioContext ??
+        (window as AudioContextWindow).webkitAudioContext;
+      if (!AudioContextConstructor) {
         throw new Error("Web Audio is not available.");
       }
 
-      const context = Howler.ctx;
-      const master = Howler.masterGain;
+      const context = new AudioContextConstructor();
+      const master = context.createGain();
       const voice = context.createGain();
       const music = context.createGain();
       const effects = context.createGain();
 
+      master.connect(context.destination);
       voice.connect(master);
       music.connect(master);
       effects.connect(master);
@@ -191,14 +200,39 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
     (allowCreate = false) => {
       const graph =
         graphRef.current ?? (allowCreate ? ensureAudioGraph() : null);
-      if (!graph || graph.context.state === "running") return;
+      const contexts = [graph?.context, Howler.ctx].filter(
+        (context): context is AudioContext => Boolean(context),
+      );
 
-      void graph.context.resume().catch((error) => {
-        console.warn(
-          "Web Audio 재개가 브라우저에 의해 보류되었습니다.",
-          error,
-        );
-      });
+      for (const context of contexts) {
+        if (
+          context.state === "running" ||
+          context.state === "closed"
+        ) {
+          continue;
+        }
+
+        try {
+          const source = context.createBufferSource();
+          source.buffer = context.createBuffer(1, 1, context.sampleRate);
+          source.connect(context.destination);
+          source.addEventListener(
+            "ended",
+            () => source.disconnect(),
+            { once: true },
+          );
+          source.start(0);
+        } catch {
+          // Resuming the context below remains the primary unlock path.
+        }
+
+        void context.resume().catch((error) => {
+          console.warn(
+            "Web Audio 재개가 브라우저에 의해 보류되었습니다.",
+            error,
+          );
+        });
+      }
     },
     [ensureAudioGraph],
   );
@@ -207,12 +241,6 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
     (element: HTMLMediaElement, channel: WebAudioChannel) => {
       const existingBinding = mediaBindingsRef.current.get(element);
       if (existingBinding) return existingBinding;
-
-      const currentSettings = readAudioSettings();
-      if (!currentSettings.soundEnabled) {
-        pendingMediaRef.current.delete(element);
-        return null;
-      }
 
       const graph = graphRef.current;
       if (!graph) {
@@ -235,6 +263,26 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
     },
     [],
   );
+
+  useEffect(() => {
+    Howler.autoUnlock = true;
+    Howler.autoSuspend = false;
+
+    // Prepare Howler's own mobile context before the first user gesture.
+    // Video and narration use the independent graph created above.
+    const unlockBootstrap = new Howl({
+      format: ["mp3"],
+      html5: false,
+      mute: true,
+      preload: false,
+      src: ["data:audio/mp3;base64,"],
+      volume: 0,
+    });
+
+    return () => {
+      unlockBootstrap.unload();
+    };
+  }, []);
 
   useEffect(() => {
     const currentSettings = readAudioSettings();
