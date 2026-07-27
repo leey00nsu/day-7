@@ -1,6 +1,6 @@
 {
-  "version": "2026-07-26-d3887da8452e",
-  "totalBytes": 35205870,
+  "version": "2026-07-26-2a7fe7d9158e",
+  "totalBytes": 34766933,
   "assets": [
     {
       "key": "audio/chapter-clock-ticking.mp3",
@@ -111,15 +111,15 @@
       "key": "video/c02_a_finish_tonight_s01.mp4",
       "source": "c02_a_finish_tonight_s01.mp4",
       "cacheName": "video__c02_a_finish_tonight_s01.mp4",
-      "size": 1278327,
-      "sha256": "c5c96bda61dd9530f04b39084c6928a06b9b973a3e85b630e49185bb368e7435"
+      "size": 1162986,
+      "sha256": "82aca552db1867844279466452d2df0f98026cf770e92a8662cfefd418425f86"
     },
     {
       "key": "video/c02_b_set_scope_s01.mp4",
       "source": "c02_b_set_scope_s01.mp4",
       "cacheName": "video__c02_b_set_scope_s01.mp4",
-      "size": 925374,
-      "sha256": "0af665852d1712623b75d70cac9fb775f70fdd8d5885754999de510d96cd6d2d"
+      "size": 823599,
+      "sha256": "e62b484aa8fac129fa58934adcd506c423c70a1e1708a3a58840881e75e28f2e"
     },
     {
       "key": "video/c03_a_take_blame_s01.mp4",
@@ -209,15 +209,15 @@
       "key": "video/n02_tue_late_request_s01.mp4",
       "source": "n02_tue_late_request_s01.mp4",
       "cacheName": "video__n02_tue_late_request_s01.mp4",
-      "size": 1221885,
-      "sha256": "c18f54cf6cca6654f2213bfb59337428e4a81106e1fab3180c44a4ff88f61f6f"
+      "size": 1029821,
+      "sha256": "c2c7ccf4f6a441d158c524d6771cdf9d89a94a557aa44a8a815d36d6b57a71da"
     },
     {
       "key": "video/n02_tue_late_request_s02.mp4",
       "source": "n02_tue_late_request_s02.mp4",
       "cacheName": "video__n02_tue_late_request_s02.mp4",
-      "size": 865107,
-      "sha256": "c115777797042e973f56ea7c8f2aeaa36f32343f3397af738bce479ef8b599fc"
+      "size": 835350,
+      "sha256": "c76612a1bcaf2ab7ba257def1e26f141dca6c9b3b31dc657899070e52141a2c9"
     },
     {
       "key": "video/n03_wed_wrong_number_s01.mp4",
