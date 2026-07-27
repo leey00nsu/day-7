@@ -223,10 +223,7 @@ export function GameScene() {
       return chapter.choices[selectedChoice].clips[clipIndex];
     }
 
-    if (
-      (mode === "ending" || mode === "endingNarration") &&
-      activeEnding
-    ) {
+    if (mode === "ending" && activeEnding) {
       return activeEnding.clips[clipIndex];
     }
 

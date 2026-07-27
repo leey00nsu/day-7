@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 
 const SOUND_CHOICE_STORAGE_KEY = "game-sound-choice";
 const SOUND_CHOICE_EVENT = "game:sound-choice";
+export const AUDIO_ACTIVATED_EVENT = "game:audio-activated";
 
 type SoundChoiceSnapshot = "loading" | "unset" | "enabled" | "muted";
 
@@ -54,6 +55,9 @@ function saveSoundChoice(choice: "enabled" | "muted") {
   }
 
   window.dispatchEvent(new Event(SOUND_CHOICE_EVENT));
+  if (choice === "enabled") {
+    window.dispatchEvent(new Event(AUDIO_ACTIVATED_EVENT));
+  }
 }
 
 type SoundConsentPromptProps = {

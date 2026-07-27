@@ -67,25 +67,33 @@ export function useHowlerSound({
   }, [hardMuted, outputVolume, src]);
 
   const play = useCallback(
-    ({ restart = false }: { restart?: boolean } = {}) => {
+    ({
+      force = false,
+      restart = false,
+    }: { force?: boolean; restart?: boolean } = {}) => {
       if (!src) return;
 
       const sound = soundRef.current;
-      if (!sound || hardMuted) return;
+      if (!sound || (!force && hardMuted)) return;
+
+      if (force) {
+        sound.volume(outputVolume);
+        sound.mute(false);
+      }
 
       if (restart) sound.stop();
       if (!restart && sound.playing()) return;
 
       sound.once("playerror", (failedId) => {
         sound.once("unlock", () => {
-          if (!hardMuted) sound.play(failedId);
+          if (force || !hardMuted) sound.play(failedId);
         });
       });
       const soundId = sound.play();
 
       return soundId;
     },
-    [hardMuted, src],
+    [hardMuted, outputVolume, src],
   );
 
   const pause = useCallback(() => {

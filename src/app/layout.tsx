@@ -112,8 +112,8 @@ export default function RootLayout({
       <body className="min-h-full bg-background font-sans text-foreground">
         {videoBaseUrl ? (
           <WebAudioProvider>
+            <GameAudio />
             <MediaAssetProvider>
-              <GameAudio />
               <SoundConsent>
                 <GameOptions />
                 {children}

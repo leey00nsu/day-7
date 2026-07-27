@@ -31,3 +31,21 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const LeftAndRight: Story = {};
+
+export const MobileWrapping: Story = {
+  args: {
+    choices: [
+      "오늘 안에 할 수 있는 데까지 정리한 뒤 퇴근한다.",
+      "선약을 취소하고 모든 수치를 다시 확인한다.",
+    ],
+    prompt:
+      "퇴근 직전에 전달받은 추가 업무를 오늘 모두 처리할 것인가?",
+  },
+  decorators: [
+    (Story) => (
+      <div className="relative mx-auto h-[844px] w-[390px] max-w-full overflow-hidden bg-black">
+        <Story />
+      </div>
+    ),
+  ],
+};

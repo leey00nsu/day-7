@@ -3,33 +3,29 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
-import { useMediaAssetUrl } from "./MediaAssetProvider";
+import { AUDIO_ACTIVATED_EVENT } from "./SoundConsent";
 import { useWebAudioSettings } from "./WebAudioProvider";
 import { useHowlerSound } from "./useHowlerSound";
 
 const BUTTON_SOUND_GAIN = 0.9;
+const BUTTON_SOUND_SRC = "/audio/ui-select-click.mp3";
+const HOME_MUSIC_SRC = "/audio/home-minimal-piano-pulse.mp3";
 const HOME_MUSIC_PATHS = new Set(["/", "/endings", "/report"]);
 
 export function GameAudio() {
   const pathname = usePathname();
-  const homeMusicSrc = useMediaAssetUrl(
-    "/audio/home-minimal-piano-pulse.mp3",
-  );
-  const buttonSoundSrc = useMediaAssetUrl(
-    "/audio/ui-select-click.mp3",
-  );
   const { masterVolume, soundEnabled } = useWebAudioSettings();
   const { play: playHomeMusic, stop: stopHomeMusic } = useHowlerSound({
     channel: "music",
     loop: true,
     muted: !soundEnabled || masterVolume <= 0,
-    src: homeMusicSrc,
+    src: HOME_MUSIC_SRC,
   });
   const { play: playButtonSound } = useHowlerSound({
     channel: "effects",
     gain: BUTTON_SOUND_GAIN,
     muted: !soundEnabled || masterVolume <= 0,
-    src: buttonSoundSrc,
+    src: BUTTON_SOUND_SRC,
   });
 
   useEffect(() => {
@@ -60,7 +56,12 @@ export function GameAudio() {
         "button:not(:disabled), a[href], [role='button']",
       );
 
-      if (!control || control.dataset.sound === "none") return;
+      if (!control) return;
+
+      if (HOME_MUSIC_PATHS.has(pathname)) {
+        playHomeMusic({ force: true });
+      }
+      if (control.dataset.sound === "none") return;
 
       playButtonSound({ restart: true });
     }
@@ -68,7 +69,30 @@ export function GameAudio() {
     document.addEventListener("pointerdown", handleButtonPress);
     return () =>
       document.removeEventListener("pointerdown", handleButtonPress);
-  }, [masterVolume, playButtonSound, soundEnabled]);
+  }, [
+    masterVolume,
+    pathname,
+    playButtonSound,
+    playHomeMusic,
+    soundEnabled,
+  ]);
+
+  useEffect(() => {
+    function startHomeMusicFromUserGesture() {
+      if (!HOME_MUSIC_PATHS.has(pathname)) return;
+      playHomeMusic({ force: true, restart: true });
+    }
+
+    window.addEventListener(
+      AUDIO_ACTIVATED_EVENT,
+      startHomeMusicFromUserGesture,
+    );
+    return () =>
+      window.removeEventListener(
+        AUDIO_ACTIVATED_EVENT,
+        startHomeMusicFromUserGesture,
+      );
+  }, [pathname, playHomeMusic]);
 
   return null;
 }
