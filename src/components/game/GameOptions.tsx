@@ -102,6 +102,11 @@ export function GameOptions({
     );
   }
 
+  function goHome() {
+    setOpen(false);
+    router.push("/");
+  }
+
   return (
     <aside
       className={cn(
@@ -256,7 +261,7 @@ export function GameOptions({
           <div className="mt-3 border-t border-white/10 pt-3">
             <Button
               className="h-10 w-full"
-              onClick={() => router.push("/")}
+              onClick={goHome}
               variant="outline"
             >
               <House data-icon="inline-start" />

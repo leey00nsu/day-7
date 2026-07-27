@@ -43,7 +43,7 @@ export default function ReportPage() {
           <Link
             className={cn(
               buttonVariants({ variant: "outline", size: "lg" }),
-              "bg-black/30",
+              "hidden bg-black/30 sm:inline-flex",
             )}
             href="/"
           >
@@ -52,6 +52,16 @@ export default function ReportPage() {
         </header>
 
         <ReportDashboard />
+
+        <Link
+          className={cn(
+            buttonVariants({ variant: "outline", size: "lg" }),
+            "mb-[max(0rem,env(safe-area-inset-bottom))] mt-2 w-full bg-black/30 sm:hidden",
+          )}
+          href="/"
+        >
+          홈으로
+        </Link>
       </div>
     </main>
   );
