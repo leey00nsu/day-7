@@ -40,6 +40,14 @@ type AudioContextWindow = Window & {
   webkitAudioContext?: typeof AudioContext;
 };
 
+type AudioSessionType = "auto" | "playback";
+
+type AudioSessionNavigator = Navigator & {
+  audioSession?: {
+    type: AudioSessionType;
+  };
+};
+
 type WebAudioContextValue = AudioSettings & {
   graphRevision: number;
   registerMediaElement: (
@@ -71,6 +79,19 @@ const WebAudioContext = createContext<WebAudioContextValue>({
 function clamp(value: number, minimum = 0, maximum = 1) {
   if (!Number.isFinite(value)) return minimum;
   return Math.min(Math.max(value, minimum), maximum);
+}
+
+function setAudioSessionType(type: AudioSessionType) {
+  if (typeof navigator === "undefined") return;
+
+  const audioSession = (navigator as AudioSessionNavigator).audioSession;
+  if (!audioSession || audioSession.type === type) return;
+
+  try {
+    audioSession.type = type;
+  } catch (error) {
+    console.warn("브라우저 오디오 세션을 변경하지 못했습니다.", error);
+  }
 }
 
 function storedVolume(key: string, fallback: number) {
@@ -126,6 +147,10 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState(readAudioSettings);
 
   const applySettings = useCallback((nextSettings: AudioSettings) => {
+    const audioEnabled =
+      nextSettings.soundEnabled && nextSettings.masterVolume > 0;
+    setAudioSessionType(audioEnabled ? "playback" : "auto");
+
     Howler.volume(nextSettings.masterVolume);
     Howler.mute(!nextSettings.soundEnabled);
 
@@ -198,6 +223,14 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
 
   const resumeAudioGraph = useCallback(
     (allowCreate = false) => {
+      const currentSettings = readAudioSettings();
+      if (
+        currentSettings.soundEnabled &&
+        currentSettings.masterVolume > 0
+      ) {
+        setAudioSessionType("playback");
+      }
+
       const graph =
         graphRef.current ?? (allowCreate ? ensureAudioGraph() : null);
       const contexts = [graph?.context, Howler.ctx].filter(
