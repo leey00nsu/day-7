@@ -15,7 +15,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { getInitialCaptionSize } from "@/lib/game-preferences";
+import { updateGamePreferences } from "@/features/preferences/game-preferences-store";
+import { useGamePreferences } from "@/features/preferences/use-game-preferences";
 import { cn } from "@/lib/utils";
 
 import { useMediaAssetStorage } from "@/features/media/MediaAssetProvider";
@@ -39,67 +40,35 @@ export function GameOptions({
     storageMode,
   } = useMediaAssetStorage();
   const [open, setOpen] = useState(defaultOpen);
-  const [captions, setCaptions] = useState(() =>
-    typeof window === "undefined"
-      ? true
-      : window.localStorage.getItem("game-captions") !== "false",
-  );
-  const [captionSize, setCaptionSize] = useState(getInitialCaptionSize);
-  const [volume, setVolume] = useState(() =>
-    typeof window === "undefined"
-      ? 80
-      : Number(window.localStorage.getItem("game-volume") ?? 80),
-  );
-  const [musicVolume, setMusicVolume] = useState(() =>
-    typeof window === "undefined"
-      ? 28
-      : Number(window.localStorage.getItem("game-music-volume") ?? 28),
-  );
-  const [effectsVolume, setEffectsVolume] = useState(() =>
-    typeof window === "undefined"
-      ? 40
-      : Number(window.localStorage.getItem("game-effects-volume") ?? 40),
-  );
+  const {
+    captionSize,
+    captionsEnabled: captions,
+    effectsVolume,
+    masterVolume: volume,
+    musicVolume,
+  } = useGamePreferences();
 
   function updateCaptions(value: boolean) {
-    setCaptions(value);
-    window.localStorage.setItem("game-captions", String(value));
-    window.dispatchEvent(new CustomEvent("game:captions", { detail: value }));
+    updateGamePreferences({ captionsEnabled: value });
   }
 
   function updateCaptionSize(value: number) {
-    setCaptionSize(value);
-    window.localStorage.setItem("game-caption-size", String(value));
-    window.dispatchEvent(
-      new CustomEvent("game:caption-size", { detail: value }),
-    );
+    updateGamePreferences({ captionSize: value });
   }
 
   function updateVolume(value: number) {
-    setVolume(value);
-    window.localStorage.setItem("game-volume", String(value));
-    window.localStorage.setItem(
-      "game-sound-choice",
-      value > 0 ? "enabled" : "muted",
-    );
-    window.dispatchEvent(new CustomEvent("game:volume", { detail: value }));
-    window.dispatchEvent(new Event("game:sound-choice"));
+    updateGamePreferences({
+      masterVolume: value,
+      soundChoice: value > 0 ? "enabled" : "muted",
+    });
   }
 
   function updateMusicVolume(value: number) {
-    setMusicVolume(value);
-    window.localStorage.setItem("game-music-volume", String(value));
-    window.dispatchEvent(
-      new CustomEvent("game:music-volume", { detail: value }),
-    );
+    updateGamePreferences({ musicVolume: value });
   }
 
   function updateEffectsVolume(value: number) {
-    setEffectsVolume(value);
-    window.localStorage.setItem("game-effects-volume", String(value));
-    window.dispatchEvent(
-      new CustomEvent("game:effects-volume", { detail: value }),
-    );
+    updateGamePreferences({ effectsVolume: value });
   }
 
   function goHome() {

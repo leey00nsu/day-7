@@ -3,58 +3,17 @@
 import { type ReactNode, useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  getSoundChoiceSnapshot,
+  saveSoundChoice,
+  subscribeToGamePreferences,
+  type SoundChoice,
+} from "@/features/preferences/game-preferences-store";
 
-const SOUND_CHOICE_STORAGE_KEY = "game-sound-choice";
-const SOUND_CHOICE_EVENT = "game:sound-choice";
 export const AUDIO_ACTIVATED_EVENT = "game:audio-activated";
 
-type SoundChoiceSnapshot = "loading" | "unset" | "enabled" | "muted";
-
-function getSoundChoiceSnapshot(): SoundChoiceSnapshot {
-  const storedChoice = window.localStorage.getItem(
-    SOUND_CHOICE_STORAGE_KEY,
-  );
-
-  return storedChoice === "enabled" || storedChoice === "muted"
-    ? storedChoice
-    : "unset";
-}
-
-function subscribeToSoundChoice(onStoreChange: () => void) {
-  function handleStorage(event: StorageEvent) {
-    if (event.key === SOUND_CHOICE_STORAGE_KEY) onStoreChange();
-  }
-
-  window.addEventListener("storage", handleStorage);
-  window.addEventListener(SOUND_CHOICE_EVENT, onStoreChange);
-
-  return () => {
-    window.removeEventListener("storage", handleStorage);
-    window.removeEventListener(SOUND_CHOICE_EVENT, onStoreChange);
-  };
-}
-
-function saveSoundChoice(choice: "enabled" | "muted") {
-  window.localStorage.setItem(SOUND_CHOICE_STORAGE_KEY, choice);
-
-  if (choice === "muted") {
-    window.localStorage.setItem("game-volume", "0");
-    window.dispatchEvent(
-      new CustomEvent("game:volume", { detail: 0 }),
-    );
-  } else {
-    const storedVolume = Number(
-      window.localStorage.getItem("game-volume") ?? 80,
-    );
-    const nextVolume = storedVolume > 0 ? storedVolume : 80;
-
-    window.localStorage.setItem("game-volume", String(nextVolume));
-    window.dispatchEvent(
-      new CustomEvent("game:volume", { detail: nextVolume }),
-    );
-  }
-
-  window.dispatchEvent(new Event(SOUND_CHOICE_EVENT));
+function chooseSound(choice: Exclude<SoundChoice, "unset">) {
+  saveSoundChoice(choice);
   if (choice === "enabled") {
     window.dispatchEvent(new Event(AUDIO_ACTIVATED_EVENT));
   }
@@ -66,8 +25,8 @@ type SoundConsentPromptProps = {
 };
 
 export function SoundConsentPrompt({
-  onEnable = () => saveSoundChoice("enabled"),
-  onDisable = () => saveSoundChoice("muted"),
+  onEnable = () => chooseSound("enabled"),
+  onDisable = () => chooseSound("muted"),
 }: SoundConsentPromptProps) {
   return (
     <section
@@ -110,7 +69,7 @@ export function SoundConsentPrompt({
 
 export function SoundConsent({ children }: { children: ReactNode }) {
   const soundChoice = useSyncExternalStore(
-    subscribeToSoundChoice,
+    subscribeToGamePreferences,
     getSoundChoiceSnapshot,
     () => "loading",
   );

@@ -14,6 +14,8 @@ import {
 } from "react";
 import { Howl, Howler } from "howler";
 
+import { useGamePreferences } from "@/features/preferences/use-game-preferences";
+
 export type WebAudioChannel = "voice" | "music" | "effects";
 
 type AudioSettings = {
@@ -94,25 +96,6 @@ function setAudioSessionType(type: AudioSessionType) {
   }
 }
 
-function storedVolume(key: string, fallback: number) {
-  if (typeof window === "undefined") return fallback / 100;
-
-  const stored = Number(window.localStorage.getItem(key) ?? fallback);
-  return clamp(stored, 0, 100) / 100;
-}
-
-function readAudioSettings(): AudioSettings {
-  if (typeof window === "undefined") return DEFAULT_AUDIO_SETTINGS;
-
-  return {
-    effectsVolume: storedVolume("game-effects-volume", 40),
-    masterVolume: storedVolume("game-volume", 80),
-    musicVolume: storedVolume("game-music-volume", 28),
-    soundEnabled:
-      window.localStorage.getItem("game-sound-choice") === "enabled",
-  };
-}
-
 function connectMediaElement(
   graph: AudioGraph,
   bindings: WeakMap<HTMLMediaElement, MediaBinding>,
@@ -135,6 +118,7 @@ function connectMediaElement(
 }
 
 export function WebAudioProvider({ children }: { children: ReactNode }) {
+  const preferences = useGamePreferences();
   const graphRef = useRef<AudioGraph | null>(null);
   const mediaBindingsRef = useRef(
     new WeakMap<HTMLMediaElement, MediaBinding>(),
@@ -144,7 +128,15 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
   );
   const webAudioUnavailableRef = useRef(false);
   const [graphRevision, setGraphRevision] = useState(0);
-  const [settings, setSettings] = useState(readAudioSettings);
+  const settings = useMemo<AudioSettings>(
+    () => ({
+      effectsVolume: preferences.effectsVolume / 100,
+      masterVolume: preferences.masterVolume / 100,
+      musicVolume: preferences.musicVolume / 100,
+      soundEnabled: preferences.soundChoice === "enabled",
+    }),
+    [preferences],
+  );
 
   const applySettings = useCallback((nextSettings: AudioSettings) => {
     const audioEnabled =
@@ -194,7 +186,7 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
 
       const graph = { context, effects, master, music, voice };
       graphRef.current = graph;
-      applySettings(readAudioSettings());
+      applySettings(settings);
 
       for (const [element, channel] of pendingMediaRef.current) {
         try {
@@ -219,15 +211,11 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
       );
       return null;
     }
-  }, [applySettings]);
+  }, [applySettings, settings]);
 
   const resumeAudioGraph = useCallback(
     (allowCreate = false) => {
-      const currentSettings = readAudioSettings();
-      if (
-        currentSettings.soundEnabled &&
-        currentSettings.masterVolume > 0
-      ) {
+      if (settings.soundEnabled && settings.masterVolume > 0) {
         setAudioSessionType("playback");
       }
 
@@ -267,7 +255,7 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
         });
       }
     },
-    [ensureAudioGraph],
+    [ensureAudioGraph, settings],
   );
 
   const registerMediaElement = useCallback(
@@ -318,41 +306,23 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const currentSettings = readAudioSettings();
-    if (
-      currentSettings.soundEnabled &&
-      currentSettings.masterVolume > 0
-    ) {
+    if (settings.soundEnabled && settings.masterVolume > 0) {
       const setupFrame = window.requestAnimationFrame(() => {
         ensureAudioGraph();
       });
       return () => window.cancelAnimationFrame(setupFrame);
     }
-  }, [ensureAudioGraph]);
+  }, [ensureAudioGraph, settings]);
 
   useEffect(() => {
-    function updateSettings() {
-      const nextSettings = readAudioSettings();
-      setSettings(nextSettings);
-      applySettings(nextSettings);
-
-      if (nextSettings.soundEnabled && nextSettings.masterVolume > 0) {
+    applySettings(settings);
+    if (settings.soundEnabled && settings.masterVolume > 0) {
+      const resumeFrame = window.requestAnimationFrame(() => {
         resumeAudioGraph(true);
-      }
+      });
+      return () => window.cancelAnimationFrame(resumeFrame);
     }
-
-    window.addEventListener("game:volume", updateSettings);
-    window.addEventListener("game:music-volume", updateSettings);
-    window.addEventListener("game:effects-volume", updateSettings);
-    window.addEventListener("game:sound-choice", updateSettings);
-
-    return () => {
-      window.removeEventListener("game:volume", updateSettings);
-      window.removeEventListener("game:music-volume", updateSettings);
-      window.removeEventListener("game:effects-volume", updateSettings);
-      window.removeEventListener("game:sound-choice", updateSettings);
-    };
-  }, [applySettings, resumeAudioGraph]);
+  }, [applySettings, resumeAudioGraph, settings]);
 
   useEffect(() => {
     function unlockAudio() {

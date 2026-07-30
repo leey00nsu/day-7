@@ -48,8 +48,8 @@ import {
 import { PlaybackControls } from "@/features/game/components/PlaybackControls";
 import { useMediaBuffering } from "@/features/game/playback/use-media-buffering";
 import { usePlaybackVisibility } from "@/features/game/playback/use-playback-visibility";
+import { useGamePreferences } from "@/features/preferences/use-game-preferences";
 import { unlockEnding } from "@/lib/ending-progress";
-import { getInitialCaptionSize } from "@/lib/game-preferences";
 import {
   recordChoice,
   recordEnding,
@@ -132,12 +132,7 @@ export function GameScene() {
     storyChapters[0].clips[0].filename,
     storyChapters[0].clips[1]?.filename,
   ]);
-  const [captionsEnabled, setCaptionsEnabled] = useState(() =>
-    typeof window === "undefined"
-      ? true
-      : window.localStorage.getItem("game-captions") !== "false",
-  );
-  const [captionSize, setCaptionSize] = useState(getInitialCaptionSize);
+  const { captionSize, captionsEnabled } = useGamePreferences();
   const {
     buffering: mediaBuffering,
     clearBuffering,
@@ -175,24 +170,6 @@ export function GameScene() {
     () => selectCurrentChoices(gameState),
     [gameState],
   );
-
-  useEffect(() => {
-    function updateCaptions(event: Event) {
-      setCaptionsEnabled((event as CustomEvent<boolean>).detail);
-    }
-
-    function updateCaptionSize(event: Event) {
-      setCaptionSize((event as CustomEvent<number>).detail);
-    }
-
-    window.addEventListener("game:captions", updateCaptions);
-    window.addEventListener("game:caption-size", updateCaptionSize);
-
-    return () => {
-      window.removeEventListener("game:captions", updateCaptions);
-      window.removeEventListener("game:caption-size", updateCaptionSize);
-    };
-  }, []);
 
   useEffect(() => {
     if (!choiceFeedback) return;
