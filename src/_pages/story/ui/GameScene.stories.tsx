@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
-import { GameScene } from "./GameScene";
+import { StoryPage } from "./StoryPage";
 
 const meta = {
   title: "Pages/Story/Scene",
-  component: GameScene,
+  component: StoryPage,
   parameters: {
     layout: "fullscreen",
   },
-} satisfies Meta<typeof GameScene>;
+} satisfies Meta<typeof StoryPage>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

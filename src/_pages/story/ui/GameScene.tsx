@@ -6,7 +6,6 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useReducer,
   useRef,
   useState,
 } from "react";
@@ -29,7 +28,6 @@ import {
 } from "@/widgets/game-shell";
 import { GameVideo } from "@/widgets/game-video";
 import {
-  createInitialGameState,
   gameReducer,
   selectActiveClip,
   selectActiveEnding,
@@ -48,6 +46,7 @@ import {
 import { Button } from "@/shared/ui/button";
 import { useStoryMediaBuffering } from "../model/use-media-buffering";
 import { useStoryPlaybackVisibility } from "../model/use-playback-visibility";
+import { useStorySession } from "../model/story-session-store";
 import { ChapterIntro } from "./ChapterIntro";
 import { ChoiceFeedback } from "./ChoiceFeedback";
 import { DecisionOverlay } from "./DecisionOverlay";
@@ -102,10 +101,9 @@ export function GameScene() {
   const activeSlotRef = useRef(0);
   const narrationRetryCountRef = useRef(0);
   const narrationRetryTimerRef = useRef<number | null>(null);
-  const [gameState, dispatchGame] = useReducer(
-    gameReducer,
-    undefined,
-    createInitialGameState,
+  const gameState = useStorySession((state) => state.gameState);
+  const dispatchGame = useStorySession(
+    (state) => state.dispatchGame,
   );
   const {
     achievedEndingId,
@@ -372,7 +370,7 @@ export function GameScene() {
     dispatchGame({ type: "chapterIntroFinished" });
     setCurrentTime(0);
     setIsPlaying(false);
-  }, []);
+  }, [dispatchGame]);
 
   const markVideoReady = useCallback(
     (filename: string, video: HTMLVideoElement) => {
