@@ -2,7 +2,7 @@ import {
   decisionDefinitions,
   decisionIds,
   endings,
-} from "@/data/game";
+} from "@/entities/game";
 import {
   emptyEndingCounts,
   type ReportData,

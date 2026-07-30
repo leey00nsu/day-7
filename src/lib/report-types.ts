@@ -1,4 +1,10 @@
-import type { DecisionId, EndingId } from "@/data/game";
+import type {
+  ChoiceMap,
+  DecisionId,
+  EndingId,
+} from "@/entities/game";
+
+export type { ChoiceMap };
 
 export type ChoiceReport = {
   decisionId: DecisionId;
@@ -16,8 +22,6 @@ export type ReportData = {
   choices: ChoiceReport[];
   endings: Record<EndingId, number>;
 };
-
-export type ChoiceMap = Partial<Record<DecisionId, 0 | 1>>;
 
 export const emptyEndingCounts: Record<EndingId, number> = {
   E01: 0,

@@ -8,7 +8,7 @@ const globalForDatabase = globalThis as typeof globalThis & {
   gameDatabase?: PrismaClient;
 };
 
-function createDatabaseClient() {
+function createDatabaseClient(): PrismaClient {
   const connectionString = process.env.DATABASE_URL;
 
   if (!connectionString) {

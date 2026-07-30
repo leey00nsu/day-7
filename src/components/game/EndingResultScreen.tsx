@@ -4,8 +4,8 @@ import Link from "next/link";
 
 import { EndingCard } from "@/components/game/EndingCard";
 import { ReportOverview } from "@/components/game/ReportOverview";
-import { buttonVariants } from "@/components/ui/button";
-import type { Ending } from "@/data/game";
+import type { Ending } from "@/entities/game";
+import { buttonVariants } from "@/shared/ui/button";
 import { useReportData } from "@/hooks/use-report-data";
 import type { ChoiceMap, ReportData } from "@/lib/report-types";
 

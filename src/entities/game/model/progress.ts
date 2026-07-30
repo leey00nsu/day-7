@@ -1,4 +1,4 @@
-import type { EndingId } from "@/data/game";
+import type { EndingId } from "./content";
 
 export const ENDING_PROGRESS_STORAGE_KEY = "d7-unlocked-endings";
 export const LAST_ENDING_STORAGE_KEY = "d7-last-ending";

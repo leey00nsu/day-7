@@ -1,6 +1,6 @@
 "use client";
 
-import type { DecisionId, EndingId } from "@/data/game";
+import type { DecisionId, EndingId } from "@/entities/game";
 import type { ChoiceMap, ReportData } from "@/lib/report-types";
 
 const PLAYER_ID_STORAGE_KEY = "d7-anonymous-player-id";

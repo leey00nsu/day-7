@@ -14,10 +14,10 @@ import {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import { updateGamePreferences } from "@/features/preferences/game-preferences-store";
 import { useGamePreferences } from "@/features/preferences/use-game-preferences";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
 
 import { useMediaAssetStorage } from "@/features/media/MediaAssetProvider";
 

@@ -1,7 +1,7 @@
 import Image from "next/image";
 
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
+import { buttonVariants } from "@/shared/ui/button";
 
 type DecisionOverlayProps = {
   choices: readonly [string, string];

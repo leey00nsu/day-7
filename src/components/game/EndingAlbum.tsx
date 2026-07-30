@@ -7,18 +7,19 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import { EndingCard } from "@/components/game/EndingCard";
 import { GameVideo } from "@/components/game/GameVideo";
-import { buttonVariants } from "@/components/ui/button";
-import { endings, type EndingId } from "@/data/game";
-import { useReportData } from "@/hooks/use-report-data";
 import {
+  endings,
   getEndingProgressSnapshot,
   getLastEndingSnapshot,
   parseLastEndingId,
   parseUnlockedEndingIds,
   subscribeToEndingProgress,
-} from "@/lib/ending-progress";
+  type EndingId,
+} from "@/entities/game";
+import { useReportData } from "@/hooks/use-report-data";
 import type { ReportData } from "@/lib/report-types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
+import { buttonVariants } from "@/shared/ui/button";
 
 type EndingAlbumProps = {
   initialUnlockedIds?: readonly EndingId[];

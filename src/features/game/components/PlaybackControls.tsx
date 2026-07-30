@@ -2,8 +2,8 @@
 
 import { ChevronsRight, Pause, Play } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import type { PlaybackMode } from "@/features/game/domain/game-state";
+import type { PlaybackMode } from "@/entities/game";
+import { Button } from "@/shared/ui/button";
 
 type PlaybackControlsProps = {
   isPlaying: boolean;

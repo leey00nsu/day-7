@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-import { siteConfig } from "@/lib/site";
+import { siteConfig } from "@/shared/config";
 
 const routes = ["", "/story", "/endings", "/report"];
 

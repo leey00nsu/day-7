@@ -7,8 +7,7 @@ import { MediaAssetProvider } from "@/features/media/MediaAssetProvider";
 import { SoundConsent } from "@/components/game/SoundConsent";
 import { VideoPlaybackError } from "@/components/game/VideoPlaybackError";
 import { WebAudioProvider } from "@/components/game/WebAudioProvider";
-import { siteConfig } from "@/lib/site";
-import { videoBaseUrl } from "@/lib/video";
+import { siteConfig, videoBaseUrl } from "@/shared/config";
 import "./globals.css";
 
 export const metadata: Metadata = {

@@ -1,8 +1,8 @@
 import { Check, Lock } from "lucide-react";
 import Image from "next/image";
 
-import type { Ending } from "@/data/game";
-import { cn } from "@/lib/utils";
+import type { Ending } from "@/entities/game";
+import { cn } from "@/shared/lib/cn";
 
 type EndingCardProps = {
   ending: Ending;

@@ -1,5 +1,5 @@
 import mediaManifestJson from "@/data/media-manifest.json";
-import { getVideoUrl } from "@/lib/video";
+import { getVideoUrl } from "@/shared/config";
 
 export type MediaAsset = {
   key: string;

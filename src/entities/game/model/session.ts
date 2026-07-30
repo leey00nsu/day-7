@@ -3,9 +3,9 @@ import {
   storyChapters,
   type EndingId,
   type StoryClip,
-} from "@/data/game";
-import { resolveEndingFromChoices } from "@/lib/ending-progress";
-import type { ChoiceMap } from "@/lib/report-types";
+} from "./content";
+import { resolveEndingFromChoices } from "./progress";
+import type { ChoiceMap } from "./content";
 
 export type PlaybackMode =
   | "chapterIntro"

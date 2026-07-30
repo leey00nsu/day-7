@@ -4,7 +4,7 @@ import {
   parseLastEndingId,
   parseUnlockedEndingIds,
   resolveEndingFromChoices,
-} from "./ending-progress";
+} from "./progress";
 
 describe("ending progress", () => {
   it.each([

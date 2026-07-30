@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
-import { endings } from "@/data/game";
+import { endings } from "@/entities/game";
 
 import { EndingCard } from "./EndingCard";
 

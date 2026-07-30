@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getDatabase } from "@/lib/db";
+import { getDatabase } from "@/shared/api/database";
 
 export const dynamic = "force-dynamic";
 

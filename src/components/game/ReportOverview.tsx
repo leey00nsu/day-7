@@ -4,7 +4,7 @@ import type {
   ChoiceMap,
   ReportData,
 } from "@/lib/report-types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
 
 type ReportOverviewProps = {
   data: ReportData;

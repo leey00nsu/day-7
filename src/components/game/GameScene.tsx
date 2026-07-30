@@ -31,11 +31,6 @@ import {
 import { SubtitleOverlay } from "@/components/game/SubtitleOverlay";
 import { useWebAudioSettings } from "@/components/game/WebAudioProvider";
 import { useHowlerSound } from "@/components/game/useHowlerSound";
-import { Button } from "@/components/ui/button";
-import {
-  storyChapters,
-  type SubtitleCue,
-} from "@/data/game";
 import {
   createInitialGameState,
   gameReducer,
@@ -44,16 +39,19 @@ import {
   selectChapter,
   selectCurrentChoices,
   selectResolvedEnding,
-} from "@/features/game/domain/game-state";
+  storyChapters,
+  type SubtitleCue,
+  unlockEnding,
+} from "@/entities/game";
 import { PlaybackControls } from "@/features/game/components/PlaybackControls";
 import { useMediaBuffering } from "@/features/game/playback/use-media-buffering";
 import { usePlaybackVisibility } from "@/features/game/playback/use-playback-visibility";
 import { useGamePreferences } from "@/features/preferences/use-game-preferences";
-import { unlockEnding } from "@/lib/ending-progress";
 import {
   recordChoice,
   recordEnding,
 } from "@/lib/report-client";
+import { Button } from "@/shared/ui/button";
 type VideoSlots = [string | undefined, string | undefined];
 
 const MIN_START_BUFFER_SECONDS = 4;

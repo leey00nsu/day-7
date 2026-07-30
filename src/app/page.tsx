@@ -3,8 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { GameVideo } from "@/components/game/GameVideo";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
+import { buttonVariants } from "@/shared/ui/button";
 
 export const metadata: Metadata = {
   alternates: {

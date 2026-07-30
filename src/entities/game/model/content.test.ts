@@ -5,7 +5,7 @@ import {
   decisionIds,
   endings,
   storyChapters,
-} from "./game";
+} from "./content";
 
 describe("game content", () => {
   it("defines every decision exactly once", () => {

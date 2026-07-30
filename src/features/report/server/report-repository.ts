@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getDatabase } from "@/lib/db";
+import { getDatabase } from "@/shared/api/database";
 
 export type ChoiceCountRow = {
   count: number;

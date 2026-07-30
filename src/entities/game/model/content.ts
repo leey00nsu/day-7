@@ -36,6 +36,7 @@ export const decisionIds = [
 ] as const;
 
 export type DecisionId = (typeof decisionIds)[number];
+export type ChoiceMap = Partial<Record<DecisionId, 0 | 1>>;
 
 const subtitleTable = subtitles as Record<string, SubtitleCue[]>;
 

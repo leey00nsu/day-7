@@ -1,4 +1,4 @@
-const deploymentHost =
+const deploymentHost: string | undefined =
   process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
 const coolifyUrl = process.env.COOLIFY_URL?.split(",")[0]?.trim();
 

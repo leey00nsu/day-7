@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
 
 import { useMediaAssetUrl } from "@/features/media/MediaAssetProvider";
 import { useHowlerSound } from "./useHowlerSound";

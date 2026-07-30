@@ -1,6 +1,6 @@
 import { CircleHelp } from "lucide-react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/cn";
 
 type ChoiceFeedbackProps = {
   message: string;

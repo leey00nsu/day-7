@@ -5,7 +5,7 @@ import {
   gameReducer,
   selectActiveClip,
   selectCurrentChoices,
-} from "./game-state";
+} from "./session";
 
 function finishChapterIntro(state = createInitialGameState()) {
   return gameReducer(state, { type: "chapterIntroFinished" });

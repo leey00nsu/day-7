@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-import { siteConfig } from "@/lib/site";
+import { siteConfig } from "@/shared/config";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -12,4 +12,3 @@ export default function robots(): MetadataRoute.Robots {
     host: siteConfig.url,
   };
 }
-
