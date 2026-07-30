@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
 
 import {
-  decisionDefinitions,
-  decisionIds,
-  endings,
-} from "@/data/game";
-import { getDatabase } from "@/lib/db";
+  createPrismaReportRepository,
+} from "@/features/report/server/report-repository";
 import {
-  emptyEndingCounts,
-  type ReportData,
-} from "@/lib/report-types";
+  InvalidReportEventError,
+  loadReportData,
+  saveReportEvent,
+} from "@/features/report/server/report-service";
 import {
   parseReportRequest,
   ReportRequestError,
@@ -17,77 +15,11 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const decisionIdSet = new Set<string>(decisionIds);
-const endingIdSet = new Set<string>(endings.map((ending) => ending.id));
-
-function percentage(count: number, total: number) {
-  return total === 0 ? 0 : Math.round((count / total) * 100);
-}
-
 export async function GET() {
   try {
-    const database = getDatabase();
-    const [choiceRows, endingRows] = await Promise.all([
-      database.gameChoiceResponse.groupBy({
-        by: ["decisionId", "choiceIndex"],
-        _count: {
-          _all: true,
-        },
-      }),
-      database.gameEndingResponse.groupBy({
-        by: ["endingId"],
-        _count: {
-          _all: true,
-        },
-      }),
-    ]);
-
-    const choiceCounts = new Map<string, number>();
-    for (const row of choiceRows) {
-      choiceCounts.set(
-        `${row.decisionId}:${row.choiceIndex}`,
-        row._count._all,
-      );
-    }
-
-    const endingCounts = { ...emptyEndingCounts };
-    for (const row of endingRows) {
-      if (endingIdSet.has(row.endingId)) {
-        endingCounts[row.endingId as keyof typeof endingCounts] =
-          row._count._all;
-      }
-    }
-
-    const data: ReportData = {
-      choices: decisionDefinitions.map((decision) => {
-        const firstCount =
-          choiceCounts.get(`${decision.id}:0`) ?? 0;
-        const secondCount =
-          choiceCounts.get(`${decision.id}:1`) ?? 0;
-        const total = firstCount + secondCount;
-
-        return {
-          decisionId: decision.id,
-          day: decision.day,
-          title: decision.title,
-          prompt: decision.prompt,
-          total,
-          choices: [
-            {
-              label: decision.choices[0],
-              count: firstCount,
-              percentage: percentage(firstCount, total),
-            },
-            {
-              label: decision.choices[1],
-              count: secondCount,
-              percentage: percentage(secondCount, total),
-            },
-          ],
-        };
-      }),
-      endings: endingCounts,
-    };
+    const data = await loadReportData(
+      createPrismaReportRepository(),
+    );
 
     return NextResponse.json(data, {
       headers: {
@@ -107,38 +39,8 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await parseReportRequest(request);
-    const database = getDatabase();
-
-    if (
-      body.type === "choice" &&
-      decisionIdSet.has(body.decisionId)
-    ) {
-      await database.gameChoiceResponse.create({
-        data: {
-          playerId: body.playerId,
-          decisionId: body.decisionId,
-          choiceIndex: body.choiceIndex,
-        },
-      });
-
-      return NextResponse.json({ saved: true });
-    }
-
-    if (
-      body.type === "ending" &&
-      endingIdSet.has(body.endingId)
-    ) {
-      await database.gameEndingResponse.create({
-        data: {
-          playerId: body.playerId,
-          endingId: body.endingId,
-        },
-      });
-
-      return NextResponse.json({ saved: true });
-    }
-
-    throw new ReportRequestError("잘못된 리포트 이벤트입니다.", 400);
+    await saveReportEvent(createPrismaReportRepository(), body);
+    return NextResponse.json({ saved: true });
   } catch (error) {
     if (error instanceof ReportRequestError) {
       return NextResponse.json(
@@ -147,6 +49,13 @@ export async function POST(request: Request) {
           status: error.status,
           headers: error.headers,
         },
+      );
+    }
+
+    if (error instanceof InvalidReportEventError) {
+      return NextResponse.json(
+        { message: error.message },
+        { status: 400 },
       );
     }
 

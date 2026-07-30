@@ -163,9 +163,8 @@ REPORT_RATE_LIMIT_WINDOW_SECONDS=600
 ### PostgreSQL
 
 리포트는 브라우저별 익명 UUID와 함께 월요일부터 목요일까지 발생한 모든
-선택을 PostgreSQL에 저장합니다. 같은 게임을 반복하면 선택 기록도
-플레이한 횟수만큼 누적됩니다. 도달한 엔딩은 브라우저별로 한 번만
-집계됩니다.
+선택과 도달한 엔딩을 PostgreSQL에 저장합니다. 같은 게임을 반복하면
+선택 기록과 엔딩 기록 모두 플레이한 횟수만큼 누적됩니다.
 
 로컬에서는 Docker Compose로 PostgreSQL을 실행하고 Prisma 마이그레이션을
 적용합니다.
