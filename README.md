@@ -91,7 +91,7 @@ E03 김 인턴의 거절
 
 ## 시작하기
 
-Node.js 20 이상과 pnpm이 필요합니다.
+Node.js 22.13.1 이상 23 미만과 pnpm 11이 필요합니다.
 
 ```bash
 corepack enable
@@ -243,14 +243,18 @@ pnpm storybook
 
 ```bash
 pnpm lint
+pnpm test:unit
+pnpm test:storybook
 pnpm build
 pnpm build-storybook
-pnpm test-storybook
 ```
 
-Storybook에서는 공통 버튼의 모든 variant와 크기, 게임 옵션의 열린·닫힌
-상태, 챕터 전환, 선택지, 선택 결과 메시지, 자막, 엔딩 카드와 앨범,
-사운드 동의, 영상 오류, 주요 화면을 각각 확인할 수 있습니다.
+`pnpm test`는 단위 테스트와 Storybook 브라우저 테스트를 차례로 실행합니다.
+단위 테스트는 게임 상태 전이, 엔딩 판정, 설정 파싱, 미디어 다운로드와
+리포트 집계를 검증합니다. Storybook에서는 공통 버튼의 모든 variant와
+크기, 게임 옵션의 열린·닫힌 상태, 챕터 전환, 선택지, 선택 결과 메시지,
+자막, 엔딩 카드와 앨범, 사운드 동의, 영상 오류, 주요 화면을 각각
+확인할 수 있습니다.
 `GameAudio`, `NarrationAudio`, `StoryMusic`은 화면을 렌더링하지 않는
 재생 제어 컴포넌트라 별도 시각 스토리 대신 `GameScene`에서 통합됩니다.
 
@@ -260,12 +264,17 @@ Storybook에서는 공통 버튼의 모든 variant와 크기, 게임 옵션의 �
 src/
 ├── app/                 # 페이지, 리포트 API, SEO 메타데이터
 ├── components/
-│   ├── game/            # 게임 재생과 선택·엔딩 UI
+│   ├── game/            # 게임 화면과 오디오 UI
 │   └── ui/              # 공통 기반 컴포넌트
 ├── data/
 │   ├── game.ts          # 챕터, 선택지, 엔딩
 │   ├── media-manifest.json # 다운로드 파일 크기와 SHA-256
 │   └── subtitles.json   # 영상별 자막
+├── features/
+│   ├── game/            # 게임 상태 전이와 재생 제어
+│   ├── media/           # 미디어 다운로드, URL과 다이얼로그
+│   ├── preferences/     # 영속 설정 저장소
+│   └── report/          # 리포트 집계와 DB 저장 경계
 └── lib/                 # 엔딩 저장과 공통 유틸리티
 
 prisma/
