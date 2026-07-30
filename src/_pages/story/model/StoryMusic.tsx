@@ -6,7 +6,7 @@ import { useMediaAssetUrl } from "@/features/prepare-game-media";
 import {
   useHowlerSound,
   useWebAudioSettings,
-} from "@/widgets/game-shell";
+} from "@/features/manage-game-audio";
 
 export type StoryMusicMode = "silent" | "gameplay" | "decision";
 

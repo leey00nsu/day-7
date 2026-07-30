@@ -8,7 +8,7 @@ import {
 } from "react";
 
 import { useMediaAssetUrl } from "@/features/prepare-game-media";
-import { useWebAudioMedia } from "@/widgets/game-shell";
+import { useWebAudioMedia } from "@/features/manage-game-audio";
 
 type NarrationAudioProps = {
   gain?: number;

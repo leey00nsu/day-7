@@ -14,11 +14,9 @@ import {
 } from "react";
 import { Howl, Howler } from "howler";
 
-import { useGamePreferences } from "@/features/manage-game-preferences";
-
 export type WebAudioChannel = "voice" | "music" | "effects";
 
-type AudioSettings = {
+export type AudioSettings = {
   effectsVolume: number;
   masterVolume: number;
   musicVolume: number;
@@ -117,17 +115,13 @@ function connectMediaElement(
   return binding;
 }
 
-export function WebAudioProvider({ children }: { children: ReactNode }) {
-  const effectsVolume = useGamePreferences(
-    (state) => state.effectsVolume,
-  );
-  const masterVolume = useGamePreferences(
-    (state) => state.masterVolume,
-  );
-  const musicVolume = useGamePreferences(
-    (state) => state.musicVolume,
-  );
-  const soundChoice = useGamePreferences((state) => state.soundChoice);
+export function GameAudioProvider({
+  children,
+  settings,
+}: {
+  children: ReactNode;
+  settings: AudioSettings;
+}) {
   const graphRef = useRef<AudioGraph | null>(null);
   const mediaBindingsRef = useRef(
     new WeakMap<HTMLMediaElement, MediaBinding>(),
@@ -137,16 +131,6 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
   );
   const webAudioUnavailableRef = useRef(false);
   const [graphRevision, setGraphRevision] = useState(0);
-  const settings = useMemo<AudioSettings>(
-    () => ({
-      effectsVolume: effectsVolume / 100,
-      masterVolume: masterVolume / 100,
-      musicVolume: musicVolume / 100,
-      soundEnabled: soundChoice === "enabled",
-    }),
-    [effectsVolume, masterVolume, musicVolume, soundChoice],
-  );
-
   const applySettings = useCallback((nextSettings: AudioSettings) => {
     const audioEnabled =
       nextSettings.soundEnabled && nextSettings.masterVolume > 0;

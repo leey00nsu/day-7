@@ -43,8 +43,10 @@ AI 영상, 대사 자막, 내레이션과 배경음이 하나의 장면처럼
 
 ### 엔딩 앨범
 
-도달한 엔딩은 브라우저에 저장됩니다. 해금 전에는 엔딩 카드가
-가려지고, 달성한 결말만 앨범에서 다시 볼 수 있습니다.
+도달한 엔딩은 플레이할 때마다 선택 기록과 함께 누적됩니다. 브라우저에는
+해금한 엔딩 목록과 가장 최근 엔딩을 저장해 앨범을 구성하고, 서버에는 같은
+엔딩에 여러 번 도달한 기록도 매 플레이별로 저장합니다. 해금 전에는 엔딩
+카드가 가려지고, 달성한 결말만 앨범에서 다시 볼 수 있습니다.
 
 ![잠긴 엔딩 앨범 화면](./docs/screenshots/endings.jpg)
 
@@ -73,7 +75,7 @@ E03 김 인턴의 거절
 - 최초 방문 미디어 다운로드 동의, 세션 Blob 재생 및 스트리밍 폴백
 - 다운로드 파일 크기 검증
 - 선택 결과 피드백과 세 가지 엔딩 판정
-- `localStorage` 기반 엔딩 해금 및 앨범
+- `localStorage` 기반 엔딩 해금·최근 엔딩 및 플레이별 서버 엔딩 누적
 - 모바일 화면에서 전체 영상을 유지하는 레터박스 처리
 - Open Graph, favicon, sitemap, robots, JSON-LD
 - UI 컴포넌트와 주요 화면을 확인할 수 있는 Storybook
@@ -84,6 +86,8 @@ E03 김 인턴의 거절
 | --- | --- |
 | Framework | Next.js 16 App Router |
 | UI | React 19, TypeScript, Tailwind CSS 4 |
+| State | Zustand 5 |
+| Architecture | Feature-Sliced Design(FSD-lite) |
 | Components | Base UI 기반 게임 UI 시스템 |
 | Typography | Pretendard Variable |
 | Documentation | Storybook 10 |
@@ -111,9 +115,10 @@ https://media.example.com/day-7-videos/<filename>
 ```
 
 실제로 참조되는 파일명은
-[`src/data/game.ts`](./src/data/game.ts)에서 확인할 수 있습니다.
-영상 주소는 [`src/lib/video.ts`](./src/lib/video.ts)의 공통 함수를 통해
-생성됩니다. 실행 전에 미디어 경로를 환경 변수로 지정해야 합니다.
+[`src/entities/game/model/content.ts`](./src/entities/game/model/content.ts)에서
+확인할 수 있습니다. 영상 주소는
+[`src/shared/config/video.ts`](./src/shared/config/video.ts)의 공통 함수를
+통해 생성됩니다. 실행 전에 미디어 경로를 환경 변수로 지정해야 합니다.
 
 ```bash
 NEXT_PUBLIC_VIDEO_BASE_URL=https://media.example.com/day-7-videos
@@ -199,12 +204,13 @@ Prisma 모델은 [`prisma/schema.prisma`](./prisma/schema.prisma), 실제 변경
 ### 스토리와 분기
 
 장별 영상, 선택지, 피드백과 엔딩 정보는
-[`src/data/game.ts`](./src/data/game.ts)에서 관리합니다.
+[`src/entities/game/model/content.ts`](./src/entities/game/model/content.ts)에서
+관리합니다.
 
 ### 자막
 
-[`src/data/subtitles.json`](./src/data/subtitles.json)의 영상 파일명 아래에
-자막을 추가합니다.
+[`src/entities/game/model/subtitles.json`](./src/entities/game/model/subtitles.json)의
+영상 파일명 아래에 자막을 추가합니다.
 
 ```json
 {
@@ -243,6 +249,7 @@ pnpm storybook
 
 ```bash
 pnpm lint
+pnpm lint:boundaries
 pnpm test:unit
 pnpm test:storybook
 pnpm build
@@ -250,7 +257,8 @@ pnpm build-storybook
 ```
 
 `pnpm test`는 단위 테스트와 Storybook 브라우저 테스트를 차례로 실행합니다.
-단위 테스트는 게임 상태 전이, 엔딩 판정, 설정 파싱, 미디어 다운로드와
+`pnpm lint`는 ESLint와 FSD 의존 경계 검사를 함께 실행합니다. 단위 테스트는
+게임 상태 전이, 엔딩 판정, Zustand 설정·스토리 store, 미디어 다운로드와
 리포트 집계를 검증합니다. Storybook에서는 공통 버튼의 모든 variant와
 크기, 게임 옵션의 열린·닫힌 상태, 챕터 전환, 선택지, 선택 결과 메시지,
 자막, 엔딩 카드와 앨범, 사운드 동의, 영상 오류, 주요 화면을 각각
@@ -262,20 +270,19 @@ pnpm build-storybook
 
 ```text
 src/
-├── app/                 # 페이지, 리포트 API, SEO 메타데이터
-├── components/
-│   ├── game/            # 게임 화면과 오디오 UI
-│   └── ui/              # 공통 기반 컴포넌트
-├── data/
-│   ├── game.ts          # 챕터, 선택지, 엔딩
-│   ├── media-manifest.json # 다운로드 파일 크기와 SHA-256
-│   └── subtitles.json   # 영상별 자막
+├── app/                 # 얇은 Next.js 라우트, API, SEO 메타데이터
+├── _app/                # 전역 Provider와 전역 스타일
+├── _pages/              # 페이지별 화면 조합과 라우트 수명 상태
+├── widgets/             # 게임 셸, 공통 비디오 등 큰 UI 블록
 ├── features/
-│   ├── game/            # 게임 상태 전이와 재생 제어
-│   ├── media/           # 미디어 다운로드, URL과 다이얼로그
-│   ├── preferences/     # 영속 설정 저장소
-│   └── report/          # 리포트 집계와 DB 저장 경계
-└── lib/                 # 엔딩 저장과 공통 유틸리티
+│   ├── manage-game-audio/        # Web Audio 그래프와 Howler 재생
+│   ├── prepare-game-media/       # 미디어 준비와 재생 URL
+│   ├── manage-game-preferences/  # Zustand 영속 설정 store
+│   └── game-reporting/           # 리포트 수집, 집계와 DB 경계
+├── entities/
+│   └── game/            # 콘텐츠, 순수 상태 전이, 엔딩 진행도
+├── shared/              # 공통 UI, 설정, 유틸리티, DB 클라이언트
+└── generated/           # Prisma 생성 코드
 
 prisma/
 ├── schema.prisma        # 리포트 데이터 모델
@@ -287,6 +294,17 @@ public/
 ├── assets/              # 로고, 포스터, 엔딩 키아트
 └── audio/               # BGM, 효과음, 내레이션
 ```
+
+의존성은 `app → _app/_pages → widgets → features → entities → shared`
+방향으로만 흐릅니다. 각 slice 외부에서는 `index.ts` 공개 API를 사용하며,
+리포트의 서버 전용·스토리 fixture 진입점만 `server.ts`와 `testing.ts`로
+분리합니다. 이 규칙은 `scripts/check-fsd-boundaries.mjs`에서 검사합니다.
+
+Zustand는 직렬화 가능한 앱 상태에만 사용합니다. 게임 설정은 앱 Provider와
+버전이 지정된 persist store를 사용하고 기존 개별 `localStorage` 키를 처음
+한 번 마이그레이션합니다. 스토리 진행은 `/story` 페이지 Provider가 새
+store를 만들어 라우트를 벗어나면 폐기합니다. 비디오·오디오 DOM ref와
+Web Audio 객체는 명령형 수명 주기를 유지하며 store에 저장하지 않습니다.
 
 ## AI 생성 에셋
 

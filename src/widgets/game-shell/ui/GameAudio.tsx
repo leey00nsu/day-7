@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import {
   useHowlerSound,
   useWebAudioSettings,
-} from "../model";
+} from "@/features/manage-game-audio";
 import { AUDIO_ACTIVATED_EVENT } from "./SoundConsent";
 
 const BUTTON_SOUND_GAIN = 0.9;

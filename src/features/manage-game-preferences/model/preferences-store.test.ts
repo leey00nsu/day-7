@@ -13,7 +13,7 @@ function storage(values: Record<string, string>) {
   };
 }
 
-describe("game preferences", () => {
+describe("zustand game preferences store", () => {
   it("reads and clamps persisted settings", () => {
     expect(
       readGamePreferences(

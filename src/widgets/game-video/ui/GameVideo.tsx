@@ -9,12 +9,14 @@ import {
   type ComponentPropsWithoutRef,
 } from "react";
 
-import { useMediaAssetUrl } from "@/features/prepare-game-media";
+import {
+  useMediaAssetUrl,
+  VideoPlaybackError,
+} from "@/features/prepare-game-media";
 import {
   useWebAudioMedia,
   type WebAudioChannel,
-  VideoPlaybackError,
-} from "@/widgets/game-shell";
+} from "@/features/manage-game-audio";
 
 type GameVideoProps = Omit<ComponentPropsWithoutRef<"video">, "src"> & {
   audioChannel?: WebAudioChannel;

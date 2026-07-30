@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef } from "react";
 
 import { useWebAudioSettings } from "./WebAudioProvider";
 
-type HowlerSoundChannel = "music" | "effects";
+export type HowlerSoundChannel = "music" | "effects";
 
 type UseHowlerSoundOptions = {
   channel: HowlerSoundChannel;

@@ -2,18 +2,25 @@ import type { Preview } from "@storybook/nextjs-vite";
 import "pretendard/dist/web/variable/pretendardvariable.css";
 
 import { GamePreferencesProvider } from "../src/features/manage-game-preferences";
-import { WebAudioProvider } from "../src/widgets/game-shell";
+import { GameAudioProvider } from "../src/features/manage-game-audio";
 import "../src/_app/styles/globals.css";
 
 const preview: Preview = {
   decorators: [
     (Story) => (
       <GamePreferencesProvider>
-        <WebAudioProvider>
+        <GameAudioProvider
+          settings={{
+            effectsVolume: 0.4,
+            masterVolume: 0.8,
+            musicVolume: 0.28,
+            soundEnabled: false,
+          }}
+        >
           <div className="dark min-h-svh bg-background text-foreground">
             <Story />
           </div>
-        </WebAudioProvider>
+        </GameAudioProvider>
       </GamePreferencesProvider>
     ),
   ],

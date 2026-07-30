@@ -25,7 +25,7 @@ import {
 import {
   useHowlerSound,
   useWebAudioSettings,
-} from "@/widgets/game-shell";
+} from "@/features/manage-game-audio";
 import { GameVideo } from "@/widgets/game-video";
 import {
   gameReducer,

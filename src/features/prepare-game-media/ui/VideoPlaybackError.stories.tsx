@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { VideoPlaybackError } from "./VideoPlaybackError";
 
 const meta = {
-  title: "Widgets/Game Shell/Video Playback Error",
+  title: "Features/Prepare Game Media/Video Playback Error",
   component: VideoPlaybackError,
   parameters: {
     layout: "fullscreen",
