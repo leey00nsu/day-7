@@ -1,14 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import "pretendard/dist/web/variable/pretendardvariable.css";
 
-import { GameAudio } from "@/components/game/GameAudio";
-import { GameOptions } from "@/components/game/GameOptions";
-import { MediaAssetProvider } from "@/features/prepare-game-media";
-import { SoundConsent } from "@/components/game/SoundConsent";
-import { VideoPlaybackError } from "@/components/game/VideoPlaybackError";
-import { WebAudioProvider } from "@/components/game/WebAudioProvider";
-import { siteConfig, videoBaseUrl } from "@/shared/config";
-import "./globals.css";
+import { AppProviders } from "@/_app";
+import { siteConfig } from "@/shared/config";
+import "@/_app/styles/globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -109,19 +104,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full bg-background font-sans text-foreground">
-        {videoBaseUrl ? (
-          <WebAudioProvider>
-            <GameAudio />
-            <MediaAssetProvider>
-              <SoundConsent>
-                <GameOptions />
-                {children}
-              </SoundConsent>
-            </MediaAssetProvider>
-          </WebAudioProvider>
-        ) : (
-          <VideoPlaybackError />
-        )}
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

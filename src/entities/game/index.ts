@@ -25,6 +25,7 @@ export {
   subscribeToEndingProgress,
   unlockEnding,
 } from "./model/progress";
+export { EndingCard } from "./ui/EndingCard";
 export {
   createInitialGameState,
   gameReducer,

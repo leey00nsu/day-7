@@ -1,8 +1,8 @@
 import type { Preview } from "@storybook/nextjs-vite";
 import "pretendard/dist/web/variable/pretendardvariable.css";
 
-import { WebAudioProvider } from "../src/components/game/WebAudioProvider";
-import "../src/app/globals.css";
+import { WebAudioProvider } from "../src/widgets/game-shell";
+import "../src/_app/styles/globals.css";
 
 const preview: Preview = {
   decorators: [

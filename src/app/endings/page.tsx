@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { EndingAlbum } from "@/components/game/EndingAlbum";
+import { EndingsPage } from "@/_pages/endings";
 
 export const metadata: Metadata = {
   title: "엔딩 앨범",
@@ -9,6 +9,4 @@ export const metadata: Metadata = {
   },
 };
 
-export default function EndingsPage() {
-  return <EndingAlbum />;
-}
+export default EndingsPage;

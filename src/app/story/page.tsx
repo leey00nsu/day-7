@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { GameScene } from "@/components/game/GameScene";
+import { StoryPage } from "@/_pages/story";
 
 export const metadata: Metadata = {
   title: "스토리",
@@ -9,6 +9,4 @@ export const metadata: Metadata = {
   },
 };
 
-export default function StoryPage() {
-  return <GameScene />;
-}
+export default StoryPage;
