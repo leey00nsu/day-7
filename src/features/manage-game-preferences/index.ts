@@ -1,14 +1,18 @@
 export {
+  createGamePreferencesStore,
   defaultGamePreferences,
-  getGamePreferencesSnapshot,
-  getSoundChoiceSnapshot,
+  GAME_PREFERENCES_STORAGE_KEY,
+  GAME_PREFERENCES_STORAGE_VERSION,
+  migrateLegacyGamePreferences,
   readGamePreferences,
-  saveSoundChoice,
-  subscribeToGamePreferences,
-  updateGamePreferences,
-} from "./model/game-preferences-store";
+} from "./model/preferences-store";
 export type {
   GamePreferences,
+  GamePreferencesStore,
+  GamePreferencesStoreApi,
   SoundChoice,
-} from "./model/game-preferences-store";
-export { useGamePreferences } from "./model/use-game-preferences";
+} from "./model/preferences-store";
+export {
+  GamePreferencesProvider,
+  useGamePreferences,
+} from "./model/preferences-provider";

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { readGamePreferences } from "./game-preferences-store";
+import {
+  createGamePreferencesStore,
+  readGamePreferences,
+} from "./preferences-store";
 
 function storage(values: Record<string, string>) {
   return {
@@ -38,6 +41,26 @@ describe("game preferences", () => {
       captionSize: 75,
       captionsEnabled: true,
       soundChoice: "unset",
+    });
+  });
+
+  it("updates settings and restores an audible volume", () => {
+    const store = createGamePreferencesStore();
+
+    store.getState().updatePreferences({ captionSize: 125 });
+    store.getState().saveSoundChoice("muted");
+
+    expect(store.getState()).toMatchObject({
+      captionSize: 125,
+      masterVolume: 0,
+      soundChoice: "muted",
+    });
+
+    store.getState().saveSoundChoice("enabled");
+
+    expect(store.getState()).toMatchObject({
+      masterVolume: 80,
+      soundChoice: "enabled",
     });
   });
 });

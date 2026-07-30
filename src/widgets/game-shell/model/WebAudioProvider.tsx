@@ -118,7 +118,16 @@ function connectMediaElement(
 }
 
 export function WebAudioProvider({ children }: { children: ReactNode }) {
-  const preferences = useGamePreferences();
+  const effectsVolume = useGamePreferences(
+    (state) => state.effectsVolume,
+  );
+  const masterVolume = useGamePreferences(
+    (state) => state.masterVolume,
+  );
+  const musicVolume = useGamePreferences(
+    (state) => state.musicVolume,
+  );
+  const soundChoice = useGamePreferences((state) => state.soundChoice);
   const graphRef = useRef<AudioGraph | null>(null);
   const mediaBindingsRef = useRef(
     new WeakMap<HTMLMediaElement, MediaBinding>(),
@@ -130,12 +139,12 @@ export function WebAudioProvider({ children }: { children: ReactNode }) {
   const [graphRevision, setGraphRevision] = useState(0);
   const settings = useMemo<AudioSettings>(
     () => ({
-      effectsVolume: preferences.effectsVolume / 100,
-      masterVolume: preferences.masterVolume / 100,
-      musicVolume: preferences.musicVolume / 100,
-      soundEnabled: preferences.soundChoice === "enabled",
+      effectsVolume: effectsVolume / 100,
+      masterVolume: masterVolume / 100,
+      musicVolume: musicVolume / 100,
+      soundEnabled: soundChoice === "enabled",
     }),
-    [preferences],
+    [effectsVolume, masterVolume, musicVolume, soundChoice],
   );
 
   const applySettings = useCallback((nextSettings: AudioSettings) => {

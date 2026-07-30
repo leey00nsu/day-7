@@ -1,23 +1,14 @@
 "use client";
 
-import { type ReactNode, useSyncExternalStore } from "react";
+import { type ReactNode } from "react";
 
 import { Button } from "@/shared/ui/button";
 import {
-  getSoundChoiceSnapshot,
-  saveSoundChoice,
-  subscribeToGamePreferences,
   type SoundChoice,
+  useGamePreferences,
 } from "@/features/manage-game-preferences";
 
 export const AUDIO_ACTIVATED_EVENT = "game:audio-activated";
-
-function chooseSound(choice: Exclude<SoundChoice, "unset">) {
-  saveSoundChoice(choice);
-  if (choice === "enabled") {
-    window.dispatchEvent(new Event(AUDIO_ACTIVATED_EVENT));
-  }
-}
 
 type SoundConsentPromptProps = {
   onEnable?: () => void;
@@ -25,9 +16,20 @@ type SoundConsentPromptProps = {
 };
 
 export function SoundConsentPrompt({
-  onEnable = () => chooseSound("enabled"),
-  onDisable = () => chooseSound("muted"),
+  onEnable,
+  onDisable,
 }: SoundConsentPromptProps) {
+  const saveSoundChoice = useGamePreferences(
+    (state) => state.saveSoundChoice,
+  );
+
+  function chooseSound(choice: Exclude<SoundChoice, "unset">) {
+    saveSoundChoice(choice);
+    if (choice === "enabled") {
+      window.dispatchEvent(new Event(AUDIO_ACTIVATED_EVENT));
+    }
+  }
+
   return (
     <section
       aria-labelledby="sound-consent-title"
@@ -46,7 +48,7 @@ export function SoundConsentPrompt({
           <Button
             className="min-w-32"
             data-sound="none"
-            onClick={onEnable}
+            onClick={onEnable ?? (() => chooseSound("enabled"))}
             size="lg"
             variant="outline"
           >
@@ -55,7 +57,7 @@ export function SoundConsentPrompt({
           <Button
             className="min-w-32"
             data-sound="none"
-            onClick={onDisable}
+            onClick={onDisable ?? (() => chooseSound("muted"))}
             size="lg"
             variant="outline"
           >
@@ -68,13 +70,12 @@ export function SoundConsentPrompt({
 }
 
 export function SoundConsent({ children }: { children: ReactNode }) {
-  const soundChoice = useSyncExternalStore(
-    subscribeToGamePreferences,
-    getSoundChoiceSnapshot,
-    () => "loading",
+  const hasHydrated = useGamePreferences(
+    (state) => state.hasHydrated,
   );
+  const soundChoice = useGamePreferences((state) => state.soundChoice);
 
-  if (soundChoice === "loading") {
+  if (!hasHydrated) {
     return (
       <div
         aria-hidden="true"

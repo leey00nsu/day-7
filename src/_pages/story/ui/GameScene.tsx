@@ -132,7 +132,10 @@ export function GameScene() {
     storyChapters[0].clips[0].filename,
     storyChapters[0].clips[1]?.filename,
   ]);
-  const { captionSize, captionsEnabled } = useGamePreferences();
+  const captionSize = useGamePreferences((state) => state.captionSize);
+  const captionsEnabled = useGamePreferences(
+    (state) => state.captionsEnabled,
+  );
   const {
     buffering: mediaBuffering,
     clearBuffering,

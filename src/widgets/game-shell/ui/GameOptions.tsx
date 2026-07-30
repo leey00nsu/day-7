@@ -15,10 +15,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/shared/ui/button";
-import {
-  updateGamePreferences,
-  useGamePreferences,
-} from "@/features/manage-game-preferences";
+import { useGamePreferences } from "@/features/manage-game-preferences";
 import { cn } from "@/shared/lib/cn";
 
 import { useMediaAssetStorage } from "@/features/prepare-game-media";
@@ -42,35 +39,42 @@ export function GameOptions({
     storageMode,
   } = useMediaAssetStorage();
   const [open, setOpen] = useState(defaultOpen);
-  const {
-    captionSize,
-    captionsEnabled: captions,
-    effectsVolume,
-    masterVolume: volume,
-    musicVolume,
-  } = useGamePreferences();
+  const captionSize = useGamePreferences((state) => state.captionSize);
+  const captions = useGamePreferences(
+    (state) => state.captionsEnabled,
+  );
+  const effectsVolume = useGamePreferences(
+    (state) => state.effectsVolume,
+  );
+  const volume = useGamePreferences((state) => state.masterVolume);
+  const musicVolume = useGamePreferences(
+    (state) => state.musicVolume,
+  );
+  const updatePreferences = useGamePreferences(
+    (state) => state.updatePreferences,
+  );
 
   function updateCaptions(value: boolean) {
-    updateGamePreferences({ captionsEnabled: value });
+    updatePreferences({ captionsEnabled: value });
   }
 
   function updateCaptionSize(value: number) {
-    updateGamePreferences({ captionSize: value });
+    updatePreferences({ captionSize: value });
   }
 
   function updateVolume(value: number) {
-    updateGamePreferences({
+    updatePreferences({
       masterVolume: value,
       soundChoice: value > 0 ? "enabled" : "muted",
     });
   }
 
   function updateMusicVolume(value: number) {
-    updateGamePreferences({ musicVolume: value });
+    updatePreferences({ musicVolume: value });
   }
 
   function updateEffectsVolume(value: number) {
-    updateGamePreferences({ effectsVolume: value });
+    updatePreferences({ effectsVolume: value });
   }
 
   function goHome() {
