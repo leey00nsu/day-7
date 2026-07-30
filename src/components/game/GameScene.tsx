@@ -1,6 +1,5 @@
 "use client";
 
-import { ChevronsRight, Pause, Play } from "lucide-react";
 import Link from "next/link";
 import {
   type MouseEvent,
@@ -46,6 +45,9 @@ import {
   selectCurrentChoices,
   selectResolvedEnding,
 } from "@/features/game/domain/game-state";
+import { PlaybackControls } from "@/features/game/components/PlaybackControls";
+import { useMediaBuffering } from "@/features/game/playback/use-media-buffering";
+import { usePlaybackVisibility } from "@/features/game/playback/use-playback-visibility";
 import { unlockEnding } from "@/lib/ending-progress";
 import { getInitialCaptionSize } from "@/lib/game-preferences";
 import {
@@ -94,13 +96,10 @@ export function GameScene() {
   const startedSceneKeyRef = useRef<string | null>(null);
   const videoEndedRef = useRef(false);
   const narrationEndedRef = useRef(false);
-  const resumeAfterBufferingRef = useRef(false);
-  const wasPlayingBeforeHiddenRef = useRef(false);
   const startingSceneKeyRef = useRef<string | null>(null);
   const autoplayBlockedSceneKeyRef = useRef<string | null>(null);
   const currentSceneKeyRef = useRef<string | null>(null);
   const activeSlotRef = useRef(0);
-  const mediaBufferingRef = useRef(false);
   const narrationRetryCountRef = useRef(0);
   const narrationRetryTimerRef = useRef<number | null>(null);
   const [gameState, dispatchGame] = useReducer(
@@ -127,10 +126,7 @@ export function GameScene() {
   const [narrationFailedSource, setNarrationFailedSource] = useState<
     string | null
   >(null);
-  const [mediaBuffering, setMediaBuffering] = useState(false);
   const [sceneMediaPending, setSceneMediaPending] = useState(false);
-  const [resumeRequired, setResumeRequired] = useState(false);
-  const [pageHidden, setPageHidden] = useState(false);
   const [activeSlot, setActiveSlot] = useState(0);
   const [videoSlots, setVideoSlots] = useState<VideoSlots>([
     storyChapters[0].clips[0].filename,
@@ -142,6 +138,26 @@ export function GameScene() {
       : window.localStorage.getItem("game-captions") !== "false",
   );
   const [captionSize, setCaptionSize] = useState(getInitialCaptionSize);
+  const {
+    buffering: mediaBuffering,
+    clearBuffering,
+    isBuffering,
+    shouldResume,
+    startBuffering,
+  } = useMediaBuffering();
+  const {
+    finishResume,
+    pageHidden,
+    requireResume,
+    resumeRequired,
+  } = usePlaybackVisibility({
+    isPlaying,
+    pausePlayback() {
+      videoRefs.current[activeSlot]?.pause();
+      narrationRef.current?.pause();
+      setIsPlaying(false);
+    },
+  });
   const { masterVolume, soundEnabled } = useWebAudioSettings();
   const choiceFeedbackSrc = useMediaAssetUrl(
     "/audio/choice-feedback-chime.mp3",
@@ -331,8 +347,7 @@ export function GameScene() {
     autoplayBlockedSceneKeyRef.current = null;
     videoEndedRef.current = false;
     narrationEndedRef.current = !narrationFilename;
-    resumeAfterBufferingRef.current = false;
-    mediaBufferingRef.current = false;
+    clearBuffering();
     narrationRetryCountRef.current = 0;
 
     return () => {
@@ -341,7 +356,7 @@ export function GameScene() {
         narrationRetryTimerRef.current = null;
       }
     };
-  }, [narrationFilename, sceneKey, videoFilename]);
+  }, [clearBuffering, narrationFilename, sceneKey, videoFilename]);
 
   useEffect(() => {
     if (
@@ -478,8 +493,7 @@ export function GameScene() {
 
         if (error instanceof DOMException && error.name === "NotAllowedError") {
           autoplayBlockedSceneKeyRef.current = sceneKey;
-          wasPlayingBeforeHiddenRef.current = true;
-          setResumeRequired(true);
+          requireResume();
         }
       } finally {
         if (startingSceneKeyRef.current === sceneKey) {
@@ -493,6 +507,7 @@ export function GameScene() {
       narrationFilename,
       narrationReadySource,
       preloadFilename,
+      requireResume,
       sceneKey,
       storageMode,
       videoFilename,
@@ -500,7 +515,7 @@ export function GameScene() {
   );
 
   const resumeBufferedMedia = useCallback(async () => {
-    if (!mediaBufferingRef.current || !resumeAfterBufferingRef.current) return;
+    if (!isBuffering() || !shouldResume()) return;
 
     const video = videoRefs.current[activeSlot];
     const narration = narrationRef.current;
@@ -533,24 +548,23 @@ export function GameScene() {
       );
       if (currentSceneKeyRef.current !== expectedSceneKey) return;
 
-      resumeAfterBufferingRef.current = false;
-      mediaBufferingRef.current = false;
-      setMediaBuffering(false);
+      clearBuffering();
     } catch (error) {
       if (currentSceneKeyRef.current !== expectedSceneKey) return;
 
       video?.pause();
       narration?.pause();
-      resumeAfterBufferingRef.current = false;
-      mediaBufferingRef.current = false;
-      setMediaBuffering(false);
+      clearBuffering();
       setIsPlaying(false);
       console.error("Failed to resume buffered scene media", error);
     }
   }, [
     activeSlot,
+    clearBuffering,
     hasPlayableNarration,
+    isBuffering,
     sceneKey,
+    shouldResume,
     videoFilename,
   ]);
 
@@ -709,16 +723,14 @@ export function GameScene() {
     if (
       !isPlaying ||
       startedSceneKeyRef.current !== sceneKey ||
-      mediaBufferingRef.current
+      isBuffering()
     ) {
       return;
     }
 
-    mediaBufferingRef.current = true;
-    resumeAfterBufferingRef.current = true;
+    if (!startBuffering()) return;
     videoRefs.current[activeSlot]?.pause();
     narrationRef.current?.pause();
-    setMediaBuffering(true);
     setIsPlaying(false);
   }
 
@@ -727,8 +739,7 @@ export function GameScene() {
     startingSceneKeyRef.current = null;
     videoEndedRef.current = false;
     narrationEndedRef.current = false;
-    mediaBufferingRef.current = false;
-    setMediaBuffering(false);
+    clearBuffering();
     setIsPlaying(false);
 
     const nextState = gameReducer(gameState, { type: "mediaEnded" });
@@ -764,8 +775,7 @@ export function GameScene() {
     const branchClips = chapter.choices[index].clips;
     setChoiceFeedbackExiting(false);
     setChoiceFeedback(chapter.choices[index].feedback);
-    mediaBufferingRef.current = false;
-    setMediaBuffering(false);
+    clearBuffering();
     setIsPlaying(false);
     setCurrentTime(0);
 
@@ -881,8 +891,7 @@ export function GameScene() {
       if (currentSceneKeyRef.current !== expectedSceneKey) return;
 
       startedSceneKeyRef.current = expectedSceneKey;
-      wasPlayingBeforeHiddenRef.current = false;
-      setResumeRequired(false);
+      finishResume();
       setChapterVideoPending(false);
       setSceneMediaPending(false);
     } catch (error) {
@@ -891,38 +900,11 @@ export function GameScene() {
     }
   }, [
     activeSlot,
+    finishResume,
     hasPlayableNarration,
     sceneKey,
     videoFilename,
   ]);
-
-  useEffect(() => {
-    function handleVisibilityChange() {
-      if (document.visibilityState === "hidden") {
-        setPageHidden(true);
-        wasPlayingBeforeHiddenRef.current = isPlaying;
-
-        if (isPlaying) {
-          videoRefs.current[activeSlot]?.pause();
-          narrationRef.current?.pause();
-          setIsPlaying(false);
-        }
-        return;
-      }
-
-      setPageHidden(false);
-      if (wasPlayingBeforeHiddenRef.current) {
-        setResumeRequired(true);
-      }
-    }
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () =>
-      document.removeEventListener(
-        "visibilitychange",
-        handleVisibilityChange,
-      );
-  }, [activeSlot, isPlaying]);
 
   const storyMusicMode: StoryMusicMode =
     pageHidden || resumeRequired
@@ -1138,41 +1120,12 @@ export function GameScene() {
         </header>
       ) : null}
 
-      {mode === "main" || mode === "branch" || mode === "ending" ? (
-        <>
-          <Button
-            aria-label="현재 영상 건너뛰기"
-            className="fixed right-[7.5rem] top-4 z-[90] size-11 rounded-full border border-white/15 bg-black/35 text-white shadow-lg shadow-black/20 backdrop-blur-xl hover:bg-black/55 sm:right-[8rem] sm:top-6"
-            onClick={skipCurrentVideo}
-            size="icon-lg"
-            title="영상 넘기기"
-            variant="ghost"
-          >
-            <ChevronsRight />
-          </Button>
-          <Button
-            aria-label={isPlaying ? "일시정지" : "재생"}
-            className="fixed right-[4.25rem] top-4 z-[90] size-11 rounded-full border border-white/15 bg-black/35 text-white shadow-lg shadow-black/20 backdrop-blur-xl hover:bg-black/55 sm:right-[4.75rem] sm:top-6"
-            onClick={() => void togglePlayback()}
-            size="icon-lg"
-            variant="ghost"
-          >
-            {isPlaying ? <Pause /> : <Play />}
-          </Button>
-        </>
-      ) : null}
-
-      {mode === "endingNarration" ? (
-        <Button
-          aria-label={isPlaying ? "일시정지" : "재생"}
-          className="fixed right-[4.25rem] top-4 z-[90] size-11 rounded-full border border-white/15 bg-black/35 text-white shadow-lg shadow-black/20 backdrop-blur-xl hover:bg-black/55 sm:right-[4.75rem] sm:top-6"
-          onClick={() => void togglePlayback()}
-          size="icon-lg"
-          variant="ghost"
-        >
-          {isPlaying ? <Pause /> : <Play />}
-        </Button>
-      ) : null}
+      <PlaybackControls
+        isPlaying={isPlaying}
+        mode={mode}
+        onSkip={skipCurrentVideo}
+        onToggle={() => void togglePlayback()}
+      />
 
       {mode === "decision" && chapter.choices ? (
         <DecisionOverlay
