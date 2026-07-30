@@ -6,7 +6,7 @@ import {
 import {
   emptyEndingCounts,
   type ReportData,
-} from "@/lib/report-types";
+} from "../model/types";
 
 import type { ReportRepository } from "./report-repository";
 

@@ -6,7 +6,7 @@ import { EndingResultScreen } from "./EndingResultScreen";
 import {
   reportStoryData,
   reportStoryChoices,
-} from "./report-story-fixture";
+} from "@/features/game-reporting/testing";
 
 const meta = {
   title: "Game/Ending Result Screen",

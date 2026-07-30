@@ -1,8 +1,8 @@
 "use client";
 
-import { ReportOverview } from "@/components/game/ReportOverview";
-import { useReportData } from "@/hooks/use-report-data";
-import type { ReportData } from "@/lib/report-types";
+import { useReportData } from "../model/use-report-data";
+import type { ReportData } from "../model/types";
+import { ReportOverview } from "./ReportOverview";
 
 type ReportDashboardProps = {
   initialData?: ReportData;

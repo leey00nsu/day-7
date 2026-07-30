@@ -7,7 +7,7 @@ import {
 import { ReportOverview } from "./ReportOverview";
 
 const meta = {
-  title: "Game/Report Overview",
+  title: "Features/Game Reporting/Overview",
   component: ReportOverview,
   parameters: {
     layout: "fullscreen",

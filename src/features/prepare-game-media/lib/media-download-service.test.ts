@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { downloadMediaAssets } from "./media-download-service";
-import type { MediaManifest } from "./media-manifest";
+import type { MediaManifest } from "../model/media-manifest";
 
 const manifest: MediaManifest = {
   totalBytes: 5,

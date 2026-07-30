@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { GameVideo } from "@/components/game/GameVideo";
-import { ReportDashboard } from "@/components/game/ReportDashboard";
+import { ReportDashboard } from "@/features/game-reporting";
 import { cn } from "@/shared/lib/cn";
 import { buttonVariants } from "@/shared/ui/button";
 

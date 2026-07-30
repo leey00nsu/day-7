@@ -19,7 +19,7 @@ import { GameVideo } from "@/components/game/GameVideo";
 import {
   useMediaAssetStorage,
   useMediaAssetUrl,
-} from "@/features/media/MediaAssetProvider";
+} from "@/features/prepare-game-media";
 import {
   StoryMusic,
   type StoryMusicMode,
@@ -46,11 +46,11 @@ import {
 import { PlaybackControls } from "@/features/game/components/PlaybackControls";
 import { useMediaBuffering } from "@/features/game/playback/use-media-buffering";
 import { usePlaybackVisibility } from "@/features/game/playback/use-playback-visibility";
-import { useGamePreferences } from "@/features/preferences/use-game-preferences";
+import { useGamePreferences } from "@/features/manage-game-preferences";
 import {
   recordChoice,
   recordEnding,
-} from "@/lib/report-client";
+} from "@/features/game-reporting";
 import { Button } from "@/shared/ui/button";
 type VideoSlots = [string | undefined, string | undefined];
 

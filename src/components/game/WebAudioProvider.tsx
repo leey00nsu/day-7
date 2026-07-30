@@ -14,7 +14,7 @@ import {
 } from "react";
 import { Howl, Howler } from "howler";
 
-import { useGamePreferences } from "@/features/preferences/use-game-preferences";
+import { useGamePreferences } from "@/features/manage-game-preferences";
 
 export type WebAudioChannel = "voice" | "music" | "effects";
 

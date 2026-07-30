@@ -4,7 +4,7 @@ import {
   MediaDeletePrompt,
   MediaDownloadProgress,
   MediaDownloadPrompt,
-} from "@/features/media/components/MediaAssetDialogs";
+} from "./MediaAssetDialogs";
 
 const meta = {
   title: "Game/Media Download",

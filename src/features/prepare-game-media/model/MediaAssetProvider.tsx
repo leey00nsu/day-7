@@ -15,13 +15,13 @@ import {
   MediaDeletePrompt,
   MediaDownloadProgress,
   MediaDownloadPrompt,
-} from "@/features/media/components/MediaAssetDialogs";
-import { downloadMediaAssets } from "@/features/media/media-download-service";
+} from "../ui/MediaAssetDialogs";
+import { downloadMediaAssets } from "../lib/media-download-service";
 import {
   getMediaAssetKey,
   getMediaNetworkUrl,
   requiresDownloadedPlayback,
-} from "@/features/media/media-manifest";
+} from "./media-manifest";
 
 const STORAGE_CHOICE_KEY = "game-media-storage-choice";
 

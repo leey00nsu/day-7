@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
 import { EndingAlbum } from "./EndingAlbum";
-import { reportStoryData } from "./report-story-fixture";
+import { reportStoryData } from "@/features/game-reporting/testing";
 
 const meta = {
   title: "Game/Ending Album",

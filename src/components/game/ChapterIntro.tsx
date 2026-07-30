@@ -4,7 +4,7 @@ import { useEffect } from "react";
 
 import { cn } from "@/shared/lib/cn";
 
-import { useMediaAssetUrl } from "@/features/media/MediaAssetProvider";
+import { useMediaAssetUrl } from "@/features/prepare-game-media";
 import { useHowlerSound } from "./useHowlerSound";
 
 type ChapterIntroProps = {

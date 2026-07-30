@@ -1,7 +1,7 @@
 import type {
   ChoiceMap,
   ReportData,
-} from "@/lib/report-types";
+} from "../model/types";
 
 export const reportStoryData: ReportData = {
   choices: [

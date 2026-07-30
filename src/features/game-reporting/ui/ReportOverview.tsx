@@ -3,7 +3,7 @@ import { Check } from "lucide-react";
 import type {
   ChoiceMap,
   ReportData,
-} from "@/lib/report-types";
+} from "../model/types";
 import { cn } from "@/shared/lib/cn";
 
 type ReportOverviewProps = {

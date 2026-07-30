@@ -6,7 +6,7 @@ import { Button } from "@/shared/ui/button";
 import {
   formatMegabytes,
   mediaManifest,
-} from "@/features/media/media-manifest";
+} from "../model/media-manifest";
 
 export function MediaDownloadPrompt({
   downloadRequired = false,

@@ -3,7 +3,7 @@ import {
   mediaManifest,
   type MediaAsset,
   type MediaManifest,
-} from "./media-manifest";
+} from "../model/media-manifest";
 
 const DOWNLOAD_CONCURRENCY = 1;
 const DOWNLOAD_RETRY_LIMIT = 2;

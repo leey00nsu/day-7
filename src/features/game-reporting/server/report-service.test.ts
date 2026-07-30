@@ -19,7 +19,7 @@ function createRepository(
   };
 }
 
-describe("report service", () => {
+describe("game report service", () => {
   it("builds report percentages from repository counts", async () => {
     const repository = createRepository({
       getChoiceCounts: vi.fn().mockResolvedValue([

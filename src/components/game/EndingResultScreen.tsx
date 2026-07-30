@@ -3,11 +3,14 @@
 import Link from "next/link";
 
 import { EndingCard } from "@/components/game/EndingCard";
-import { ReportOverview } from "@/components/game/ReportOverview";
+import {
+  ReportOverview,
+  useReportData,
+  type ChoiceMap,
+  type ReportData,
+} from "@/features/game-reporting";
 import type { Ending } from "@/entities/game";
 import { buttonVariants } from "@/shared/ui/button";
-import { useReportData } from "@/hooks/use-report-data";
-import type { ChoiceMap, ReportData } from "@/lib/report-types";
 
 type EndingResultScreenProps = {
   ending: Ending;

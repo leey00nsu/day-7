@@ -2,16 +2,12 @@ import { NextResponse } from "next/server";
 
 import {
   createPrismaReportRepository,
-} from "@/features/report/server/report-repository";
-import {
   InvalidReportEventError,
   loadReportData,
-  saveReportEvent,
-} from "@/features/report/server/report-service";
-import {
   parseReportRequest,
   ReportRequestError,
-} from "@/lib/report-request";
+  saveReportEvent,
+} from "@/features/game-reporting/server";
 
 export const dynamic = "force-dynamic";
 

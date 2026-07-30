@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { parseChoices } from "./report-client";
 
-describe("stored report choices", () => {
+describe("stored game report choices", () => {
   it("keeps binary choice values", () => {
     expect(
       parseChoices(

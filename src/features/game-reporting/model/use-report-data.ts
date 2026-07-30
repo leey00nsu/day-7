@@ -13,11 +13,11 @@ import {
   getChoicesSnapshot,
   parseChoices,
   subscribeToChoices,
-} from "@/lib/report-client";
+} from "../api/report-client";
 import type {
   ChoiceMap,
   ReportData,
-} from "@/lib/report-types";
+} from "./types";
 
 export function useReportData(initialData?: ReportData) {
   const [data, setData] = useState<ReportData | undefined>(initialData);

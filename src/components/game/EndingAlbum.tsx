@@ -16,8 +16,10 @@ import {
   subscribeToEndingProgress,
   type EndingId,
 } from "@/entities/game";
-import { useReportData } from "@/hooks/use-report-data";
-import type { ReportData } from "@/lib/report-types";
+import {
+  useReportData,
+  type ReportData,
+} from "@/features/game-reporting";
 import { cn } from "@/shared/lib/cn";
 import { buttonVariants } from "@/shared/ui/button";
 

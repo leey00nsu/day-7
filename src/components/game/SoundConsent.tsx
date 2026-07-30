@@ -8,7 +8,7 @@ import {
   saveSoundChoice,
   subscribeToGamePreferences,
   type SoundChoice,
-} from "@/features/preferences/game-preferences-store";
+} from "@/features/manage-game-preferences";
 
 export const AUDIO_ACTIVATED_EVENT = "game:audio-activated";
 

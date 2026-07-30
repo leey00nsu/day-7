@@ -3,7 +3,7 @@ import "pretendard/dist/web/variable/pretendardvariable.css";
 
 import { GameAudio } from "@/components/game/GameAudio";
 import { GameOptions } from "@/components/game/GameOptions";
-import { MediaAssetProvider } from "@/features/media/MediaAssetProvider";
+import { MediaAssetProvider } from "@/features/prepare-game-media";
 import { SoundConsent } from "@/components/game/SoundConsent";
 import { VideoPlaybackError } from "@/components/game/VideoPlaybackError";
 import { WebAudioProvider } from "@/components/game/WebAudioProvider";

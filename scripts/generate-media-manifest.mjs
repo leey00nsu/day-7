@@ -7,7 +7,9 @@ const publicRoot = path.join(projectRoot, "public");
 const outputPath = path.join(
   projectRoot,
   "src",
-  "data",
+  "features",
+  "prepare-game-media",
+  "config",
   "media-manifest.json",
 );
 

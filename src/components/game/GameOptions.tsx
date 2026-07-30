@@ -15,11 +15,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/shared/ui/button";
-import { updateGamePreferences } from "@/features/preferences/game-preferences-store";
-import { useGamePreferences } from "@/features/preferences/use-game-preferences";
+import {
+  updateGamePreferences,
+  useGamePreferences,
+} from "@/features/manage-game-preferences";
 import { cn } from "@/shared/lib/cn";
 
-import { useMediaAssetStorage } from "@/features/media/MediaAssetProvider";
+import { useMediaAssetStorage } from "@/features/prepare-game-media";
 
 type GameOptionsProps = {
   className?: string;

@@ -4,7 +4,7 @@ import { reportStoryData } from "./report-story-fixture";
 import { ReportDashboard } from "./ReportDashboard";
 
 const meta = {
-  title: "Game/Report Dashboard",
+  title: "Features/Game Reporting/Dashboard",
   component: ReportDashboard,
   parameters: {
     layout: "fullscreen",
