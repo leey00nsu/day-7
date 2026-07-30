@@ -19,7 +19,7 @@ import { GameVideo } from "@/components/game/GameVideo";
 import {
   useMediaAssetStorage,
   useMediaAssetUrl,
-} from "@/components/game/MediaAssetProvider";
+} from "@/features/media/MediaAssetProvider";
 import {
   StoryMusic,
   type StoryMusicMode,

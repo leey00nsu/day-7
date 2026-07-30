@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-import { useMediaAssetUrl } from "./MediaAssetProvider";
+import { useMediaAssetUrl } from "@/features/media/MediaAssetProvider";
 import { useWebAudioSettings } from "./WebAudioProvider";
 import { useHowlerSound } from "./useHowlerSound";
 

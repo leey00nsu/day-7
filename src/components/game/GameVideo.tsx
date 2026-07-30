@@ -9,7 +9,7 @@ import {
   type ComponentPropsWithoutRef,
 } from "react";
 
-import { useMediaAssetUrl } from "./MediaAssetProvider";
+import { useMediaAssetUrl } from "@/features/media/MediaAssetProvider";
 import { VideoPlaybackError } from "./VideoPlaybackError";
 import {
   useWebAudioMedia,

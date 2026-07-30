@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
 import { GameOptions } from "./GameOptions";
-import { MediaAssetStoragePreview } from "./MediaAssetProvider";
+import { MediaAssetStoragePreview } from "@/features/media/MediaAssetProvider";
 
 const meta = {
   title: "Game/Options",

@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { getInitialCaptionSize } from "@/lib/game-preferences";
 import { cn } from "@/lib/utils";
 
-import { useMediaAssetStorage } from "./MediaAssetProvider";
+import { useMediaAssetStorage } from "@/features/media/MediaAssetProvider";
 
 type GameOptionsProps = {
   className?: string;

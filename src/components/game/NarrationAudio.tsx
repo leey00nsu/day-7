@@ -7,7 +7,7 @@ import {
   useRef,
 } from "react";
 
-import { useMediaAssetUrl } from "./MediaAssetProvider";
+import { useMediaAssetUrl } from "@/features/media/MediaAssetProvider";
 import { useWebAudioMedia } from "./WebAudioProvider";
 
 type NarrationAudioProps = {
