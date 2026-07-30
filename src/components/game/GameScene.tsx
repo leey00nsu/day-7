@@ -7,6 +7,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useReducer,
   useRef,
   useState,
 } from "react";
@@ -33,31 +34,24 @@ import { useWebAudioSettings } from "@/components/game/WebAudioProvider";
 import { useHowlerSound } from "@/components/game/useHowlerSound";
 import { Button } from "@/components/ui/button";
 import {
-  endings,
   storyChapters,
-  type EndingId,
-  type StoryClip,
   type SubtitleCue,
 } from "@/data/game";
 import {
-  resolveEndingFromChoices,
-  unlockEnding,
-} from "@/lib/ending-progress";
+  createInitialGameState,
+  gameReducer,
+  selectActiveClip,
+  selectActiveEnding,
+  selectChapter,
+  selectCurrentChoices,
+  selectResolvedEnding,
+} from "@/features/game/domain/game-state";
+import { unlockEnding } from "@/lib/ending-progress";
 import { getInitialCaptionSize } from "@/lib/game-preferences";
 import {
   recordChoice,
   recordEnding,
 } from "@/lib/report-client";
-import type { ChoiceMap } from "@/lib/report-types";
-
-type PlaybackMode =
-  | "chapterIntro"
-  | "main"
-  | "decision"
-  | "branch"
-  | "ending"
-  | "endingNarration"
-  | "complete";
 type VideoSlots = [string | undefined, string | undefined];
 
 const MIN_START_BUFFER_SECONDS = 4;
@@ -91,23 +85,6 @@ function hasStartBuffer(
   return video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA;
 }
 
-function mapCurrentChoices(choiceHistory: readonly number[]): ChoiceMap {
-  const currentChoices: ChoiceMap = {};
-  let decisionIndex = 0;
-
-  for (const chapter of storyChapters) {
-    if (!chapter.decisionId || !chapter.choices) continue;
-
-    const selectedChoice = choiceHistory[decisionIndex];
-    if (selectedChoice === 0 || selectedChoice === 1) {
-      currentChoices[chapter.decisionId] = selectedChoice;
-    }
-    decisionIndex += 1;
-  }
-
-  return currentChoices;
-}
-
 export function GameScene() {
   const { storageMode } = useMediaAssetStorage();
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
@@ -126,13 +103,18 @@ export function GameScene() {
   const mediaBufferingRef = useRef(false);
   const narrationRetryCountRef = useRef(0);
   const narrationRetryTimerRef = useRef<number | null>(null);
-  const [chapterIndex, setChapterIndex] = useState(0);
-  const [clipIndex, setClipIndex] = useState(0);
-  const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
-  const [choiceHistory, setChoiceHistory] = useState<number[]>([]);
-  const [achievedEndingId, setAchievedEndingId] =
-    useState<EndingId | null>(null);
-  const [mode, setMode] = useState<PlaybackMode>("chapterIntro");
+  const [gameState, dispatchGame] = useReducer(
+    gameReducer,
+    undefined,
+    createInitialGameState,
+  );
+  const {
+    achievedEndingId,
+    chapterIndex,
+    clipIndex,
+    mode,
+    selectedChoice,
+  } = gameState;
   const [currentTime, setCurrentTime] = useState(0);
   const [currentVideoDuration, setCurrentVideoDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -171,13 +153,11 @@ export function GameScene() {
     src: choiceFeedbackSrc,
   });
 
-  const chapter = storyChapters[chapterIndex];
-  const activeEnding = achievedEndingId
-    ? endings.find((ending) => ending.id === achievedEndingId)
-    : undefined;
+  const chapter = selectChapter(gameState);
+  const activeEnding = selectActiveEnding(gameState);
   const currentChoices = useMemo(
-    () => mapCurrentChoices(choiceHistory),
-    [choiceHistory],
+    () => selectCurrentChoices(gameState),
+    [gameState],
   );
 
   useEffect(() => {
@@ -214,21 +194,7 @@ export function GameScene() {
     };
   }, [choiceFeedback]);
 
-  const activeClip = useMemo<StoryClip | undefined>(() => {
-    if (mode === "main") {
-      return chapter.clips[clipIndex];
-    }
-
-    if (mode === "branch" && selectedChoice !== null && chapter.choices) {
-      return chapter.choices[selectedChoice].clips[clipIndex];
-    }
-
-    if (mode === "ending" && activeEnding) {
-      return activeEnding.clips[clipIndex];
-    }
-
-    return undefined;
-  }, [activeEnding, chapter, clipIndex, mode, selectedChoice]);
+  const activeClip = selectActiveClip(gameState);
 
   const activeCue = captionsEnabled
     ? findCue(activeClip?.cues, currentTime)
@@ -275,12 +241,7 @@ export function GameScene() {
       clipIndex === chapter.clips.length - 1 &&
       chapterIndex === storyChapters.length - 1
     ) {
-      const nextEnding = endings.find(
-        (ending) =>
-          ending.id === resolveEndingFromChoices(choiceHistory),
-      );
-
-      return nextEnding?.clips[0]?.filename;
+      return selectResolvedEnding(gameState)?.clips[0]?.filename;
     }
 
     if (mode === "main") {
@@ -310,8 +271,8 @@ export function GameScene() {
     activeEnding,
     chapter,
     chapterIndex,
-    choiceHistory,
     clipIndex,
+    gameState,
     mode,
     selectedChoice,
   ]);
@@ -413,10 +374,10 @@ export function GameScene() {
   const startChapter = useCallback(() => {
     setChapterVideoPending(true);
     setSceneMediaPending(true);
-    setMode(chapter.clips.length > 0 ? "main" : "decision");
+    dispatchGame({ type: "chapterIntroFinished" });
     setCurrentTime(0);
     setIsPlaying(false);
-  }, [chapter.clips.length]);
+  }, []);
 
   const markVideoReady = useCallback(
     (filename: string, video: HTMLVideoElement) => {
@@ -684,43 +645,12 @@ export function GameScene() {
     videoFilename,
   ]);
 
-  function advanceChapter(completedChoices = choiceHistory) {
-    mediaBufferingRef.current = false;
-    setMediaBuffering(false);
-    setSceneMediaPending(false);
-
-    if (chapterIndex < storyChapters.length - 1) {
-      for (const video of videoRefs.current) {
-        video?.pause();
-      }
-      setChapterIndex((value) => value + 1);
-      setClipIndex(0);
-      setSelectedChoice(null);
-      setMode("chapterIntro");
-      chapterIntroElapsedRef.current = false;
-      setCurrentTime(0);
-      setIsPlaying(false);
-      return;
-    }
-
-    const endingId = resolveEndingFromChoices(completedChoices);
-    const ending = endings.find((candidate) => candidate.id === endingId);
-
-    setAchievedEndingId(endingId);
-    setClipIndex(0);
-    setSelectedChoice(null);
-    setMode(ending?.clips.length ? "ending" : "endingNarration");
-    setSceneMediaPending(Boolean(ending?.clips.length));
-    setCurrentTime(0);
-    setIsPlaying(false);
-  }
-
   function completeEnding() {
     if (!achievedEndingId) return;
 
     unlockEnding(achievedEndingId);
     void recordEnding(achievedEndingId);
-    setMode("complete");
+    dispatchGame({ type: "endingCompleted" });
     setCurrentTime(0);
     setIsPlaying(false);
   }
@@ -801,75 +731,55 @@ export function GameScene() {
     setMediaBuffering(false);
     setIsPlaying(false);
 
-    if (mode === "main") {
-      if (clipIndex < chapter.clips.length - 1) {
-        setSceneMediaPending(true);
-        setClipIndex((value) => value + 1);
-      } else if (chapter.choices) {
-        setSceneMediaPending(true);
-        setClipIndex(0);
-        setMode("decision");
-      } else {
-        advanceChapter();
+    const nextState = gameReducer(gameState, { type: "mediaEnded" });
+    if (nextState.chapterIndex !== chapterIndex) {
+      for (const video of videoRefs.current) {
+        video?.pause();
       }
-    } else if (
-      mode === "branch" &&
-      selectedChoice !== null &&
-      chapter.choices
-    ) {
-      const branchClips = chapter.choices[selectedChoice].clips;
-
-      if (clipIndex < branchClips.length - 1) {
-        setSceneMediaPending(true);
-        setClipIndex((value) => value + 1);
-      } else {
-        advanceChapter();
-      }
-    } else if (mode === "ending" && activeEnding) {
-      if (clipIndex < activeEnding.clips.length - 1) {
-        setSceneMediaPending(true);
-        setClipIndex((value) => value + 1);
-      } else {
-        setSceneMediaPending(false);
-        setMode("endingNarration");
-        setIsPlaying(true);
-      }
+      chapterIntroElapsedRef.current = false;
     }
 
+    setSceneMediaPending(
+      nextState.mode !== "chapterIntro" &&
+        nextState.mode !== "endingNarration" &&
+        nextState.mode !== "complete",
+    );
+    if (nextState.mode === "endingNarration") setIsPlaying(true);
+    dispatchGame({ type: "mediaEnded" });
     setCurrentTime(0);
   }
 
   function choose(index: number) {
-    if (!chapter.choices) return;
+    if (!chapter.choices || (index !== 0 && index !== 1)) return;
 
     videoRefs.current[activeSlot]?.pause();
     narrationRef.current?.pause();
 
     playChoiceFeedback({ restart: true });
 
-    if (chapter.decisionId && (index === 0 || index === 1)) {
+    if (chapter.decisionId) {
       recordChoice(chapter.decisionId, index);
     }
 
     const branchClips = chapter.choices[index].clips;
-    const nextChoiceHistory = [...choiceHistory, index];
-    setChoiceHistory(nextChoiceHistory);
     setChoiceFeedbackExiting(false);
     setChoiceFeedback(chapter.choices[index].feedback);
     mediaBufferingRef.current = false;
     setMediaBuffering(false);
     setIsPlaying(false);
-    setSelectedChoice(index);
     setCurrentTime(0);
-    setClipIndex(0);
 
     if (branchClips.length === 0) {
-      advanceChapter(nextChoiceHistory);
-      return;
+      chapterIntroElapsedRef.current = false;
+      setSceneMediaPending(false);
+    } else {
+      setSceneMediaPending(true);
     }
 
-    setSceneMediaPending(true);
-    setMode("branch");
+    dispatchGame({
+      type: "choiceSelected",
+      choiceIndex: index,
+    });
   }
 
   async function togglePlayback() {
